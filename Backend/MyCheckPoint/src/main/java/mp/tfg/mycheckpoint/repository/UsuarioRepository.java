@@ -7,8 +7,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+@Repository // Indica a Spring que esta interfaz es un componente de repositorio
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> { // Entidad Usuario, ID es Long
+
+    // Spring Data JPA genera la consulta basada en el nombre del metodo
 
     // Buscar usuario por su nombre de usuario (debe ser único)
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
@@ -24,4 +26,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> { // Ent
 
     // Comprobar si existe un usuario con ese email
     boolean existsByEmail(String email);
+
+    // Puedes añadir más métodos según necesites, por ejemplo, para buscar usuarios activos:
+    // List<Usuario> findByFechaEliminacionIsNull(); // Si usas Soft Delete y necesitas consultarlos explícitamente
 }

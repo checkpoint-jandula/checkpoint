@@ -33,7 +33,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"generos", "motores", "modosJuego", "companias", "keywords", "plataformasIgdb", "temas", "perspectivas", "imagenes", "videos", "webs", "idiomasSoporte", "franquicias", "dlcs", "expansiones", "similares", "juegosUsuario", "listasJuego", "tierListsJuego", "ranking", "duracion"}) // Evitar recursión
+// ***** CORRECCIÓN: Añadido 'similares' a la exclusión de toString *****
+@ToString(exclude = {"generos", "motores", "modosJuego", "companias", "keywords",
+        "plataformasIgdb", "temas", "perspectivas", "imagenes",
+        "videos", "webs", "idiomasSoporte", "franquicias",
+        "relacionesOrigen", "relacionesDestino", // Mantenemos estos para DLCs/Expansiones
+        "similares", // Añadido aquí
+        "juegosUsuario", "listasJuego", "tierListsJuego",
+        "ranking", "duracion"})
 @SQLDelete(sql = "UPDATE juego SET fechaEliminacion = CURRENT_TIMESTAMP WHERE id = ?")
 @Where(clause = "fechaEliminacion IS NULL")
 public class Juego {
@@ -128,17 +135,8 @@ public class Juego {
             inverseJoinColumns = @JoinColumn(name = "perspectivajugador_id"))
     private Set<PerspectivaJugador> perspectivas = new HashSet<>();
 
-    // Relación con PlataformaIGDB (no con nuestra entidad Plataforma)
-    //@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    //@JoinTable(name = "juegoplataformaigdb",
-    //        joinColumns = @JoinColumn(name = "juego_id"),
-    //        inverseJoinColumns = @JoinColumn(name = "plataforma_igdb_id"))
-    // Podríamos necesitar una entidad intermedia si queremos guardar fechaLanzamiento específica
-    // por plataforma IGDB, como está en el SQL. Vamos a crearla abajo.
-    // private Set<PlataformaIGDB> plataformasIgdb = new HashSet<>(); //<- Cambio abajo
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<JuegoPlataformaIGDB> plataformasIgdb = new HashSet<>();
-
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(name = "juegotema",
@@ -152,269 +150,219 @@ public class Juego {
             inverseJoinColumns = @JoinColumn(name = "franquicia_id"))
     private Set<Franquicia> franquicias = new HashSet<>();
 
+    // ***** CORRECCIÓN: Añadida relación ManyToMany para juegos similares *****
+    @ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(name = "juego_similar", // Nombre de la tabla de unión para juegos similares
+            joinColumns = @JoinColumn(name = "juego_id"), // FK a este juego
+            inverseJoinColumns = @JoinColumn(name = "similar_juego_id") // FK al juego similar
+    )
+    private Set<Juego> similares = new HashSet<>();
+
+    // ***** CORRECCIÓN: Relación inversa para juegos similares (necesaria si quieres navegar en ambos sentidos) *****
+    @ManyToMany(mappedBy = "similares", fetch = FetchType.LAZY)
+    private Set<Juego> similarDe = new HashSet<>();
+
+
     // --- Relaciones 1:N (Hacia entidades relacionadas directamente con Juego) ---
 
-    // Juego 1 <--> * Artwork
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Artwork> imagenes = new HashSet<>();
 
-    // Juego 1 <--> * Video
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Video> videos = new HashSet<>();
 
-    // Juego 1 <--> * Web
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Web> webs = new HashSet<>();
 
-    // Juego 1 <--> * JuegoIdiomaSoporte (Tabla de unión con atributos extra)
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<JuegoIdiomaSoporte> idiomasSoporte = new HashSet<>();
 
 
-    // --- Relaciones N:M con la propia entidad Juego (a través de JuegoRelacion) ---
+    // --- Relaciones N:M con la propia entidad Juego (a través de JuegoRelacion para DLC/Expansion) ---
     // Usamos la entidad JuegoRelacion para manejar esto
-
-    // Juegos que son DLCs/Expansiones/Similares DE este juego (Este juego es el ORIGEN)
+    // ***** NO TOCAMOS ESTO, sigue siendo válido para DLCs y Expansiones *****
     @OneToMany(mappedBy = "juegoOrigen", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<JuegoRelacion> relacionesOrigen = new HashSet<>();
 
-    // Juegos de los cuales ESTE juego es un DLC/Expansion/Similar (Este juego es el DESTINO)
     @OneToMany(mappedBy = "juegoDestino", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<JuegoRelacion> relacionesDestino = new HashSet<>();
 
 
     // --- Relaciones inversas (desde otras entidades hacia Juego) ---
 
-    // Juego 1 <--> * JuegoUsuario
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<JuegoUsuario> juegosUsuario = new HashSet<>();
 
-    // Juego 1 <--> * ListaJuego (Tabla de unión)
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<ListaJuego> listasJuego = new HashSet<>();
 
-    // Juego 1 <--> * TierListJuego (Tabla de unión)
     @OneToMany(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<TierListJuego> tierListsJuego = new HashSet<>();
 
-    // Juego 1 <--> 1 Ranking (Ranking tiene la FK)
     @OneToOne(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Ranking ranking;
 
-    // Juego 1 <--> 1 DuracionJuego (DuracionJuego tiene la FK)
     @OneToOne(mappedBy = "juego", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private DuracionJuego duracion;
 
 
-    // --- Métodos Helper  ---
-    // Helpers para ManyToMany (implica actualizar ambos lados)
+    // --- Métodos Helper ---
+    // (Se mantienen los helpers existentes para otras relaciones)
+    // ... (Helpers para Genero, MotorGrafico, Compania, etc.) ...
     public void addGenero(Genero genero) {
         this.generos.add(genero);
-        genero.getJuegos().add(this); // Asumiendo que Genero tiene Set<Juego> juegos con mappedBy="generos"
+        genero.getJuegos().add(this);
     }
-
     public void removeGenero(Genero genero) {
         this.generos.remove(genero);
-        genero.getJuegos().remove(this); // Asumiendo que Genero tiene Set<Juego> juegos con mappedBy="generos"
+        genero.getJuegos().remove(this);
     }
-
     public void addMotorGrafico(MotorGrafico motorGrafico) {
         this.motores.add(motorGrafico);
-        motorGrafico.getJuegos().add(this); // Asumiendo MotorGrafico tiene Set<Juego> juegos con mappedBy="motores"
+        motorGrafico.getJuegos().add(this);
     }
-
     public void removeMotorGrafico(MotorGrafico motorGrafico) {
         this.motores.remove(motorGrafico);
         motorGrafico.getJuegos().remove(this);
     }
-
     public void addCompania(Compania compania) {
         this.companias.add(compania);
-        compania.getJuegos().add(this); // Asumiendo Compania tiene Set<Juego> juegos con mappedBy="companias"
+        compania.getJuegos().add(this);
     }
-
     public void removeCompania(Compania compania) {
         this.companias.remove(compania);
         compania.getJuegos().remove(this);
     }
-
     public void addKeyword(Keyword keyword) {
         this.keywords.add(keyword);
-        keyword.getJuegos().add(this); // Asumiendo Keyword tiene Set<Juego> juegos con mappedBy="keywords"
+        keyword.getJuegos().add(this);
     }
-
     public void removeKeyword(Keyword keyword) {
         this.keywords.remove(keyword);
         keyword.getJuegos().remove(this);
     }
-
     public void addModoJuego(ModoJuego modoJuego) {
         this.modosJuego.add(modoJuego);
-        modoJuego.getJuegos().add(this); // Asumiendo ModoJuego tiene Set<Juego> juegos con mappedBy="modosJuego"
+        modoJuego.getJuegos().add(this);
     }
-
     public void removeModoJuego(ModoJuego modoJuego) {
         this.modosJuego.remove(modoJuego);
         modoJuego.getJuegos().remove(this);
     }
-
     public void addPerspectivaJugador(PerspectivaJugador perspectivaJugador) {
         this.perspectivas.add(perspectivaJugador);
-        perspectivaJugador.getJuegos().add(this); // Asumiendo PerspectivaJugador tiene Set<Juego> juegos con mappedBy="perspectivas"
+        perspectivaJugador.getJuegos().add(this);
     }
-
     public void removePerspectivaJugador(PerspectivaJugador perspectivaJugador) {
         this.perspectivas.remove(perspectivaJugador);
         perspectivaJugador.getJuegos().remove(this);
     }
-
     public void addTema(Tema tema) {
         this.temas.add(tema);
-        tema.getJuegos().add(this); // Asumiendo Tema tiene Set<Juego> juegos con mappedBy="temas"
+        tema.getJuegos().add(this);
     }
-
     public void removeTema(Tema tema) {
         this.temas.remove(tema);
         tema.getJuegos().remove(this);
     }
-
     public void addFranquicia(Franquicia franquicia) {
         this.franquicias.add(franquicia);
-        franquicia.getJuegos().add(this); // Asumiendo Franquicia tiene Set<Juego> juegos con mappedBy="franquicias"
+        franquicia.getJuegos().add(this);
     }
-
     public void removeFranquicia(Franquicia franquicia) {
         this.franquicias.remove(franquicia);
         franquicia.getJuegos().remove(this);
     }
-
-    // Helpers para OneToMany directas (Artwork, Video, Web)
     public void addArtwork(Artwork artwork) {
         this.imagenes.add(artwork);
         artwork.setJuego(this);
     }
-
     public void removeArtwork(Artwork artwork) {
         this.imagenes.remove(artwork);
         artwork.setJuego(null);
     }
-
     public void addVideo(Video video) {
         this.videos.add(video);
         video.setJuego(this);
     }
-
     public void removeVideo(Video video) {
         this.videos.remove(video);
         video.setJuego(null);
     }
-
     public void addWeb(Web web) {
         this.webs.add(web);
         web.setJuego(this);
     }
-
     public void removeWeb(Web web) {
         this.webs.remove(web);
         web.setJuego(null);
     }
-
-    // Helpers para OneToMany hacia entidades de unión con atributos (JuegoIdiomaSoporte, JuegoPlataformaIGDB)
     public void addJuegoIdiomaSoporte(JuegoIdiomaSoporte juegoIdiomaSoporte) {
         this.idiomasSoporte.add(juegoIdiomaSoporte);
         juegoIdiomaSoporte.setJuego(this);
-        // Al crear el objeto de unión, su ID compuesto debe estar completo
-        // juegoIdiomaSoporte.setId(new JuegoIdiomaSoporteId(this.id, juegoIdiomaSoporte.getIdioma().getId(), juegoIdiomaSoporte.getTipoSoporte()));
     }
-
     public void removeJuegoIdiomaSoporte(JuegoIdiomaSoporte juegoIdiomaSoporte) {
         this.idiomasSoporte.remove(juegoIdiomaSoporte);
         juegoIdiomaSoporte.setJuego(null);
     }
-
     public void addJuegoPlataformaIGDB(JuegoPlataformaIGDB juegoPlataformaIGDB) {
         this.plataformasIgdb.add(juegoPlataformaIGDB);
         juegoPlataformaIGDB.setJuego(this);
-        // Al crear el objeto de unión, su ID compuesto debe estar completo
-        // juegoPlataformaIGDB.setId(new JuegoPlataformaIGDBId(this.id, juegoPlataformaIGDB.getPlataformaIgdb().getId()));
     }
-
     public void removeJuegoPlataformaIGDB(JuegoPlataformaIGDB juegoPlataformaIGDB) {
         this.plataformasIgdb.remove(juegoPlataformaIGDB);
         juegoPlataformaIGDB.setJuego(null);
     }
-
-
-    // Helpers para relaciones autoreferenciales (JuegoRelacion)
     public void addRelacionOrigen(JuegoRelacion relacion) {
         this.relacionesOrigen.add(relacion);
         relacion.setJuegoOrigen(this);
-        // Es importante que al crear la relación, el ID compuesto y el juego destino estén completos
-        // relacion.setId(new JuegoRelacionId(this.id, relacion.getJuegoDestino().getId(), relacion.getId().getTipoRelacion()));
-        // relacion.setJuegoDestino(...)
     }
-
     public void removeRelacionOrigen(JuegoRelacion relacion) {
         this.relacionesOrigen.remove(relacion);
         relacion.setJuegoOrigen(null);
     }
-
-    // Helpers para relaciones autoreferenciales (lado inverso)
     public void addRelacionDestino(JuegoRelacion relacion) {
         this.relacionesDestino.add(relacion);
         relacion.setJuegoDestino(this);
-        // Es importante que al crear la relación, el ID compuesto y el juego origen estén completos
-        // relacion.setId(new JuegoRelacionId(relacion.getJuegoOrigen().getId(), this.id, relacion.getId().getTipoRelacion()));
-        // relacion.setJuegoOrigen(...)
     }
-
     public void removeRelacionDestino(JuegoRelacion relacion) {
         this.relacionesDestino.remove(relacion);
         relacion.setJuegoDestino(null);
     }
-
-
-    // Helpers para OneToMany inversas (desde Juego hacia tablas de unión con usuarios)
     public void addJuegoUsuario(JuegoUsuario juegoUsuario) {
         this.juegosUsuario.add(juegoUsuario);
         juegoUsuario.setJuego(this);
-        // Es importante que al crear JuegoUsuario, el usuario también esté establecido
-        // juegoUsuario.setUsuario(...)
     }
-
     public void removeJuegoUsuario(JuegoUsuario juegoUsuario) {
         this.juegosUsuario.remove(juegoUsuario);
         juegoUsuario.setJuego(null);
     }
-
     public void addListaJuego(ListaJuego listaJuego) {
         this.listasJuego.add(listaJuego);
         listaJuego.setJuego(this);
-        // Es importante que al crear ListaJuego, la lista y el ID compuesto estén completos
-        // listaJuego.setId(new ListaJuegoId(listaJuego.getLista().getId(), this.id));
-        // listaJuego.setLista(...)
     }
-
     public void removeListaJuego(ListaJuego listaJuego) {
         this.listasJuego.remove(listaJuego);
         listaJuego.setJuego(null);
     }
-
     public void addTierListJuego(TierListJuego tierListJuego) {
         this.tierListsJuego.add(tierListJuego);
         tierListJuego.setJuego(this);
-        // Es importante que al crear TierListJuego, la tierlist, el nivel y el ID compuesto estén completos
-        // tierListJuego.setId(new TierListJuegoId(tierListJuego.getTierList().getId(), this.id));
-        // tierListJuego.setTierList(...)
-        // tierListJuego.setNivelTier(...)
     }
-
     public void removeTierListJuego(TierListJuego tierListJuego) {
         this.tierListsJuego.remove(tierListJuego);
         tierListJuego.setJuego(null);
     }
 
-    // No solemos crear helpers para relaciones OneToOne mappedBy (Ranking, DuracionJuego)
-    // ya que la relación se establece en el lado dueño (donde está la FK).
-    // Ranking.setJuego(juego) o DuracionJuego.setJuego(juego) es lo común.
+    // ***** CORRECCIÓN: Añadidos helpers para la nueva relación 'similares' *****
+    public void addSimilar(Juego juegoSimilar) {
+        this.similares.add(juegoSimilar);
+        juegoSimilar.getSimilarDe().add(this); // Actualiza el lado inverso
+    }
+
+    public void removeSimilar(Juego juegoSimilar) {
+        this.similares.remove(juegoSimilar);
+        juegoSimilar.getSimilarDe().remove(this); // Actualiza el lado inverso
+    }
+
 }
