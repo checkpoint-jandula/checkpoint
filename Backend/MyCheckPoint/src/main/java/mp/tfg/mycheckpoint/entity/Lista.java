@@ -57,10 +57,14 @@ public class Lista {
     @OneToMany(mappedBy = "lista", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<ListaJuego> listaJuegos = new HashSet<>();
 
-    // Método Helper (opcional)
+    // Metodos Helper
+    // Helpers para ListaJuego (tabla de unión)
     public void addListaJuego(ListaJuego listaJuego) {
         this.listaJuegos.add(listaJuego);
         listaJuego.setLista(this);
+        // Es importante que al crear ListaJuego, el juego y el ID compuesto estén completos
+        // listaJuego.setId(new ListaJuegoId(this.id, listaJuego.getJuego().getId()));
+        // listaJuego.setJuego(...)
     }
 
     public void removeListaJuego(ListaJuego listaJuego) {

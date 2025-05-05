@@ -2,7 +2,6 @@ package mp.tfg.mycheckpoint.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +30,18 @@ public class Genero {
     private String nombre;
 
     // Relación inversa con Juego (opcional, pero útil si navegas desde Género a Juegos)
-    // @ManyToMany(mappedBy = "generos", fetch = FetchType.LAZY)
-    // private Set<Juego> juegos = new HashSet<>();
+     @ManyToMany(mappedBy = "generos", fetch = FetchType.LAZY)
+     private Set<Juego> juegos = new HashSet<>();
+
+    // --- Métodos Helper ---
+    // Helpers para Juego (lado inverso ManyToMany)
+    public void addJuego(Juego juego) {
+        this.juegos.add(juego);
+        juego.getGeneros().add(this); // <-- Actualiza el otro lado de la relación
+    }
+
+    public void removeJuego(Juego juego) {
+        this.juegos.remove(juego);
+        juego.getGeneros().remove(this); // <-- Actualiza el otro lado de la relación
+    }
 }

@@ -51,7 +51,7 @@ public class Usuario {
     private String email;
 
     @Column(name = "contraseña", length = 255, nullable = false)
-    private String contrasena; // Ojo: nombre de variable en camelCase
+    private String contrasena;
 
     @Column(name = "fechaRegistro", nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP")
     @CreationTimestamp(source = SourceType.DB) // Gestionado por DB
@@ -101,6 +101,7 @@ public class Usuario {
 
     // --- Métodos Helper (Opcional pero útil) ---
 
+    // Helpers para JuegoUsuario
     public void addJuegoUsuario(JuegoUsuario juegoUsuario) {
         this.juegosUsuario.add(juegoUsuario);
         juegoUsuario.setUsuario(this);
@@ -108,10 +109,71 @@ public class Usuario {
 
     public void removeJuegoUsuario(JuegoUsuario juegoUsuario) {
         this.juegosUsuario.remove(juegoUsuario);
-        juegoUsuario.setUsuario(null);
+        juegoUsuario.setUsuario(null); // Desvincula el hijo del padre
     }
 
-    // ... (helpers similares para Listas, TierLists, Plataformas, Amistades)
+    // Helpers para Lista
+    public void addLista(Lista lista) {
+        this.listas.add(lista);
+        lista.setUsuario(this);
+    }
+
+    public void removeLista(Lista lista) {
+        this.listas.remove(lista);
+        lista.setUsuario(null);
+    }
+
+    // Helpers para TierList
+    public void addTierList(TierList tierList) {
+        this.tierLists.add(tierList);
+        tierList.setUsuario(this);
+    }
+
+    public void removeTierList(TierList tierList) {
+        this.tierLists.remove(tierList);
+        tierList.setUsuario(null);
+    }
+
+    // Helpers para PlataformaUsuario (tabla de unión)
+    public void addPlataformaUsuario(PlataformaUsuario plataformaUsuario) {
+        this.plataformasUsuario.add(plataformaUsuario);
+        plataformaUsuario.setUsuario(this);
+        // El ID compuesto también debe establecerse si se crea el objeto de unión aquí
+        // plataformaUsuario.setId(new PlataformaUsuarioId(this.id, plataformaUsuario.getPlataforma().getId()));
+        // Es más común crear el objeto de unión con el ID ya establecido
+    }
+
+    public void removePlataformaUsuario(PlataformaUsuario plataformaUsuario) {
+        this.plataformasUsuario.remove(plataformaUsuario);
+        plataformaUsuario.setUsuario(null);
+    }
+
+    // Helpers para Amistad (lado donde este usuario es 'usuario')
+    public void addAmistad(Amistad amistad) {
+        this.amistades.add(amistad);
+        amistad.setUsuario(this);
+        // Es importante que al crear la amistad se establezca también el 'amigo' en el objeto Amistad
+        // amistad.setAmigo(...)
+        // Y potencialmente añadir esta misma instancia de Amistad al Set 'amigosDe' del otro usuario
+        // if (amistad.getAmigo() != null) {
+        //     amistad.getAmigo().getAmigosDe().add(amistad);
+        // }
+        // Esto puede ser complejo; a menudo se maneja en la capa de servicio
+    }
+
+    public void removeAmistad(Amistad amistad) {
+        this.amistades.remove(amistad);
+        amistad.setUsuario(null);
+        // También desvincular del Set 'amigosDe' del otro usuario
+        // if (amistad.getAmigo() != null) {
+        //     amistad.getAmigo().getAmigosDe().remove(amistad);
+        // }
+    }
+
+    // No solemos crear helpers para el lado 'amigosDe' directamente
+    // ya que las instancias de Amistad se crean desde el lado 'usuario'.
+    // La colección 'amigosDe' se puebla cuando JPA carga la entidad.
+
 
     // --- Ciclo de vida JPA (Opcional) ---
     @PrePersist

@@ -16,7 +16,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "perfilusuario", indexes = {
-        @Index(name = "idx_perfilusuario_usuarioid", columnList = "usuario_id")
+        // El índice en usuario_id ya está implícito al ser parte de la PK
 })
 @Getter
 @Setter
@@ -30,15 +30,15 @@ import java.time.OffsetDateTime;
 public class PerfilUsuario {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
 
     // PerfilUsuario 1 <--> 1 Usuario (Dueño de la relación con la FK)
     @OneToOne(fetch = FetchType.LAZY, optional = false) // Es obligatorio que un perfil tenga usuario
-    @JoinColumn(name = "usuario_id", referencedColumnName = "id", unique = true, nullable = false)
-    @MapsId // Usa la FK como parte de la PK (si no tuviéramos un ID autogenerado separado)
-    // En este caso, como tenemos id propio, solo usamos @JoinColumn
+    @JoinColumn(name = "usuario_id", referencedColumnName = "id", nullable = false)
+    @MapsId // <--- **IMPORTANTE:** Esta anotación indica que la PK de esta entidad
+    //      se mapea desde la PK de la entidad asociada (`Usuario`).
+    //      Implícitamente toma el valor del campo 'id' de esta entidad.
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING) // Mapear a String ('CLARO', 'OSCURO')

@@ -48,4 +48,6 @@ public class DuracionJuego { // Datos agregados
     @Column(name = "fechaModificacion", nullable = false, columnDefinition = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP")
     @UpdateTimestamp(source = SourceType.DB) // Actualizado por trigger al recalcular
     private OffsetDateTime fechaModificacion;
+
+    //Que son los REAL CHECK Y el CHECK
 }

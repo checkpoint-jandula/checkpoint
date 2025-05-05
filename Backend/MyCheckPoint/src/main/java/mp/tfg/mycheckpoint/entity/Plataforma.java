@@ -68,4 +68,33 @@ public class Plataforma { // Representa NUESTRA entidad Plataforma (Steam, PS5, 
     @OneToMany(mappedBy = "plataforma", fetch = FetchType.LAZY) // No cascade all, no borrar juegos de usuario si se borra plataforma
     private Set<JuegoUsuario> juegosUsuario = new HashSet<>();
 
+    // --- Métodos Helper ---
+
+    // Helpers para PlataformaUsuario (tabla de unión)
+    public void addPlataformaUsuario(PlataformaUsuario plataformaUsuario) {
+        this.plataformasUsuario.add(plataformaUsuario);
+        plataformaUsuario.setPlataforma(this);
+        // Es importante que al crear PlataformaUsuario, el usuario y el ID compuesto estén completos
+        // plataformaUsuario.setId(new PlataformaUsuarioId(plataformaUsuario.getUsuario().getId(), this.id));
+        // plataformaUsuario.setUsuario(...)
+    }
+
+    public void removePlataformaUsuario(PlataformaUsuario plataformaUsuario) {
+        this.plataformasUsuario.remove(plataformaUsuario);
+        plataformaUsuario.setPlataforma(null);
+    }
+
+    // Helpers para JuegoUsuario (establecer la plataforma en un juego de usuario)
+    // Nota: Esto es ligeramente diferente a los otros helpers. Al añadir/remover de esta colección,
+    // lo que realmente haces es establecer/quitar la referencia a Plataforma en el objeto JuegoUsuario.
+    public void addJuegoUsuario(JuegoUsuario juegoUsuario) {
+        this.juegosUsuario.add(juegoUsuario);
+        juegoUsuario.setPlataforma(this);
+    }
+
+    public void removeJuegoUsuario(JuegoUsuario juegoUsuario) {
+        this.juegosUsuario.remove(juegoUsuario);
+        juegoUsuario.setPlataforma(null); // Desvincula el JuegoUsuario de esta Plataforma
+    }
+
 }

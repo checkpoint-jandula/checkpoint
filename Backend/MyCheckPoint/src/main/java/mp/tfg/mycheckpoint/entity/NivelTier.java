@@ -51,4 +51,25 @@ public class NivelTier {
     // NivelTier 1 <--> * TierListJuego (Juegos asignados a este nivel)
     @OneToMany(mappedBy = "nivelTier", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<TierListJuego> tierListJuegos = new HashSet<>();
+
+    // --- Métodos Helper ---
+
+    // Helpers para TierListJuego (tabla de unión)
+    // Un juego puede estar en una tierlist y asignado a un nivel.
+    // La relación principal es TierList -> TierListJuego, pero este helper
+    // es útil si quieres ver o gestionar los juegos *dentro de este nivel*
+    // tierlistJuego.setNivelTier(this) es lo importante aquí.
+    public void addTierListJuego(TierListJuego tierListJuego) {
+        this.tierListJuegos.add(tierListJuego);
+        tierListJuego.setNivelTier(this);
+        // Es importante que al crear TierListJuego, la tierlist, el juego y el ID compuesto estén completos
+        // tierListJuego.setId(...)
+        // tierListJuego.setTierList(...)
+        // tierListJuego.setJuego(...)
+    }
+
+    public void removeTierListJuego(TierListJuego tierListJuego) {
+        this.tierListJuegos.remove(tierListJuego);
+        tierListJuego.setNivelTier(null);
+    }
 }

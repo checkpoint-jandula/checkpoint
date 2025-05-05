@@ -2,6 +2,8 @@ package mp.tfg.mycheckpoint.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "modojuego", indexes = {
@@ -27,6 +29,18 @@ public class ModoJuego {
     private String nombre;
 
     // Relación inversa con Juego (opcional)
-    // @ManyToMany(mappedBy = "modosJuego", fetch = FetchType.LAZY)
-    // private Set<Juego> juegos = new HashSet<>();
+     @ManyToMany(mappedBy = "modosJuego", fetch = FetchType.LAZY)
+     private Set<Juego> juegos = new HashSet<>();
+
+    // --- Métodos Helper ---
+    // Helpers para Juego (lado inverso ManyToMany)
+    public void addJuego(Juego juego) {
+        this.juegos.add(juego);
+        juego.getModosJuego().add(this); // <-- Actualiza el otro lado de la relación
+    }
+
+    public void removeJuego(Juego juego) {
+        this.juegos.remove(juego);
+        juego.getModosJuego().remove(this); // <-- Actualiza el otro lado de la relación
+    }
 }
