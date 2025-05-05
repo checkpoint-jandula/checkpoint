@@ -12,13 +12,13 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class AmistadId implements Serializable {
+public class JuegoPlataformaIGDBId implements Serializable {
 
-    private static final long serialVersionUID = 1L; // Buena práctica para Serializable
+    private static final long serialVersionUID = 1L;
 
-    @Column(name = "usuario_id")
-    private Long usuarioId;
+    @Column(name = "juego_id")
+    private Long juegoId;
 
-    @Column(name = "amigo_id")
-    private Long amigoId;
+    @Column(name = "plataforma_igdb_id")
+    private Long plataformaIgdbId;
 }

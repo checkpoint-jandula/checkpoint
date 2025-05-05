@@ -1,4 +1,6 @@
 package mp.tfg.mycheckpoint.entity.enums;
 
-public class TemaEnum {
+public enum TemaEnum {
+    CLARO,
+    OSCURO
 }

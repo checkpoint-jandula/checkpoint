@@ -1,4 +1,7 @@
 package mp.tfg.mycheckpoint.entity.enums;
 
-public class VisibilidadEnum {
+public enum VisibilidadEnum {
+    PUBLICO,
+    PRIVADO,
+    SOLO_AMIGOS
 }
