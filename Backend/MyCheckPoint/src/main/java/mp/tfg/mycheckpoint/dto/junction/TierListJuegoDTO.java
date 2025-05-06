@@ -1,8 +1,7 @@
-package mp.tfg.mycheckpoint.dto.tierlist;
+package mp.tfg.mycheckpoint.dto.junction;
 
 import lombok.*;
-import mp.tfg.mycheckpoint.dto.juego.JuegoSummaryDTO; // O JuegoDTO si necesitas más detalles
-import mp.tfg.mycheckpoint.dto.niveltier.NivelTierDTO; // O NivelTierSummaryDTO si lo creas
+
 import java.time.OffsetDateTime;
 
 @Getter

@@ -5,15 +5,10 @@ import org.mapstruct.Mapping;
 // import org.mapstruct.MappingTarget;
 // import org.mapstruct.factory.Mappers; // No es necesario con componentModel = "spring"
 
-import mp.tfg.mycheckpoint.dto.tierlist.TierListJuegoDTO; // El DTO para la entidad de unión misma
-import mp.tfg.mycheckpoint.dto.tierlist.NivelTierJuegoDTO; // El DTO que anida nivel y juego (si lo usas)
-import mp.tfg.mycheckpoint.dto.juego.JuegoSummaryDTO; // Necesario si mapeas a NivelTierJuegoDTO
-import mp.tfg.mycheckpoint.dto.niveltier.NivelTierDTO; // Necesario si mapeas a NivelTierJuegoDTO
+import mp.tfg.mycheckpoint.dto.junction.TierListJuegoDTO; // El DTO para la entidad de unión misma
+import mp.tfg.mycheckpoint.dto.junction.NivelTierJuegoDTO; // El DTO que anida nivel y juego (si lo usas)
 
 import mp.tfg.mycheckpoint.entity.junction.TierListJuego; // La entidad de unión
-import mp.tfg.mycheckpoint.entity.embedded.TierListJuegoId; // El ID embebido
-import mp.tfg.mycheckpoint.mapper.JuegoMapper; // Necesario para mapear Juego a JuegoSummaryDTO
-import mp.tfg.mycheckpoint.mapper.NivelTierMapper; // Necesario para mapear NivelTier a NivelTierDTO
 
 
 @Mapper(componentModel = "spring",

@@ -30,22 +30,14 @@ import java.time.OffsetDateTime;
 public class PerfilUsuario {
 
     // El ID de PerfilUsuario es el mismo que el ID de Usuario
-    @Id // <--- Este campo es ahora la PK
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
-    // private Long id; // Puedes mantener este campo para representar la PK... PERO...
-    // ...cuando usas @MapsId con una FK a otra entidad, el campo @Id
-    // a menudo se omite y el valor del ID se obtiene a través de la relación mapeada por @MapsId.
-    // O si la PK es un tipo primitivo (como Long aquí), puedes declararlo,
-    // pero @MapsId le dice a JPA que su valor proviene de la FK.
-    // Vamos a seguir la forma más común con @MapsId, donde el campo @Id existe
-    // y MapStruct lo mapeará si es necesario, pero su valor viene de la FK.
     private Long id; // Mantiene el valor del ID del Usuario
 
     // PerfilUsuario 1 <--> 1 Usuario (Dueño de la relación con la FK que es también PK)
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "usuario_id", referencedColumnName = "id", nullable = false) // Esta es la FK en la tabla
-    @MapsId // <--- **IMPORTANTE:** Esta anotación hace que la columna "usuario_id" sea la PK de esta entidad
-    //      y que el valor de 'id' de esta entidad se obtenga de la PK de la entidad 'usuario'.
+    @JoinColumn(name = "usuario_id", referencedColumnName = "id", nullable = false,unique = true) // Esta es la FK en la tabla
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)

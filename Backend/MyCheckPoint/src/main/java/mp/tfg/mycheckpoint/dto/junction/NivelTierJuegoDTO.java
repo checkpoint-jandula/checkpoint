@@ -1,4 +1,4 @@
-package mp.tfg.mycheckpoint.dto.tierlist;
+package mp.tfg.mycheckpoint.dto.junction;
 
 import lombok.*;
 import mp.tfg.mycheckpoint.dto.juego.JuegoSummaryDTO; // O JuegoDTO
