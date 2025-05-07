@@ -1,0 +1,2429 @@
+openapi: 3.0.0
+info:
+  title: CheckPoint API
+  description: API para la gestión de videojuegos, listas, usuarios (con perfil integrado), amistades y más en la aplicación CheckPoint. Basado en UML Modificado v4.
+  version: 1.1.0 # Incrementada versión por cambios significativos
+servers:
+  - url: /api/v1 # Cambia esto por tu URL base real
+    description: Servidor de desarrollo
+tags:
+  - name: "Usuario"
+    description: Operaciones sobre usuarios (incluye perfil)
+  # - name: "PerfilUsuario" # Eliminado
+  - name: "Juego"
+    description: Operaciones sobre juegos (basado en IGDB)
+  - name: "JuegoUsuario"
+    description: Operaciones sobre la relación entre usuarios y juegos
+  - name: "DuracionJuego"
+    description: Operaciones sobre la duración de los juegos
+  - name: "Lista"
+    description: Operaciones sobre listas de juegos creadas por usuarios
+  - name: "ListaJuego"
+    description: Operaciones para añadir/quitar juegos de listas
+  - name: "TierList"
+    description: Operaciones sobre Tier Lists de juegos creadas por usuarios
+  - name: "TierListJuego"
+    description: Operaciones para añadir/quitar/modificar juegos en Tier Lists
+  - name: "NivelTier"
+    description: Operaciones sobre los niveles dentro de una Tier List
+  - name: "Plataforma"
+    description: Operaciones sobre plataformas de videojuegos
+  - name: "Ranking"
+    description: Operaciones sobre rankings de juegos
+  - name: "Amistad"
+    description: Operaciones sobre relaciones y solicitudes de amistad entre usuarios
+  - name: "Otros (IGDB)"
+    description: Endpoints de solo lectura para obtener datos de IGDB (Géneros, Compañías, etc.)
+
+paths:
+  # --- Usuario ---
+  /usuarios:
+    post:
+      tags:
+        - "Usuario"
+      summary: Registrar un nuevo usuario
+      operationId: registrarUsuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCreate'
+      responses:
+        '201':
+          description: Usuario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Datos de entrada inválidos (ej. email/usuario duplicado)
+  /usuarios/{id}:
+    get:
+      tags:
+        - "Usuario"
+      summary: Obtener usuario por ID (interno)
+      operationId: getUsuarioById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles del usuario (incluyendo perfil)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '404':
+          description: Usuario no encontrado
+    put:
+      tags:
+        - "Usuario"
+      summary: Actualizar información de un usuario (incluyendo perfil, excepto contraseña y foto)
+      operationId: actualizarUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario a actualizar
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioUpdate' # Actualizado para incluir campos de perfil
+      responses:
+        '200':
+          description: Usuario actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '400':
+          description: Datos de entrada inválidos
+        '404':
+          description: Usuario no encontrado
+    delete:
+      tags:
+        - "Usuario"
+      summary: Eliminar un usuario (marcado lógico)
+      operationId: eliminarUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Usuario eliminado (marcado) exitosamente
+        '404':
+          description: Usuario no encontrado
+  # Endpoint específico para cambiar contraseña podría ser /usuarios/{id}/contrasena (PUT/POST)
+  # Endpoint específico para cambiar foto podría ser /usuarios/{id}/foto (PUT/POST con multipart/form-data)
+
+  /usuarios/public/{publicId}:
+    get:
+      tags:
+        - "Usuario"
+      summary: Obtener perfil público por UUID
+      operationId: getUsuarioByPublicId
+      parameters:
+        - name: publicId
+          in: path
+          required: true
+          description: Identificador público UUID del usuario
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Perfil público del usuario (datos limitados según visibilidad)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario' # El backend filtra según visibilidadPerfil
+        '404':
+          description: Usuario no encontrado
+
+  # --- PerfilUsuario Endpoints Eliminados ---
+  # /usuarios/{id}/perfil: ELIMINADO
+  # /usuarios/{id}/perfil/foto: ELIMINADO (funcionalidad integrada o movida)
+
+  # --- Juego ---
+  /juegos/{id}:
+    get:
+      tags:
+        - "Juego"
+      summary: Obtener detalles de un juego por ID interno
+      operationId: getJuegoById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles completos del juego
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Juego'
+        '404':
+          description: Juego no encontrado
+    put:
+      tags:
+        - "Juego"
+      summary: Actualizar información extendida de un juego (uso interno/admin)
+      operationId: updateJuegoExtendido
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Juego' # O un schema específico para actualización
+      responses:
+        '200':
+          description: Juego actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Juego'
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Juego no encontrado
+
+  # --- JuegoUsuario ---
+  /usuarios/{id}/juegos:
+    get:
+      tags:
+        - "JuegoUsuario"
+      summary: Obtener todos los juegos asociados a un usuario
+      operationId: getJuegosUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Lista de juegos del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JuegoUsuarioDetalle'
+        '404':
+          description: Usuario no encontrado
+    post:
+      tags:
+        - "JuegoUsuario"
+      summary: Añadir un juego al perfil del usuario
+      operationId: addJuegoUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JuegoUsuarioCreate'
+      responses:
+        '201':
+          description: Juego añadido al perfil del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JuegoUsuario'
+        '400':
+          description: Datos inválidos (e.g., juego_id no existe)
+        '404':
+          description: Usuario no encontrado
+        '409':
+          description: El juego ya está asociado al usuario
+  /usuarios/{id}/juegos/{juegoId}:
+    get:
+      tags:
+        - "JuegoUsuario"
+      summary: Obtener detalles de la relación juego-usuario específica
+      operationId: getJuegoUsuarioDetalle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles de la relación juego-usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JuegoUsuarioDetalle'
+        '404':
+          description: Usuario, juego o relación no encontrados
+    put:
+      tags:
+        - "JuegoUsuario"
+      summary: Editar datos de un juego en el perfil del usuario
+      operationId: updateJuegoUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JuegoUsuarioUpdate'
+      responses:
+        '200':
+          description: Datos actualizados exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JuegoUsuario'
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Usuario, juego o relación no encontrados
+    delete:
+      tags:
+        - "JuegoUsuario"
+      summary: Eliminar la relación entre un usuario y un juego
+      operationId: deleteJuegoUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Relación eliminada exitosamente
+        '404':
+          description: Usuario, juego o relación no encontrados
+
+  # --- DuracionJuego ---
+  /juegos/{id}/duracion:
+    get:
+      tags:
+        - "DuracionJuego"
+      summary: Obtener la duración promedio de un juego (calculada)
+      operationId: getDuracionJuego
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Duración promedio del juego
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuracionJuego'
+        '404':
+          description: Juego o datos de duración no encontrados
+  /juegos/{id}/duracion/recalcular:
+    post:
+      tags:
+        - "DuracionJuego"
+      summary: Recalcular la duración promedio de un juego (acción interna/programada)
+      operationId: recalcularDuracionJuego
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Recálculo completado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuracionJuego'
+        '404':
+          description: Juego no encontrado
+        '500':
+          description: Error durante el recálculo
+
+  # --- Lista ---
+  /usuarios/{id}/listas:
+    get:
+      tags:
+        - "Lista"
+      summary: Obtener todas las listas de un usuario
+      operationId: getListasUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Listas del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lista'
+        '404':
+          description: Usuario no encontrado
+    post:
+      tags:
+        - "Lista"
+      summary: Crear una nueva lista para un usuario
+      operationId: createLista
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  description: Nombre de la nueva lista
+              required:
+                - nombre
+      responses:
+        '201':
+          description: Lista creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lista'
+        '400':
+          description: Nombre inválido o faltante
+        '404':
+          description: Usuario no encontrado
+  /listas/{id}:
+    get:
+      tags:
+        - "Lista"
+      summary: Obtener detalles de una lista (incluyendo juegos)
+      operationId: getListaById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la lista
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles de la lista
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListaDetalle'
+        '404':
+          description: Lista no encontrada
+    put:
+      tags:
+        - "Lista"
+      summary: Editar una lista (ej. cambiar nombre)
+      operationId: updateLista
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la lista
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  description: Nuevo nombre de la lista
+              required:
+                - nombre
+      responses:
+        '200':
+          description: Lista actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lista'
+        '400':
+          description: Nombre inválido o faltante
+        '404':
+          description: Lista no encontrada
+    delete:
+      tags:
+        - "Lista"
+      summary: Eliminar una lista
+      operationId: deleteLista
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la lista
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Lista eliminada exitosamente
+        '404':
+          description: Lista no encontrada
+
+  # --- ListaJuego ---
+  /listas/{id}/juegos:
+    post:
+      tags:
+        - "ListaJuego"
+      summary: Añadir un juego a una lista
+      operationId: addJuegoToLista
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la lista
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                juego_id:
+                  type: integer
+                  format: int64
+                  description: ID del juego a añadir
+              required:
+                - juego_id
+      responses:
+        '201':
+          description: Juego añadido a la lista
+        '400':
+          description: ID de juego inválido
+        '404':
+          description: Lista o juego no encontrados
+        '409':
+          description: El juego ya está en la lista
+  /listas/{listaId}/juegos/{juegoId}:
+    delete:
+      tags:
+        - "ListaJuego"
+      summary: Quitar un juego de una lista
+      operationId: removeJuegoFromLista
+      parameters:
+        - name: listaId
+          in: path
+          required: true
+          description: ID de la lista
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID del juego a quitar
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Juego quitado de la lista exitosamente
+        '404':
+          description: Lista, juego o relación no encontrados
+
+  # --- TierList ---
+  /usuarios/{id}/tierlists:
+    get:
+      tags:
+        - "TierList"
+      summary: Obtener todas las Tier Lists de un usuario
+      operationId: getTierListsUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Tier Lists del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TierList'
+        '404':
+          description: Usuario no encontrado
+    post:
+      tags:
+        - "TierList"
+      summary: Crear una nueva Tier List para un usuario
+      operationId: createTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del usuario
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  description: Nombre de la nueva Tier List
+              required:
+                - nombre
+      responses:
+        '201':
+          description: Tier List creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TierList'
+        '400':
+          description: Nombre inválido o faltante
+        '404':
+          description: Usuario no encontrado
+  /tierlists/{id}:
+    get:
+      tags:
+        - "TierList"
+      summary: Obtener detalles de una Tier List (incluyendo niveles y juegos por nivel)
+      operationId: getTierListById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles de la Tier List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TierListDetalle'
+        '404':
+          description: Tier List no encontrada
+    put:
+      tags:
+        - "TierList"
+      summary: Editar una Tier List (ej. cambiar nombre)
+      operationId: updateTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre:
+                  type: string
+                  description: Nuevo nombre de la Tier List
+              required:
+                - nombre
+      responses:
+        '200':
+          description: Tier List actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TierList'
+        '400':
+          description: Nombre inválido o faltante
+        '404':
+          description: Tier List no encontrada
+    delete:
+      tags:
+        - "TierList"
+      summary: Eliminar una Tier List
+      operationId: deleteTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Tier List eliminada exitosamente
+        '404':
+          description: Tier List no encontrada
+
+  # --- TierListJuego ---
+  /tierlists/{id}/juegos:
+    post:
+      tags:
+        - "TierListJuego"
+      summary: Añadir un juego a un nivel específico de una Tier List
+      operationId: addJuegoToTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                juego_id:
+                  type: integer
+                  format: int64
+                  description: ID del juego a añadir
+                nivelTier_id:
+                  type: integer
+                  format: int64
+                  description: ID del nivel donde añadir el juego
+              required:
+                - juego_id
+                - nivelTier_id
+      responses:
+        '201':
+          description: Juego añadido a la Tier List
+        '400':
+          description: IDs inválidos o faltantes
+        '404':
+          description: Tier List, juego o nivel no encontrados
+        '409':
+          description: El juego ya está en esta Tier List (en algún nivel)
+  /tierlists/{id}/juegos/{juegoId}:
+    put:
+      tags:
+        - "TierListJuego"
+      summary: Modificar el nivel de un juego dentro de una Tier List
+      operationId: updateJuegoInTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID del juego a modificar
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nivelTier_id:
+                  type: integer
+                  format: int64
+                  description: ID del nuevo nivel para el juego
+              required:
+                - nivelTier_id
+      responses:
+        '200':
+          description: Nivel del juego actualizado
+        '400':
+          description: ID de nivel inválido o faltante
+        '404':
+          description: Tier List, juego, nivel o relación no encontrados
+    delete:
+      tags:
+        - "TierListJuego"
+      summary: Quitar un juego de una Tier List
+      operationId: removeJuegoFromTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+        - name: juegoId
+          in: path
+          required: true
+          description: ID del juego a quitar
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Juego quitado de la Tier List exitosamente
+        '404':
+          description: Tier List, juego o relación no encontrados
+
+  # --- NivelTier ---
+  /tierlists/{id}/niveles:
+    get:
+      tags:
+        - "NivelTier"
+      summary: Obtener todos los niveles de una Tier List específica
+      operationId: getNivelesTierList
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Lista de niveles de la Tier List (ordenados)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NivelTier'
+        '404':
+          description: Tier List no encontrada
+    post:
+      tags:
+        - "NivelTier"
+      summary: Crear un nuevo nivel en una Tier List
+      operationId: createNivelTier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la Tier List
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NivelTierCreate'
+      responses:
+        '201':
+          description: Nivel creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NivelTier'
+        '400':
+          description: Datos inválidos (e.g., nombre u orden faltante)
+        '404':
+          description: Tier List no encontrada
+  /niveles/{id}:
+    put:
+      tags:
+        - "NivelTier"
+      summary: Editar un nivel de Tier List (nombre, color, orden, descripción)
+      operationId: updateNivelTier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del NivelTier
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NivelTierUpdate'
+      responses:
+        '200':
+          description: Nivel actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NivelTier'
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Nivel no encontrado
+    delete:
+      tags:
+        - "NivelTier"
+      summary: Eliminar un nivel de Tier List
+      operationId: deleteNivelTier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del NivelTier
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Nivel eliminado exitosamente (puede requerir reasignar juegos)
+        '404':
+          description: Nivel no encontrado
+        '409':
+          description: Conflicto, el nivel contiene juegos (requiere acción adicional)
+
+  # --- Plataforma ---
+  /plataformas:
+    get:
+      tags:
+        - "Plataforma"
+      summary: Obtener todas las plataformas disponibles
+      operationId: getPlataformas
+      responses:
+        '200':
+          description: Lista de plataformas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Plataforma'
+    post:
+      tags:
+        - "Plataforma"
+      summary: Crear una nueva plataforma (uso interno/admin)
+      operationId: createPlataforma
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlataformaCreate'
+      responses:
+        '201':
+          description: Plataforma creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plataforma'
+        '400':
+          description: Datos inválidos
+  /plataformas/{id}:
+    get:
+      tags:
+        - "Plataforma"
+      summary: Obtener detalles de una plataforma
+      operationId: getPlataformaById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la plataforma
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Detalles de la plataforma
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plataforma'
+        '404':
+          description: Plataforma no encontrada
+    put:
+      tags:
+        - "Plataforma"
+      summary: Editar una plataforma (uso interno/admin)
+      operationId: updatePlataforma
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la plataforma
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlataformaUpdate'
+      responses:
+        '200':
+          description: Plataforma actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plataforma'
+        '400':
+          description: Datos inválidos
+        '404':
+          description: Plataforma no encontrada
+    delete:
+      tags:
+        - "Plataforma"
+      summary: Eliminar una plataforma (uso interno/admin)
+      operationId: deletePlataforma
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de la plataforma
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Plataforma eliminada
+        '404':
+          description: Plataforma no encontrada
+
+  # --- Ranking ---
+  /rankings:
+    get:
+      tags:
+        - "Ranking"
+      summary: Obtener rankings globales (ej. top juegos por puntuación media)
+      operationId: getGlobalRankings
+      parameters:
+        - name: limit
+          in: query
+          description: Número máximo de resultados
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: Número de resultados a saltar (paginación)
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Lista de juegos rankeados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RankingDetalle' # RankingDetalle incluye JuegoSummary
+  /juegos/{id}/ranking:
+    get:
+      tags:
+        - "Ranking"
+      summary: Obtener la información de ranking para un juego específico
+      operationId: getJuegoRanking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID interno del juego
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Datos de ranking del juego
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ranking'
+        '404':
+          description: Juego o datos de ranking no encontrados
+
+  # --- Amistad (Endpoints REVISADOS) ---
+  /usuarios/{id}/amistades:
+    get:
+      tags:
+        - "Amistad"
+      summary: Obtener relaciones de amistad (amigos, pendientes, bloqueados)
+      operationId: getAmistadesUsuario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del usuario para el que se consultan las relaciones
+          schema:
+            type: integer
+            format: int64
+        - name: estado
+          in: query
+          required: false
+          description: Filtrar por estado (PENDIENTE, ACEPTADA, BLOQUEADA) - opcional
+          schema:
+            $ref: '#/components/schemas/EstadoAmistadEnum'
+        - name: tipo # Filtrar por rol del usuario en la relación
+          in: query
+          required: false
+          description: Filtrar por tipo de relación para el usuario (solicitada, recibida, amiga, bloqueada_por_mi, bloqueado_por_otro) - opcional
+          schema:
+            type: string
+            enum: [solicitada, recibida, amiga, bloqueada_por_mi, bloqueado_por_otro]
+      responses:
+        '200':
+          description: Lista de relaciones de amistad detalladas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AmistadDetalle' # Devuelve detalle con estado y info del otro usuario
+        '404':
+          description: Usuario no encontrado
+    post:
+      tags:
+        - "Amistad"
+      summary: Enviar una solicitud de amistad a otro usuario
+      operationId: enviarSolicitudAmistad
+      parameters:
+        - name: id # ID del usuario que envía la solicitud
+          in: path
+          required: true
+          description: ID del usuario solicitante
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuario_receptor_id:
+                  type: integer
+                  format: int64
+                  description: ID del usuario que recibirá la solicitud
+              required:
+                - usuario_receptor_id
+      responses:
+        '201':
+          description: Solicitud de amistad enviada (crea registro Amistad con estado PENDIENTE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Amistad' # Devuelve la relación creada
+        '400':
+          description: No se puede enviar solicitud a uno mismo o datos inválidos
+        '404':
+          description: Usuario solicitante o receptor no encontrado
+        '409':
+          description: Ya existe una relación (amistad, solicitud pendiente, bloqueo) entre estos usuarios
+
+  /amistades/{amistadId}: # Endpoint para actuar sobre una relación existente
+    put:
+      tags:
+        - "Amistad"
+      summary: Actualizar el estado de una relación de amistad (Aceptar, Rechazar, Bloquear)
+      operationId: actualizarEstadoAmistad
+      parameters:
+        - name: amistadId
+          in: path
+          required: true
+          description: ID de la relación de amistad
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado:
+                  $ref: '#/components/schemas/EstadoAmistadEnum'
+                  description: Nuevo estado (ACEPTADA, RECHAZADA, BLOQUEADA)
+              required:
+                - estado
+      responses:
+        '200':
+          description: Estado de la amistad actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Amistad'
+        '400':
+          description: Transición de estado no válida o datos inválidos
+        '403':
+          description: No autorizado para modificar esta relación (ej. no es el receptor de una solicitud PENDIENTE)
+        '404':
+          description: Relación de amistad no encontrada
+    delete:
+      tags:
+        - "Amistad"
+      summary: Eliminar una relación de amistad o cancelar/rechazar una solicitud
+      operationId: eliminarAmistad
+      parameters:
+        - name: amistadId
+          in: path
+          required: true
+          description: ID de la relación de amistad a eliminar/cancelar/rechazar
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Relación eliminada/cancelada exitosamente
+        '403':
+          description: No autorizado para eliminar esta relación
+        '404':
+          description: Relación de amistad no encontrada
+
+  # --- Otros elementos IGDB ---
+  /generos:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de géneros
+      operationId: getGeneros
+      responses:
+        '200':
+          description: Lista de géneros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genero'
+  # /motores: (REMOVED as per UML)
+  /companias:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de compañías (developers, publishers, etc.)
+      operationId: getCompanias
+      responses:
+        '200':
+          description: Lista de compañías
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Compania'
+  /keywords:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de keywords
+      operationId: getKeywords
+      responses:
+        '200':
+          description: Lista de keywords
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Keyword'
+  # /plataformas-igdb: ELIMINADO
+  /modos-juego:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de modos de juego
+      operationId: getModosJuego
+      responses:
+        '200':
+          description: Lista de modos de juego
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModoJuego'
+  # /perspectivas: (REMOVED as per UML)
+  /artworks:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de artworks (general, no por juego específico a menos que se filtre)
+      operationId: getArtworks
+      responses:
+        '200':
+          description: Lista de artworks (URLs)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artwork'
+  /videos:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de videos (general, no por juego específico a menos que se filtre)
+      operationId: getVideos
+      responses:
+        '200':
+          description: Lista de videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Video'
+  /webs:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de webs relacionadas (general, no por juego específico a menos que se filtre)
+      operationId: getWebs
+      responses:
+        '200':
+          description: Lista de webs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Web'
+  /idiomas:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de idiomas y tipos de soporte
+      operationId: getIdiomas
+      responses:
+        '200':
+          description: Lista de idiomas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Idioma'
+  /temas:
+    get:
+      tags: ["Otros (IGDB)"]
+      summary: Obtener lista de temas
+      operationId: getTemas
+      responses:
+        '200':
+          description: Lista de temas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tema'
+  # /franquicias: (REMOVED as per UML)
+
+components:
+  schemas:
+    # --- Entidades Principales ---
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID interno único del usuario
+          readOnly: true
+        publicId:
+          type: string
+          format: uuid
+          description: Identificador público único del usuario
+          readOnly: true
+        nombreUsuario:
+          type: string
+          description: Nombre de usuario elegido
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+        # contraseña no se devuelve
+        fechaRegistro:
+          type: string
+          format: date-time
+          description: Fecha y hora del registro
+          readOnly: true
+        # Atributos de Perfil Integrados
+        tema:
+          $ref: '#/components/schemas/TemaEnum'
+        fotoPerfil:
+          type: string
+          # format: url # Podría ser una ruta relativa o absoluta
+          description: Ruta o URL a la foto de perfil (gestionada por endpoint dedicado o mecanismo aparte)
+          nullable: true
+          readOnly: true # Se asume que no se actualiza por el PUT general de usuario
+        notificaciones:
+          type: boolean
+          description: Preferencia de notificaciones activadas/desactivadas
+        visibilidadPerfil:
+          $ref: '#/components/schemas/VisibilidadEnum'
+        # Fechas de auditoría
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      required:
+        - id
+        - publicId
+        - nombreUsuario
+        - email
+        - fechaRegistro
+        - tema # Asumiendo valores por defecto si no se especifica
+        - notificaciones # Asumiendo valores por defecto
+        - visibilidadPerfil # Asumiendo valores por defecto
+        - fechaCreacion
+        - fechaModificacion
+
+    UsuarioCreate:
+      type: object
+      properties:
+        nombreUsuario:
+          type: string
+        email:
+          type: string
+          format: email
+        contraseña:
+          type: string
+          format: password
+          description: Contraseña en texto plano (se hasheará en backend)
+        # Los campos de perfil (tema, notificaciones, visibilidad) pueden tener valores por defecto
+        # o ser opcionales en la creación
+        tema:
+          $ref: '#/components/schemas/TemaEnum'
+          nullable: true
+        notificaciones:
+          type: boolean
+          nullable: true
+        visibilidadPerfil:
+          $ref: '#/components/schemas/VisibilidadEnum'
+          nullable: true
+      required:
+        - nombreUsuario
+        - email
+        - contraseña
+
+    UsuarioUpdate: # Schema para actualizar datos del usuario y su perfil (excepto contraseña/foto)
+      type: object
+      properties:
+        nombreUsuario:
+          type: string
+        email:
+          type: string
+          format: email
+        # Campos de perfil actualizables
+        tema:
+          $ref: '#/components/schemas/TemaEnum'
+        notificaciones:
+          type: boolean
+        visibilidadPerfil:
+          $ref: '#/components/schemas/VisibilidadEnum'
+        # La contraseña se cambia por endpoint dedicado
+        # La foto se cambia por endpoint dedicado
+
+    UsuarioSummary: # Para listas de amigos, etc.
+      type: object
+      properties:
+        publicId:
+          type: string
+          format: uuid
+          readOnly: true
+        nombreUsuario:
+          type: string
+        fotoPerfil: # Incluir la ruta/URL de la foto en el resumen
+          type: string
+          # format: url
+          nullable: true
+      required:
+        - publicId
+        - nombreUsuario
+
+    # PerfilUsuario: ELIMINADO
+    # PerfilUsuarioUpdate: ELIMINADO
+
+    Plataforma: # Plataforma interna de la aplicación CheckPoint
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        idigdb:
+          type: integer
+          description: ID externo de la plataforma en IGDB (si aplica, para mapeo)
+          nullable: true
+        nombre:
+          type: string
+          description: Nombre principal de la plataforma
+        nombreAlternativo:
+          type: string
+          nullable: true
+          description: Nombre alternativo o común
+        logoUrl:
+          type: string
+          format: url
+          nullable: true
+          description: URL al logo de la plataforma
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      required:
+        - id
+        - nombre # ID IGDB es opcional si es plataforma solo interna
+        - fechaCreacion
+        - fechaModificacion
+
+    PlataformaCreate:
+      type: object
+      properties:
+        idigdb:
+          type: integer
+          nullable: true
+        nombre:
+          type: string
+        nombreAlternativo:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          format: url
+          nullable: true
+      required:
+        - nombre
+
+    PlataformaUpdate:
+      type: object
+      properties:
+        idigdb:
+          type: integer
+          nullable: true
+        nombre:
+          type: string
+        nombreAlternativo:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          format: url
+          nullable: true
+
+    Juego:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        idigdb:
+          type: integer
+          format: int64
+          description: ID externo del juego en IGDB
+        nombre:
+          type: string
+        slug:
+          type: string
+          description: Identificador amigable para URL
+        gameType:
+          $ref: '#/components/schemas/GameTypeEnum'
+        resumen:
+          type: string
+          nullable: true
+        historia:
+          type: string
+          nullable: true
+        totalRating:
+          type: number
+          format: float
+          nullable: true
+          description: Puntuación media de IGDB (0-100)
+        totalRatingCount:
+          type: integer
+          nullable: true
+          description: Número de votos en IGDB
+        fechaLanzamiento:
+          type: string
+          format: date
+          nullable: true
+        coverUrl:
+          type: string
+          format: url
+          nullable: true
+          description: URL de la portada principal
+        motorGrafico:
+          type: string
+          nullable: true
+          description: Motor gráfico principal del juego (o lista como texto).
+        franquicia:
+          type: string
+          nullable: true
+          description: Franquicia principal a la que pertenece el juego.
+        generos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genero'
+        modosJuego:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModoJuego'
+        companias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Compania'
+        keywords:
+          type: array
+          items:
+            $ref: '#/components/schemas/Keyword'
+        plataformas: # MODIFICADO: Ahora referencia a Plataforma interna
+          type: array
+          items:
+            $ref: '#/components/schemas/Plataforma'
+          description: Plataformas (internas) en las que el juego está disponible.
+        temas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tema'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        imagenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artwork'
+        videos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Video'
+        webs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Web'
+        idiomas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Idioma'
+        dlcs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Juego' # Referencia a Juego completo
+          description: Lista de DLCs asociados (son de tipo Juego con gameType=DLC).
+        expansiones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Juego' # Referencia a Juego completo
+          description: Lista de expansiones asociadas (son de tipo Juego con gameType=EXPANSION).
+        similares:
+          type: array
+          items:
+            $ref: '#/components/schemas/Juego' # Referencia a Juego completo
+          description: Lista de juegos similares.
+      required:
+        - id
+        - idigdb
+        - nombre
+        - slug
+        - gameType
+        - status
+
+    JuegoSummary: # Para usar en listas, etc.
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        idigdb:
+          type: integer
+          format: int64
+        nombre:
+          type: string
+        slug:
+          type: string
+        coverUrl:
+          type: string
+          format: url
+          nullable: true
+        fechaLanzamiento:
+          type: string
+          format: date
+          nullable: true
+        gameType: # Útil para distinguir en listas
+          $ref: '#/components/schemas/GameTypeEnum'
+      required:
+        - id
+        - idigdb
+        - nombre
+        - slug
+        - gameType
+
+    JuegoUsuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        estado:
+          $ref: '#/components/schemas/EstadoJuegoUsuarioEnum'
+        posesion:
+          type: boolean
+          description: Indica si el usuario posee el juego
+        puntuacion:
+          type: number
+          format: float
+          nullable: true
+          description: Puntuación personal del usuario (e.g., 0-10)
+        comentario:
+          type: string
+          nullable: true
+          description: Comentario público del usuario sobre el juego
+        comentarioPrivado:
+          type: string
+          nullable: true
+          description: Comentario privado del usuario
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+          description: Fecha en que el usuario empezó a jugar
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+          description: Fecha en que el usuario terminó de jugar
+        duracionHistoria:
+          type: number
+          format: float
+          nullable: true
+          description: Horas dedicadas a la historia principal
+        duracionHistoriaSecundarias:
+          type: number
+          format: float
+          nullable: true
+          description: Horas dedicadas a historia + secundarias
+        duracionCompletista:
+          type: number
+          format: float
+          nullable: true
+          description: Horas dedicadas para completar al 100%
+        importado:
+          type: boolean
+          description: Indica si la entrada fue importada de otro servicio
+          # readOnly: true # Puede ser actualizable si permite marcar/desmarcar
+        plataforma_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID de la plataforma (de CheckPoint) en la que lo jugó/posee
+        usuario_id:
+          type: integer
+          format: int64
+          readOnly: true
+        juego_id:
+          type: integer
+          format: int64
+          readOnly: true
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      required:
+        - id
+        - estado
+        - posesion
+        - importado # Asumiendo que siempre tiene un valor (default false)
+        - usuario_id
+        - juego_id
+        - fechaCreacion
+        - fechaModificacion
+
+    JuegoUsuarioCreate:
+      type: object
+      properties:
+        juego_id:
+          type: integer
+          format: int64
+        estado:
+          $ref: '#/components/schemas/EstadoJuegoUsuarioEnum'
+        posesion:
+          type: boolean
+        puntuacion:
+          type: number
+          format: float
+          nullable: true
+        comentario:
+          type: string
+          nullable: true
+        comentarioPrivado:
+          type: string
+          nullable: true
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+        duracionHistoria:
+          type: number
+          format: float
+          nullable: true
+        duracionHistoriaSecundarias:
+          type: number
+          format: float
+          nullable: true
+        duracionCompletista:
+          type: number
+          format: float
+          nullable: true
+        plataforma_id:
+          type: integer
+          format: int64
+          nullable: true
+        importado:
+          type: boolean
+          default: false
+      required:
+        - juego_id
+        - estado
+        - posesion
+
+    JuegoUsuarioUpdate:
+      type: object
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoJuegoUsuarioEnum'
+        posesion:
+          type: boolean
+        puntuacion:
+          type: number
+          format: float
+          nullable: true
+        comentario:
+          type: string
+          nullable: true
+        comentarioPrivado:
+          type: string
+          nullable: true
+        fechaInicio:
+          type: string
+          format: date
+          nullable: true
+        fechaFin:
+          type: string
+          format: date
+          nullable: true
+        duracionHistoria:
+          type: number
+          format: float
+          nullable: true
+        duracionHistoriaSecundarias:
+          type: number
+          format: float
+          nullable: true
+        duracionCompletista:
+          type: number
+          format: float
+          nullable: true
+        plataforma_id:
+          type: integer
+          format: int64
+          nullable: true
+        importado:
+          type: boolean
+
+    JuegoUsuarioDetalle: # Para cuando se pide un JuegoUsuario específico
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/JuegoUsuario'
+      properties:
+        juego: # Detalles resumidos del juego
+          $ref: '#/components/schemas/JuegoSummary'
+        plataforma: # Detalles de la plataforma (de CheckPoint)
+          $ref: '#/components/schemas/Plataforma'
+          nullable: true # Porque plataforma_id es nullable
+
+    DuracionJuego:
+      type: object
+      properties:
+        id_duracion: # PK de esta entidad agregada
+          type: integer
+          format: int64
+          readOnly: true
+        juego_id: # FK al Juego
+          type: integer
+          format: int64
+          readOnly: true
+        mediaHistoria:
+          type: number
+          format: float
+          nullable: true
+          description: Media de horas para completar la historia principal
+        mediaHistoriaSecundarias:
+          type: number
+          format: float
+          nullable: true
+          description: Media de horas para completar historia + secundarias
+        mediaCompletista:
+          type: number
+          format: float
+          nullable: true
+          description: Media de horas para completar al 100%
+        numeroUsuarios:
+          type: integer
+          description: Número de usuarios que han aportado datos de duración para este juego
+      required:
+        - id_duracion
+        - juego_id
+        - numeroUsuarios
+
+    Lista:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+          description: Nombre de la lista
+        usuario_id:
+          type: integer
+          format: int64
+          readOnly: true
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        # num_juegos: ELIMINADO
+      required:
+        - id
+        - nombre
+        - usuario_id
+        - fechaCreacion
+        - fechaModificacion
+
+    ListaDetalle: # Cuando se pide una lista específica con sus juegos
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Lista'
+      properties:
+        juegos:
+          type: array
+          items:
+            $ref: '#/components/schemas/JuegoSummary' # Sin detalles de ListaJuego
+          description: Juegos incluidos en la lista.
+
+    TierList:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+          description: Nombre de la Tier List
+        usuario_id:
+          type: integer
+          format: int64
+          readOnly: true
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      required:
+        - id
+        - nombre
+        - usuario_id
+        - fechaCreacion
+        - fechaModificacion
+
+    TierListDetalle: # Cuando se pide una TierList específica con niveles y juegos
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/TierList'
+      properties:
+        niveles: # Los niveles ordenados de la Tier List
+          type: array
+          items:
+            type: object # Representa un NivelTier con sus juegos asociados
+            properties:
+              nivel: # Los datos del NivelTier
+                $ref: '#/components/schemas/NivelTier'
+              juegos: # Juegos en este nivel específico
+                type: array
+                items:
+                  $ref: '#/components/schemas/JuegoSummary' # Sin detalles de TierListJuego
+            required:
+              - nivel
+              - juegos
+
+    NivelTier:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        tierlist_id: # FK a la TierList a la que pertenece
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+          description: Nombre del nivel (e.g., "S", "A", "Meh")
+        orden:
+          type: integer
+          description: Posición ordinal del nivel en la lista (0=Top)
+        color:
+          type: string
+          nullable: true
+          description: Color asociado al nivel (e.g., "#FF0000")
+        descripcion:
+          type: string
+          nullable: true
+          description: Descripción opcional del nivel
+      required:
+        - id
+        - tierlist_id
+        - nombre
+        - orden
+
+    NivelTierCreate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        orden:
+          type: integer
+        color:
+          type: string
+          nullable: true
+        descripcion:
+          type: string
+          nullable: true
+      required:
+        - nombre
+        - orden
+
+    NivelTierUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        orden:
+          type: integer
+        color:
+          type: string
+          nullable: true
+        descripcion:
+          type: string
+          nullable: true
+
+    Ranking: # Ranking de un juego específico en CheckPoint
+      type: object
+      properties:
+        juego_id: # FK al Juego
+          type: integer
+          format: int64
+          readOnly: true
+        puntuacionMedia:
+          type: number
+          format: float
+          nullable: true
+          description: Puntuación media calculada de los usuarios de CheckPoint
+        numeroVotos:
+          type: integer
+          description: Número de usuarios de CheckPoint que han votado este juego
+      required:
+        - juego_id
+        - numeroVotos
+
+    RankingDetalle: # Para listas de rankings, incluye info del juego
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Ranking'
+      properties:
+        juego:
+          $ref: '#/components/schemas/JuegoSummary'
+
+    Amistad: # Schema de la entidad Amistad
+      type: object
+      properties:
+        id: # ID propio de la relación
+          type: integer
+          format: int64
+          readOnly: true
+        usuario_solicitante_id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ID del usuario que envió la solicitud
+        usuario_receptor_id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ID del usuario que recibió la solicitud
+        estado:
+          $ref: '#/components/schemas/EstadoAmistadEnum'
+        fechaCreacion:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Fecha de creación de la solicitud/relación
+        fechaModificacion:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Fecha de última actualización del estado
+        fechaEliminacion:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+      required:
+        - id
+        - usuario_solicitante_id
+        - usuario_receptor_id
+        - estado
+        - fechaCreacion
+        - fechaModificacion
+
+    AmistadDetalle: # Schema para respuestas de API que muestran info de amistad
+      type: object
+      properties:
+        amistad_id: # ID de la relación Amistad
+          type: integer
+          format: int64
+          readOnly: true
+        usuario: # Información del *otro* usuario en la relación
+          $ref: '#/components/schemas/UsuarioSummary'
+        estado:
+          $ref: '#/components/schemas/EstadoAmistadEnum'
+        fechaCreacion: # Fecha de la relación/solicitud
+          type: string
+          format: date-time
+          readOnly: true
+        rol_usuario_actual: # Indica el rol del usuario que hace la consulta en esta relación específica
+           type: string
+           enum: [solicitante, receptor]
+           readOnly: true
+           description: Rol del usuario que consulta la API en esta amistad (quien envió o recibió la solicitud original). Ayuda al frontend a mostrar acciones correctas.
+      required:
+        - amistad_id
+        - usuario
+        - estado
+        - fechaCreacion
+        - rol_usuario_actual
+
+    # --- Entidades de IGDB (Simplificadas) ---
+    Genero:
+      type: object
+      properties:
+        id: # ID de IGDB
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+      required: [id, nombre] # Asumiendo que el ID de IGDB siempre está
+
+    # MotorGrafico: (REMOVED)
+    Compania:
+      type: object
+      properties:
+        id: # ID de IGDB
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+        developer:
+          type: boolean
+        publisher:
+          type: boolean
+        porting:
+          type: boolean
+        supporting:
+          type: boolean
+      required: [id, nombre, developer, publisher, porting, supporting]
+
+    Keyword:
+      type: object
+      properties:
+        id: # ID de IGDB
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+      required: [id, nombre]
+
+    ModoJuego:
+      type: object
+      properties:
+        id: # ID de IGDB
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+      required: [id, nombre]
+
+    # PerspectivaJugador: (REMOVED)
+    Artwork:
+      type: object
+      properties:
+        id: # ID de IGDB si aplica o el nuestro
+          type: integer
+          format: int64
+          readOnly: true
+        url:
+          type: string
+          format: url
+      required: [id, url] # ID podría ser opcional si solo importa la URL
+
+    Video:
+      type: object
+      properties:
+        id: # ID de IGDB si aplica o el nuestro
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+        videoId: # ID del video en la plataforma (e.g. YouTube ID)
+          type: string
+      required: [id, nombre, videoId] # ID podría ser opcional
+
+    Web:
+      type: object
+      properties:
+        id: # ID de IGDB si aplica o el nuestro
+          type: integer
+          format: int64
+          readOnly: true
+        url:
+          type: string
+          format: url
+      required: [id, url] # ID podría ser opcional
+
+    Idioma:
+      type: object
+      properties:
+        id: # ID de IGDB si aplica o el nuestro
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string # e.g., "English", "Español"
+        tipoSoporte:
+          type: integer
+          description: "Tipo de soporte (e.g., 1: Interfaz, 2: Audio, 3: Subtítulos - definir mapeo)"
+      required: [id, nombre, tipoSoporte] # ID podría ser opcional
+
+    Tema:
+      type: object
+      properties:
+        id: # ID de IGDB
+          type: integer
+          format: int64
+          readOnly: true
+        nombre:
+          type: string
+      required: [id, nombre]
+
+    # Franquicia: (REMOVED)
+    # PlataformaIGDB: ELIMINADO
+
+    # --- Enums ---
+    TemaEnum:
+      type: string
+      enum: [CLARO, OSCURO]
+      description: Tema visual de la interfaz de usuario
+
+    VisibilidadEnum:
+      type: string
+      enum: [PUBLICO, PRIVADO, SOLO_AMIGOS]
+      description: Nivel de visibilidad del perfil del usuario
+
+    GameTypeEnum: # Según UML: JUEGO(1) DLC(2) EXPANSION(3)
+      type: integer # O string: JUEGO, DLC, EXPANSION
+      #enum: [1, 2, 3]
+      enum: [JUEGO, DLC, EXPANSION] # Usar strings suele ser más legible
+      description: "Tipo de juego (JUEGO, DLC, EXPANSION)"
+
+    StatusEnum: # Según UML
+      type: integer # O strings
+      #enum: [1, 2, 3, 4, 5, 6, 7, 8]
+      enum: [RELEASED, ALPHA, BETA, EARLY_ACCESS, OFFLINE, CANCELLED, RUMORED, DELISTED] # Usar strings
+      description: "Estado del lanzamiento del juego (RELEASED, ALPHA, BETA, etc.)"
+
+    EstadoJuegoUsuarioEnum:
+      type: string
+      enum:
+        - COMPLETADO_NO_SELECCIONAR
+        - COMPLETADO_HISTORIA
+        - COMPLETADO_HISTORIA_SECUNDARIAS
+        - COMPLETADO_100
+        - ARCHIVADO_NO_SELECCIONAR
+        - ARCHIVADO_ABANDONADO
+        - ARCHIVADO_NO_JUGANDO
+        - DESEADO
+        - JUGANDO_NO_SELECCIONAR
+        - JUGANDO_PAUSADO
+        - JUGANDO_INFINITO
+      description: Estado personal del usuario respecto a un juego.
+
+    EstadoAmistadEnum: # NUEVO ENUM
+      type: string
+      enum: [PENDIENTE, ACEPTADA, RECHAZADA, BLOQUEADA]
+      description: Estado de la relación de amistad entre dos usuarios.
+
+  securitySchemes:
+    bearerAuth: # Ejemplo de autenticación JWT
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security: # Global security, puede ser sobreescrito por operación
+  - bearerAuth: []

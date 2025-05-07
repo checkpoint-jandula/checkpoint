@@ -1,0 +1,455 @@
+-- Crear función para actualizar fechaModificacion automáticamente
+CREATE OR REPLACE FUNCTION update_fecha_modificacion_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Solo actualiza si la columna existe en la tabla que disparó el trigger
+    -- y si realmente hay un cambio en alguna columna (opcional, pero puede ser más eficiente)
+    -- IF TG_OP = 'UPDATE' AND OLD IS DISTINCT FROM NEW THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = TG_TABLE_SCHEMA AND table_name = TG_TABLE_NAME AND column_name = 'fechaModificacion') THEN
+            NEW.fechaModificacion = now();
+        END IF;
+    -- END IF;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Crear ENUM Types (Tipos Enumerados)
+-- (Se asume que se ejecutan antes que las tablas que los usan)
+-- (Si ya existen, necesitarás eliminarlos con DROP TYPE ... CASCADE o usar CREATE TYPE IF NOT EXISTS en PostgreSQL 9.6+)
+DROP TYPE IF EXISTS checkpoint_tema_enum CASCADE;
+CREATE TYPE checkpoint_tema_enum AS ENUM ('CLARO', 'OSCURO');
+
+DROP TYPE IF EXISTS checkpoint_visibilidad_enum CASCADE;
+CREATE TYPE checkpoint_visibilidad_enum AS ENUM ('PUBLICO', 'PRIVADO', 'SOLO_AMIGOS');
+
+DROP TYPE IF EXISTS checkpoint_game_type_enum CASCADE;
+CREATE TYPE checkpoint_game_type_enum AS ENUM ('JUEGO', 'DLC', 'EXPANSION');
+
+DROP TYPE IF EXISTS checkpoint_status_enum CASCADE;
+CREATE TYPE checkpoint_status_enum AS ENUM ('RELEASED', 'ALPHA', 'BETA', 'EARLY_ACCESS', 'OFFLINE', 'CANCELLED', 'RUMORED', 'DELISTED');
+
+DROP TYPE IF EXISTS checkpoint_estado_juego_usuario_enum CASCADE;
+CREATE TYPE checkpoint_estado_juego_usuario_enum AS ENUM (
+    'COMPLETADO_NO_SELECCIONAR', 'COMPLETADO_HISTORIA', 'COMPLETADO_HISTORIA_SECUNDARIAS', 'COMPLETADO_100',
+    'ARCHIVADO_NO_SELECCIONAR', 'ARCHIVADO_ABANDONADO', 'ARCHIVADO_NO_JUGANDO',
+    'DESEADO',
+    'JUGANDO_NO_SELECCIONAR', 'JUGANDO_PAUSADO', 'JUGANDO_INFINITO'
+);
+
+DROP TYPE IF EXISTS checkpoint_estado_amistad_enum CASCADE;
+CREATE TYPE checkpoint_estado_amistad_enum AS ENUM ('PENDIENTE', 'ACEPTADA', 'RECHAZADA', 'BLOQUEADA');
+
+DROP TYPE IF EXISTS checkpoint_juego_relacion_tipo_enum CASCADE;
+CREATE TYPE checkpoint_juego_relacion_tipo_enum AS ENUM ('DLC', 'EXPANSION', 'SIMILAR');
+
+
+-- === TABLAS PRINCIPALES ===
+
+CREATE TABLE IF NOT EXISTS Usuario (
+    id BIGSERIAL PRIMARY KEY,
+    publicId UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+    nombreUsuario VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    contraseña VARCHAR(255) NOT NULL, -- Hash
+    fechaRegistro TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Atributos de PerfilUsuario integrados --
+    tema checkpoint_tema_enum NOT NULL DEFAULT 'CLARO',
+    fotoPerfil TEXT, -- Ruta a la imagen
+    notificaciones BOOLEAN NOT NULL DEFAULT TRUE,
+    visibilidadPerfil checkpoint_visibilidad_enum NOT NULL DEFAULT 'PUBLICO',
+    -- Fechas de auditoría --
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS Plataforma (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb INT UNIQUE, -- ID de IGDB, puede ser NULL si es plataforma solo interna
+    nombre VARCHAR(255) NOT NULL,
+    nombreAlternativo VARCHAR(255),
+    logoUrl TEXT, -- URL
+    -- Fechas de auditoría --
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS Juego (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb BIGINT UNIQUE NOT NULL, -- ID externo IGDB
+    nombre VARCHAR(500) NOT NULL,
+    slug VARCHAR(500) UNIQUE NOT NULL,
+    gameType checkpoint_game_type_enum NOT NULL,
+    resumen TEXT,
+    historia TEXT,
+    totalRating REAL CHECK (totalRating IS NULL OR (totalRating >= 0 AND totalRating <= 100)), -- Puntuación IGDB
+    totalRatingCount INT CHECK (totalRatingCount IS NULL OR totalRatingCount >=0), -- Votos IGDB
+    fechaLanzamiento DATE,
+    coverUrl TEXT, -- URL
+    motorGrafico TEXT, -- Nombre o CSV
+    franquicia TEXT, -- Nombre
+    status checkpoint_status_enum NOT NULL,
+    -- Fechas de auditoría --
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ
+);
+
+-- === TABLAS DE DATOS RELACIONADOS A IGDB / CATÁLOGOS ===
+
+CREATE TABLE IF NOT EXISTS Genero (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb BIGINT UNIQUE NOT NULL, -- ID externo IGDB
+    nombre VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Compania (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb BIGINT UNIQUE NOT NULL, -- ID externo IGDB
+    nombre VARCHAR(255) NOT NULL,
+    developer BOOLEAN DEFAULT FALSE,
+    publisher BOOLEAN DEFAULT FALSE,
+    porting BOOLEAN DEFAULT FALSE,
+    supporting BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS Keyword (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb BIGINT UNIQUE NOT NULL, -- ID externo IGDB
+    nombre VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ModoJuego (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb BIGINT UNIQUE NOT NULL, -- ID externo IGDB
+    nombre VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Artwork (
+    id BIGSERIAL PRIMARY KEY,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    idigdb_image_id VARCHAR(255) UNIQUE, -- ID de imagen de IGDB
+    url TEXT NOT NULL -- URL
+);
+
+CREATE TABLE IF NOT EXISTS Video (
+    id BIGSERIAL PRIMARY KEY,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    idigdb_video_id VARCHAR(255) UNIQUE, -- ID de video de IGDB
+    nombre VARCHAR(255),
+    videoId VARCHAR(255) NOT NULL -- ID del video en la plataforma (ej. YouTube)
+);
+
+CREATE TABLE IF NOT EXISTS Web (
+    id BIGSERIAL PRIMARY KEY,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    idigdb_website_id BIGINT UNIQUE, -- ID de website de IGDB
+    categoria INT, -- Tipo de web según IGDB (official, wikia, wikipedia, etc.)
+    url TEXT NOT NULL, -- URL
+    trusted BOOLEAN DEFAULT FALSE -- Indicador de confianza de IGDB
+);
+
+CREATE TABLE IF NOT EXISTS Idioma (
+    id BIGSERIAL PRIMARY KEY,
+    idigdb_language_id BIGINT UNIQUE, -- ID de idioma de IGDB
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    locale VARCHAR(10) UNIQUE -- ej. 'en', 'es', 'fr'
+);
+
+CREATE TABLE IF NOT EXISTS Tema ( -- Tema de IGDB (Acción, Fantasía, etc.)
+    id BIGSERIAL PRIMARY KEY,
+    idigdb_theme_id BIGINT UNIQUE NOT NULL, -- ID de tema de IGDB
+    nombre VARCHAR(255) UNIQUE NOT NULL
+);
+
+-- === TABLAS DE RELACIÓN USUARIO-JUEGO Y OTROS DATOS CALCULADOS ===
+
+CREATE TABLE IF NOT EXISTS JuegoUsuario (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL REFERENCES Usuario(id) ON DELETE CASCADE,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    plataforma_id BIGINT REFERENCES Plataforma(id) ON DELETE SET NULL, -- Referencia a nuestra tabla Plataforma
+    estado checkpoint_estado_juego_usuario_enum NOT NULL DEFAULT 'DESEADO',
+    posesion BOOLEAN NOT NULL DEFAULT FALSE,
+    puntuacion REAL CHECK (puntuacion IS NULL OR (puntuacion >= 0 AND puntuacion <= 10)), -- Ajusta el rango si es necesario (ej. 0-5 estrellas)
+    comentario TEXT,
+    comentarioPrivado TEXT,
+    fechaInicio DATE,
+    fechaFin DATE,
+    duracionHistoria REAL CHECK (duracionHistoria IS NULL OR duracionHistoria >= 0), -- Horas
+    duracionHistoriaSecundarias REAL CHECK (duracionHistoriaSecundarias IS NULL OR duracionHistoriaSecundarias >= 0), -- Horas
+    duracionCompletista REAL CHECK (duracionCompletista IS NULL OR duracionCompletista >= 0), -- Horas
+    importado BOOLEAN NOT NULL DEFAULT FALSE,
+    -- Fechas de auditoría --
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ,
+    UNIQUE (usuario_id, juego_id) -- Un usuario solo tiene una entrada por juego
+);
+
+CREATE TABLE IF NOT EXISTS DuracionJuego (
+    id_duracion BIGSERIAL PRIMARY KEY,
+    juego_id BIGINT UNIQUE NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    mediaHistoria REAL CHECK (mediaHistoria IS NULL OR mediaHistoria >= 0),
+    mediaHistoriaSecundarias REAL CHECK (mediaHistoriaSecundarias IS NULL OR mediaHistoriaSecundarias >= 0),
+    mediaCompletista REAL CHECK (mediaCompletista IS NULL OR mediaCompletista >= 0),
+    numeroUsuarios INT NOT NULL DEFAULT 0 CHECK (numeroUsuarios >= 0),
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- Se actualiza cuando se recalculan las medias
+);
+
+CREATE TABLE IF NOT EXISTS Ranking (
+    juego_id BIGINT PRIMARY KEY REFERENCES Juego(id) ON DELETE CASCADE, -- PK es juego_id (Relación 1:1)
+    puntuacionMedia REAL CHECK (puntuacionMedia IS NULL OR (puntuacionMedia >= 0 AND puntuacionMedia <= 10)), -- Puntuación media de CheckPoint
+    numeroVotos INT NOT NULL DEFAULT 0 CHECK (numeroVotos >= 0),
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP -- Se actualiza cuando cambian votos/puntuaciones
+);
+
+-- === LISTAS Y TIER LISTS ===
+
+CREATE TABLE IF NOT EXISTS Lista (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL REFERENCES Usuario(id) ON DELETE CASCADE,
+    nombre VARCHAR(255) NOT NULL,
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS TierList (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL REFERENCES Usuario(id) ON DELETE CASCADE,
+    nombre VARCHAR(255) NOT NULL,
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fechaEliminacion TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS NivelTier (
+    id BIGSERIAL PRIMARY KEY,
+    tierlist_id BIGINT NOT NULL REFERENCES TierList(id) ON DELETE CASCADE,
+    nombre VARCHAR(100) NOT NULL,
+    orden INT NOT NULL CHECK (orden >= 0),
+    color VARCHAR(7) CHECK (color IS NULL OR color ~ '^#[A-Fa-f0-9]{6}$'), -- Validar formato Hex
+    descripcion TEXT,
+    UNIQUE (tierlist_id, nombre), -- Nombre único por TierList
+    UNIQUE (tierlist_id, orden) -- Orden único por TierList
+);
+
+-- === TABLAS INTERMEDIAS (JUNCTION TABLES) PARA RELACIONES N:M ===
+
+CREATE TABLE IF NOT EXISTS JuegoGenero (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    genero_id BIGINT NOT NULL REFERENCES Genero(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, genero_id)
+);
+
+CREATE TABLE IF NOT EXISTS JuegoCompania (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    compania_id BIGINT NOT NULL REFERENCES Compania(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, compania_id)
+);
+
+CREATE TABLE IF NOT EXISTS JuegoKeyword (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    keyword_id BIGINT NOT NULL REFERENCES Keyword(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, keyword_id)
+);
+
+CREATE TABLE IF NOT EXISTS JuegoModoJuego (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    modojuego_id BIGINT NOT NULL REFERENCES ModoJuego(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, modojuego_id)
+);
+
+CREATE TABLE IF NOT EXISTS JuegoIdiomaSoporte (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    idioma_id BIGINT NOT NULL REFERENCES Idioma(id) ON DELETE CASCADE,
+    tipoSoporte INT NOT NULL, -- 1=Interfaz, 2=Audio, 3=Subtítulos
+    PRIMARY KEY (juego_id, idioma_id, tipoSoporte)
+);
+
+CREATE TABLE IF NOT EXISTS JuegoTema (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    tema_id BIGINT NOT NULL REFERENCES Tema(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, tema_id)
+);
+
+-- NUEVA TABLA DE UNIÓN Juego <-> Plataforma (interna)
+CREATE TABLE IF NOT EXISTS JuegoPlataforma (
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    plataforma_id BIGINT NOT NULL REFERENCES Plataforma(id) ON DELETE CASCADE,
+    PRIMARY KEY (juego_id, plataforma_id)
+);
+
+-- TABLA DE UNIÓN PARA RELACIONES Juego <-> Juego (DLC, Expansión, Similar)
+CREATE TABLE IF NOT EXISTS JuegoRelacion (
+    juego_origen_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE, -- Ej: Juego Base
+    juego_destino_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE, -- Ej: DLC, Expansión, Juego Similar
+    tipo_relacion checkpoint_juego_relacion_tipo_enum NOT NULL, -- 'DLC', 'EXPANSION', 'SIMILAR'
+    PRIMARY KEY (juego_origen_id, juego_destino_id, tipo_relacion),
+    CHECK (juego_origen_id <> juego_destino_id)
+);
+
+CREATE TABLE IF NOT EXISTS ListaJuego (
+    lista_id BIGINT NOT NULL REFERENCES Lista(id) ON DELETE CASCADE,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Fecha en que se añadió a la lista
+    PRIMARY KEY (lista_id, juego_id)
+);
+
+CREATE TABLE IF NOT EXISTS TierListJuego (
+    tierlist_id BIGINT NOT NULL REFERENCES TierList(id) ON DELETE CASCADE,
+    juego_id BIGINT NOT NULL REFERENCES Juego(id) ON DELETE CASCADE,
+    nivelTier_id BIGINT NOT NULL REFERENCES NivelTier(id) ON DELETE CASCADE, -- Nivel asignado
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Fecha en que se añadió/movió a este nivel
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Para registrar cambios de nivel
+    UNIQUE (tierlist_id, juego_id), -- Un juego solo puede estar una vez por tierlist
+    PRIMARY KEY (tierlist_id, juego_id) -- O usar un ID propio si se prefiere y quitar el UNIQUE
+);
+
+-- TABLA AMISTAD MODIFICADA CON ESTADO
+CREATE TABLE IF NOT EXISTS Amistad (
+    id BIGSERIAL PRIMARY KEY, -- Usar un ID propio facilita referencias y modificaciones
+    usuario_solicitante_id BIGINT NOT NULL REFERENCES Usuario(id) ON DELETE CASCADE,
+    usuario_receptor_id BIGINT NOT NULL REFERENCES Usuario(id) ON DELETE CASCADE,
+    estado checkpoint_estado_amistad_enum NOT NULL DEFAULT 'PENDIENTE',
+    fechaCreacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Fecha de creación solicitud/relación
+    fechaModificacion TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Fecha de actualización de estado
+    fechaEliminacion TIMESTAMPTZ,
+    UNIQUE (usuario_solicitante_id, usuario_receptor_id), -- Evita solicitudes duplicadas en la misma dirección
+    CHECK (usuario_solicitante_id <> usuario_receptor_id)
+);
+
+-- === TRIGGERS para actualizar fechaModificacion ===
+
+-- Crear Triggers si no existen
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_usuario_modtime' AND tgrelid = 'usuario'::regclass) THEN
+        CREATE TRIGGER update_usuario_modtime BEFORE UPDATE ON Usuario FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_plataforma_modtime' AND tgrelid = 'plataforma'::regclass) THEN
+        CREATE TRIGGER update_plataforma_modtime BEFORE UPDATE ON Plataforma FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_juego_modtime' AND tgrelid = 'juego'::regclass) THEN
+        CREATE TRIGGER update_juego_modtime BEFORE UPDATE ON Juego FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_juegousuario_modtime' AND tgrelid = 'juegousuario'::regclass) THEN
+        CREATE TRIGGER update_juegousuario_modtime BEFORE UPDATE ON JuegoUsuario FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_lista_modtime' AND tgrelid = 'lista'::regclass) THEN
+        CREATE TRIGGER update_lista_modtime BEFORE UPDATE ON Lista FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_tierlist_modtime' AND tgrelid = 'tierlist'::regclass) THEN
+        CREATE TRIGGER update_tierlist_modtime BEFORE UPDATE ON TierList FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_tierlistjuego_modtime' AND tgrelid = 'tierlistjuego'::regclass) THEN
+        CREATE TRIGGER update_tierlistjuego_modtime BEFORE UPDATE ON TierListJuego FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_amistad_modtime' AND tgrelid = 'amistad'::regclass) THEN
+        CREATE TRIGGER update_amistad_modtime BEFORE UPDATE ON Amistad FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_duracionjuego_modtime' AND tgrelid = 'duracionjuego'::regclass) THEN
+        CREATE TRIGGER update_duracionjuego_modtime BEFORE UPDATE ON DuracionJuego FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_ranking_modtime' AND tgrelid = 'ranking'::regclass) THEN
+        CREATE TRIGGER update_ranking_modtime BEFORE UPDATE ON Ranking FOR EACH ROW EXECUTE FUNCTION update_fecha_modificacion_column();
+    END IF;
+END $$;
+
+-- === ÍNDICES ADICIONALES ===
+
+-- Índices para Usuario
+CREATE INDEX IF NOT EXISTS idx_usuario_email ON Usuario(email);
+CREATE INDEX IF NOT EXISTS idx_usuario_nombreusuario ON Usuario(nombreUsuario);
+CREATE INDEX IF NOT EXISTS idx_usuario_fechaeliminacion ON Usuario(fechaEliminacion);
+CREATE INDEX IF NOT EXISTS idx_usuario_tema ON Usuario(tema);
+CREATE INDEX IF NOT EXISTS idx_usuario_visibilidadperfil ON Usuario(visibilidadPerfil);
+
+-- Índices para Plataforma
+CREATE INDEX IF NOT EXISTS idx_plataforma_idigdb ON Plataforma(idigdb);
+CREATE INDEX IF NOT EXISTS idx_plataforma_nombre ON Plataforma(nombre);
+
+-- Índices para Juego
+CREATE INDEX IF NOT EXISTS idx_juego_idigdb ON Juego(idigdb);
+CREATE INDEX IF NOT EXISTS idx_juego_slug ON Juego(slug);
+CREATE INDEX IF NOT EXISTS idx_juego_nombre ON Juego(nombre);
+CREATE INDEX IF NOT EXISTS idx_juego_fechalanzamiento ON Juego(fechaLanzamiento);
+CREATE INDEX IF NOT EXISTS idx_juego_gametype ON Juego(gameType);
+CREATE INDEX IF NOT EXISTS idx_juego_status ON Juego(status);
+CREATE INDEX IF NOT EXISTS idx_juego_motor_grafico ON Juego(motorGrafico);
+CREATE INDEX IF NOT EXISTS idx_juego_franquicia ON Juego(franquicia);
+
+-- Índices para Tablas de Catálogo (Genero, Compania, etc.)
+CREATE INDEX IF NOT EXISTS idx_genero_idigdb ON Genero(idigdb);
+CREATE INDEX IF NOT EXISTS idx_compania_idigdb ON Compania(idigdb);
+CREATE INDEX IF NOT EXISTS idx_keyword_idigdb ON Keyword(idigdb);
+CREATE INDEX IF NOT EXISTS idx_modojuego_idigdb ON ModoJuego(idigdb);
+CREATE INDEX IF NOT EXISTS idx_idioma_idigdb ON Idioma(idigdb_language_id);
+CREATE INDEX IF NOT EXISTS idx_tema_idigdb ON Tema(idigdb_theme_id);
+
+-- Índices para Tablas Relacionadas a Juego (Artwork, Video, Web)
+CREATE INDEX IF NOT EXISTS idx_artwork_juegoid ON Artwork(juego_id);
+CREATE INDEX IF NOT EXISTS idx_video_juegoid ON Video(juego_id);
+CREATE INDEX IF NOT EXISTS idx_web_juegoid ON Web(juego_id);
+
+-- Índices para JuegoUsuario
+CREATE INDEX IF NOT EXISTS idx_juegousuario_usuarioid ON JuegoUsuario(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_juegousuario_juegoid ON JuegoUsuario(juego_id);
+CREATE INDEX IF NOT EXISTS idx_juegousuario_plataformaid ON JuegoUsuario(plataforma_id);
+CREATE INDEX IF NOT EXISTS idx_juegousuario_estado ON JuegoUsuario(estado);
+CREATE INDEX IF NOT EXISTS idx_juegousuario_puntuacion ON JuegoUsuario(puntuacion);
+
+-- Índices para DuracionJuego y Ranking
+CREATE INDEX IF NOT EXISTS idx_ranking_puntuacionmedia ON Ranking(puntuacionMedia);
+
+-- Índices para Listas y TierLists
+CREATE INDEX IF NOT EXISTS idx_lista_usuarioid ON Lista(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_tierlist_usuarioid ON TierList(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_niveltier_tierlistid ON NivelTier(tierlist_id);
+
+-- Índices para Tablas de Unión (Junction Tables)
+CREATE INDEX IF NOT EXISTS idx_juegogenero_generoid ON JuegoGenero(genero_id);
+CREATE INDEX IF NOT EXISTS idx_juegocompania_companiaid ON JuegoCompania(compania_id);
+CREATE INDEX IF NOT EXISTS idx_juegokeyword_keywordid ON JuegoKeyword(keyword_id);
+CREATE INDEX IF NOT EXISTS idx_juegomodojuego_modojuegoid ON JuegoModoJuego(modojuego_id);
+CREATE INDEX IF NOT EXISTS idx_juegoidiomasoporte_idiomaid ON JuegoIdiomaSoporte(idioma_id);
+CREATE INDEX IF NOT EXISTS idx_juegotema_temaid ON JuegoTema(tema_id);
+CREATE INDEX IF NOT EXISTS idx_juegoplataforma_plataformaid ON JuegoPlataforma(plataforma_id);
+CREATE INDEX IF NOT EXISTS idx_juegorelacion_juegodestinoid ON JuegoRelacion(juego_destino_id);
+CREATE INDEX IF NOT EXISTS idx_juegorelacion_tiporelacion ON JuegoRelacion(tipo_relacion);
+CREATE INDEX IF NOT EXISTS idx_listajuego_juegoid ON ListaJuego(juego_id);
+CREATE INDEX IF NOT EXISTS idx_tierlistjuego_juegoid ON TierListJuego(juego_id);
+CREATE INDEX IF NOT EXISTS idx_tierlistjuego_niveltierid ON TierListJuego(nivelTier_id);
+
+-- Índices para Amistad (Actualizados)
+CREATE INDEX IF NOT EXISTS idx_amistad_solicitante ON Amistad(usuario_solicitante_id);
+CREATE INDEX IF NOT EXISTS idx_amistad_receptor ON Amistad(usuario_receptor_id);
+CREATE INDEX IF NOT EXISTS idx_amistad_estado ON Amistad(estado);
