@@ -44,9 +44,9 @@ public class User {
     @CreationTimestamp
     private OffsetDateTime fechaRegistro; // Campo Java: fechaRegistro, Columna BBDD: fecha_registro
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tema", nullable = false, columnDefinition = "checkpoint_tema_enum DEFAULT 'CLARO'")
-    private TemaEnum tema = TemaEnum.CLARO; // Campo Java: tema, Columna BBDD: tema
+    @Enumerated(EnumType.STRING) // Correcto para guardar/leer como VARCHAR
+    @Column(name = "tema", nullable = false, length = 50) // Eliminado columnDefinition, añadido length
+    private TemaEnum tema = TemaEnum.CLARO;
 
     @Column(name = "foto_perfil", columnDefinition = "TEXT")
     private String fotoPerfil; // Campo Java: fotoPerfil, Columna BBDD: foto_perfil
@@ -54,9 +54,9 @@ public class User {
     @Column(name = "notificaciones", nullable = false)
     private Boolean notificaciones = true; // Campo Java: notificaciones, Columna BBDD: notificaciones
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "visibilidad_perfil", nullable = false, columnDefinition = "checkpoint_visibilidad_enum DEFAULT 'PUBLICO'")
-    private VisibilidadEnum visibilidadPerfil = VisibilidadEnum.PUBLICO; // Campo Java: visibilidadPerfil, Columna BBDD: visibilidad_perfil
+    @Enumerated(EnumType.STRING) // Correcto para guardar/leer como VARCHAR
+    @Column(name = "visibilidad_perfil", nullable = false, length = 50)
+    private VisibilidadEnum visibilidadPerfil = VisibilidadEnum.PUBLICO;
 
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @CreationTimestamp
