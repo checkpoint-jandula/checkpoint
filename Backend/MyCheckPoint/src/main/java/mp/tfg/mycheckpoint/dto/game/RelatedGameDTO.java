@@ -1,24 +1,23 @@
 package mp.tfg.mycheckpoint.dto.game;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mp.tfg.mycheckpoint.dto.enums.GameTypeEnum;
 
-import java.time.LocalDate;
-
+// DTO simple para representar DLCs, Expansiones, Juegos Similares
 @Data
+@Builder // Builder puede ser útil aquí
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameSummaryDTO { // Resumen REAL
-
+public class RelatedGameDTO {
     @JsonProperty("id")
-    private Long id; // ID interno
+    private Long id; // ID interno del juego relacionado
 
     @JsonProperty("id_igdb")
-    private Long idigdb; // ID IGDB
+    private Long idigdb; // ID de IGDB
 
     @JsonProperty("nombre")
     private String nombre;
@@ -29,14 +28,10 @@ public class GameSummaryDTO { // Resumen REAL
     @JsonProperty("cover_url")
     private String coverUrl;
 
-    @JsonProperty("fecha_lanzamiento")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate fechaLanzamiento;
-
     @JsonProperty("game_type")
-    private GameTypeEnum gameType;
+    private GameTypeEnum gameType; // Para saber si es DLC, EXPANSION, etc.
 
-    // Podrías añadir total_rating si lo consideras parte del resumen
+    // Podrías añadir más campos si son necesarios, como total_rating
     @JsonProperty("total_rating")
     private Float totalRating;
 }
