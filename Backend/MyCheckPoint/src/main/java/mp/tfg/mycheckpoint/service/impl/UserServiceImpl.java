@@ -21,19 +21,20 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    // private final PasswordEncoder passwordEncoder; // Se inyectará en Módulo 2
+    private final PasswordEncoder passwordEncoder; // Asumiendo que ya has añadido BCrypt
 
     @Autowired
-    // Ajustar constructor cuando se añada PasswordEncoder
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper /*, PasswordEncoder passwordEncoder */) {
+    // Añadir PasswordEncoder al constructor para la inyección de dependencias
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        // this.passwordEncoder = passwordEncoder; // Para Módulo 2
+        this.passwordEncoder = passwordEncoder;  // Asignar el bean inyectado
     }
 
     @Override
-    @Transactional // Buena práctica para operaciones que modifican datos
+    @Transactional
     public UserDTO createUser(UserCreateDTO userCreateDTO) {
+        // Validaciones de duplicados (igual que antes)
         if (userRepository.existsByEmail(userCreateDTO.getEmail())) {
             throw new DuplicateEntryException("El email '" + userCreateDTO.getEmail() + "' ya está registrado.");
         }
@@ -41,27 +42,20 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateEntryException("El nombre de usuario '" + userCreateDTO.getNombreUsuario() + "' ya está en uso.");
         }
 
+        // Mapear DTO a Entidad. Los campos tema, notificaciones, visibilidadPerfil
+        // tomarán los defaults de la entidad User.
         User userEntity = userMapper.toEntity(userCreateDTO);
 
-        // --- ESTO SE MODIFICARÁ EN EL MÓDULO 2 PARA HASHEAR LA CONTRASEÑA ---
-        // userEntity.setContraseña(passwordEncoder.encode(userCreateDTO.getContraseña()));
-        // Por ahora, para el Módulo 1, la guardamos tal cual (NO SEGURO PARA PRODUCCIÓN)
-        userEntity.setContraseña(userCreateDTO.getContraseña()); // ¡TEMPORAL!
-        // --------------------------------------------------------------------
+        // --- Hashear la contraseña (IMPORTANTE - Módulo 2) ---
+        userEntity.setContraseña(passwordEncoder.encode(userCreateDTO.getContraseña()));
+        // ----------------------------------------------------
 
-
-        // Asignar defaults si son null en el DTO y no se mapearon con @Mapping(defaultValue) en MapStruct
-        // o si los defaults de la entidad no se aplicaron correctamente (Lombok @Builder puede ayudar aquí)
-        if (userEntity.getTema() == null && userCreateDTO.getTema() == null) {
-            userEntity.setTema(mp.tfg.mycheckpoint.dto.enums.TemaEnum.CLARO); // Default de la entidad
-        }
-        if (userEntity.getNotificaciones() == null && userCreateDTO.getNotificaciones() == null) {
-            userEntity.setNotificaciones(true); // Default de la entidad
-        }
-        if (userEntity.getVisibilidadPerfil() == null && userCreateDTO.getVisibilidadPerfil() == null) {
-            userEntity.setVisibilidadPerfil(mp.tfg.mycheckpoint.dto.enums.VisibilidadEnum.PUBLICO); // Default de la entidad
-        }
-
+        // --- LÓGICA ELIMINADA ---
+        // Ya no es necesario asignar defaults aquí, se hace en la entidad
+        // if (userEntity.getTema() == null) { ... }
+        // if (userEntity.getNotificaciones() == null) { ... }
+        // if (userEntity.getVisibilidadPerfil() == null) { ... }
+        // --- FIN LÓGICA ELIMINADA ---
 
         User savedUser = userRepository.save(userEntity);
         return userMapper.toDto(savedUser);
