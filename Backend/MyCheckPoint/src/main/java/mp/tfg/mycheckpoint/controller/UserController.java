@@ -3,11 +3,16 @@ package mp.tfg.mycheckpoint.controller;
 import jakarta.validation.Valid;
 import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
 import mp.tfg.mycheckpoint.dto.user.UserDTO;
+import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
+import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Importar para obtener detalles del Principal
 import mp.tfg.mycheckpoint.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication; // Importar para obtener el principal
+import org.springframework.security.core.context.SecurityContextHolder; // Importar para obtener el contexto
+// import org.springframework.security.access.prepost.PreAuthorize; // Opcional para autorización a nivel de método
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -49,5 +54,50 @@ public class UserController {
         return userService.getUserByPublicId(publicId)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con Public ID: " + publicId));
+    }
+
+    // GET /api/v1/usuarios/me - Obtener detalles del usuario autenticado actual
+    // Este endpoint debe estar protegido y solo accesible si hay un token JWT válido
+    @GetMapping("/me")
+    // @PreAuthorize("isAuthenticated()") // Otra forma de asegurar que está autenticado, si @EnableMethodSecurity está activo
+    public ResponseEntity<UserDTO> getCurrentAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            // Esto no debería pasar si el JwtAuthenticationFilter funciona y SecurityConfig protege el endpoint.
+            // Pero es una comprobación defensiva.
+            // Devolver 401 si no hay un usuario autenticado correctamente (aunque el filtro debería haberlo hecho).
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String userEmail = userDetails.getEmail(); // O getUsername() si es lo que usas como identificador principal
+
+        // Usamos el servicio para obtener el UserDTO completo basado en el email (o el ID si lo prefieres)
+        return userService.getUserByEmail(userEmail)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado en la base de datos con email: " + userEmail));
+    }
+
+
+
+    // --- NUEVO ENDPOINT PUT /me ---
+    // PUT /api/v1/usuarios/me - Actualizar perfil del usuario autenticado actual
+    @PutMapping("/me")
+    // @PreAuthorize("isAuthenticated()") // Ya protegido por .anyRequest().authenticated() en SecurityConfig
+    public ResponseEntity<UserDTO> updateCurrentUserProfile(@Valid @RequestBody UserProfileUpdateDTO profileUpdateDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // No es estrictamente necesario volver a verificar authentication si el endpoint ya está protegido
+        // y JwtAuthenticationFilter funciona, pero no hace daño.
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Debería ser manejado por el filtro/entrypoint
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String userEmail = userDetails.getEmail(); // O getUsername()
+
+        UserDTO updatedUser = userService.updateUserProfile(userEmail, profileUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
     }
 }

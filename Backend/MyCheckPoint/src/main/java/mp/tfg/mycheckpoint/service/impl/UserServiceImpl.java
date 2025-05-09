@@ -2,6 +2,7 @@ package mp.tfg.mycheckpoint.service.impl;
 
 import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
 import mp.tfg.mycheckpoint.dto.user.UserDTO;
+import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.exception.DuplicateEntryException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
@@ -73,5 +74,32 @@ public class UserServiceImpl implements UserService {
     public Optional<UserDTO> getUserByPublicId(UUID publicId) {
         return userRepository.findByPublicId(publicId)
                 .map(userMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserDTO> getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(userMapper::toDto);
+    }
+
+
+    @Override
+    @Transactional // Operación de escritura, necesita transacción
+    public UserDTO updateUserProfile(String userEmail, UserProfileUpdateDTO profileUpdateDTO) {
+        // 1. Encontrar la entidad User existente
+        User userEntity = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + userEmail + " para actualizar perfil."));
+
+        // 2. Usar el mapper para aplicar los cambios del DTO a la entidad existente
+        //    MapStruct solo actualizará los campos no nulos del DTO.
+        userMapper.updateProfileFromDto(profileUpdateDTO, userEntity);
+
+        // 3. Guardar la entidad actualizada.
+        //    La fecha_modificacion debería actualizarse automáticamente por @UpdateTimestamp o el trigger.
+        User updatedUser = userRepository.save(userEntity);
+
+        // 4. Devolver el DTO del usuario actualizado
+        return userMapper.toDto(updatedUser);
     }
 }
