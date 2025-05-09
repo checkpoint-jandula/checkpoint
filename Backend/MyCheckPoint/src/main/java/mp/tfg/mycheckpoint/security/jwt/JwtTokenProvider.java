@@ -1,6 +1,6 @@
 package mp.tfg.mycheckpoint.security.jwt;
 
-import io.jsonwebtoken.*; // Asegúrate que este import está
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -36,10 +36,10 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .subject(userPrincipal.getUsername()) // Correcto para jjwt 0.11.x+
-                .issuedAt(now)                      // Correcto para jjwt 0.11.x+
-                .expiration(expiryDate)             // Correcto para jjwt 0.11.x+
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // Usando SignatureAlgorithm directamente
+                .subject(userPrincipal.getUsername())
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey(), Jwts.SIG.HS512) // Usando Jwts.SIG
                 .compact();
     }
 
@@ -48,29 +48,28 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .subject(username) // Correcto
-                .issuedAt(now)     // Correcto
-                .expiration(expiryDate) // Correcto
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // Usando SignatureAlgorithm directamente
+                .subject(username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey(), Jwts.SIG.HS512) // Usando Jwts.SIG
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parser()
-                .verifyWith(getSigningKey()) // Correcto para jjwt 0.11.x+
+                .verifyWith(getSigningKey())
                 .build()
-                .parseSignedClaims(token)    // Correcto para jjwt 0.11.x+
-                .getPayload();               // Correcto para jjwt 0.11.x+
-
+                .parseSignedClaims(token)
+                .getPayload();
         return claims.getSubject();
     }
 
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser()
-                    .verifyWith(getSigningKey()) // Correcto
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseSignedClaims(authToken); // Correcto
+                    .parseSignedClaims(authToken);
             return true;
         } catch (SignatureException ex) {
             logger.error("Firma del token JWT inválida: {}", ex.getMessage());
