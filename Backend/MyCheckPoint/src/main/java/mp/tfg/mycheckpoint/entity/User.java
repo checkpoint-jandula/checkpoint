@@ -40,6 +40,9 @@ public class User {
     @Column(name = "contraseña", nullable = false, length = 255)
     private String contraseña; // Campo Java: contraseña, Columna BBDD: contraseña
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false; // Por defecto, no verificado
+
     @Column(name = "fecha_registro", nullable = false, updatable = false)
     @CreationTimestamp
     private OffsetDateTime fechaRegistro; // Campo Java: fechaRegistro, Columna BBDD: fecha_registro

@@ -13,4 +13,5 @@ public interface UserService {
     Optional<UserDTO> getUserByPublicId(UUID publicId); // Para API pública
     Optional<UserDTO> getUserByEmail(String email);
     UserDTO updateUserProfile(String userEmail, UserProfileUpdateDTO profileUpdateDTO);
+    String confirmEmailVerification(String token); // Devuelve un mensaje de éxito/error
 }
