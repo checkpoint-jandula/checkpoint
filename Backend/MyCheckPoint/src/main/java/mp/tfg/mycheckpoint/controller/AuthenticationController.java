@@ -3,6 +3,8 @@ package mp.tfg.mycheckpoint.controller;
 import jakarta.validation.Valid;
 import mp.tfg.mycheckpoint.dto.auth.JwtResponseDTO;
 import mp.tfg.mycheckpoint.dto.auth.LoginRequestDTO;
+import mp.tfg.mycheckpoint.dto.user.ForgotPasswordDTO;
+import mp.tfg.mycheckpoint.dto.user.ResetPasswordDTO;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Para obtener el principal
 import mp.tfg.mycheckpoint.security.jwt.JwtTokenProvider;
@@ -84,4 +86,38 @@ public class AuthenticationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Object> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
+        try {
+            userService.processForgotPassword(forgotPasswordDTO);
+            // Siempre devolver una respuesta genérica para no revelar si un email existe en el sistema
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message",
+                    "Si tu dirección de correo electrónico está registrada, recibirás un enlace para restablecer tu contraseña."));
+        } catch (Exception e) {
+            // Loguear el error pero devolver respuesta genérica
+            logger.error("Error inesperado durante el proceso de forgot-password para email {}: {}", forgotPasswordDTO.getEmail(), e.getMessage(), e);
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message",
+                    "Si tu dirección de correo electrónico está registrada, recibirás un enlace para restablecer tu contraseña."));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Object> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        try {
+            String resultMessage = userService.processResetPassword(resetPasswordDTO);
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", resultMessage));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error inesperado durante el proceso de reset-password para token {}: {}", resetPasswordDTO.getToken(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al restablecer la contraseña."));
+        }
+    }
+
 }

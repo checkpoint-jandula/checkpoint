@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/public/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/auth/confirm-account").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
                         // Endpoints de Juegos
                         .requestMatchers(HttpMethod.GET, "/api/juegos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/juegos/igdb/**").permitAll()

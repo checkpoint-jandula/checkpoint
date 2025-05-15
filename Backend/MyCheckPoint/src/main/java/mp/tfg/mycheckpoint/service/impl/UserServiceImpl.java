@@ -1,19 +1,20 @@
 package mp.tfg.mycheckpoint.service.impl;
 
-import mp.tfg.mycheckpoint.dto.user.PasswordChangeDTO;
-import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
-import mp.tfg.mycheckpoint.dto.user.UserDTO;
-import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
+import mp.tfg.mycheckpoint.dto.user.*;
+import mp.tfg.mycheckpoint.entity.PasswordResetToken;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.entity.VerificationToken;
 import mp.tfg.mycheckpoint.event.OnRegistrationCompleteEvent;
 import mp.tfg.mycheckpoint.exception.DuplicateEntryException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.mapper.UserMapper;
+import mp.tfg.mycheckpoint.repository.PasswordResetTokenRepository;
 import mp.tfg.mycheckpoint.repository.UserRepository;
 import mp.tfg.mycheckpoint.repository.VerificationTokenRepository;
 import mp.tfg.mycheckpoint.service.EmailService;
 import mp.tfg.mycheckpoint.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,20 +36,24 @@ public class UserServiceImpl implements UserService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final EmailService emailService;
     private final ApplicationEventPublisher eventPublisher; // Para desacoplar el envío de email
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class); // <-- AÑADIR ESTA LÍNEA
 
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
                            PasswordEncoder passwordEncoder,
-                           VerificationTokenRepository verificationTokenRepository, /* Añadir */
-                           EmailService emailService,  /* Añadir */
-                           ApplicationEventPublisher eventPublisher /* Añadir */) {
+                           VerificationTokenRepository verificationTokenRepository,
+                           PasswordResetTokenRepository passwordResetTokenRepository, /* Añadir */
+                           EmailService emailService,
+                           ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
-        this.verificationTokenRepository = verificationTokenRepository; // Asignar
-        this.emailService = emailService; // Asignar
-        this.eventPublisher = eventPublisher; // Asignar
+        this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository; // Asignar
+        this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -200,5 +206,77 @@ public class UserServiceImpl implements UserService {
         //   Por simplicidad, se suele confiar en la expiración natural del token.
         // - Enviar un correo de notificación al usuario indicando que su contraseña ha sido cambiada.
         //   (Podrías usar tu EmailService para esto).
+    }
+
+    @Override
+    @Transactional
+    public void processForgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
+        Optional<User> userOptional = userRepository.findByEmail(forgotPasswordDTO.getEmail());
+
+        if (userOptional.isEmpty()) {
+            // No revelar si el email existe o no por seguridad. Simplemente loguear.
+            logger.warn("Solicitud de reseteo de contraseña para email no existente: {}", forgotPasswordDTO.getEmail());
+            // Podrías optar por no hacer nada o enviar una respuesta genérica si esto fuera un endpoint que devuelve algo.
+            // Como es void y el controlador responderá, aquí solo retornamos.
+            return;
+        }
+
+        User user = userOptional.get();
+
+        // Opcional: Invalidar tokens de reseteo anteriores para este usuario
+        passwordResetTokenRepository.findByUserAndUsedFalseAndExpiryDateAfter(user, OffsetDateTime.now())
+                .ifPresent(existingToken -> {
+                    existingToken.setUsed(true); // Marcar como usado o eliminarlo
+                    passwordResetTokenRepository.save(existingToken);
+                    // o passwordResetTokenRepository.delete(existingToken);
+                });
+
+
+        PasswordResetToken passwordResetToken = new PasswordResetToken(user);
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        // Considera usar un evento también aquí si el envío de email puede fallar y no quieres revertir
+        emailService.sendPasswordResetEmail(user, passwordResetToken.getToken());
+    }
+
+    @Override
+    @Transactional
+    public String processResetPassword(ResetPasswordDTO resetPasswordDTO) {
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(resetPasswordDTO.getToken())
+                .orElseThrow(() -> new ResourceNotFoundException("Token de restablecimiento de contraseña inválido o no encontrado."));
+
+        if (passwordResetToken.isUsed()) {
+            throw new IllegalStateException("Este token de restablecimiento ya ha sido utilizado.");
+        }
+        if (passwordResetToken.isExpired()) {
+            passwordResetTokenRepository.delete(passwordResetToken); // Limpiar token expirado
+            throw new IllegalStateException("El token de restablecimiento ha expirado. Por favor, solicita uno nuevo.");
+        }
+
+        User user = passwordResetToken.getUser();
+
+        // (Opcional) Verificar si la nueva contraseña y su confirmación coinciden
+    /*
+    if (StringUtils.hasText(resetPasswordDTO.getConfirmarNuevaContraseña()) &&
+        !resetPasswordDTO.getNuevaContraseña().equals(resetPasswordDTO.getConfirmarNuevaContraseña())) {
+        throw new IllegalArgumentException("La nueva contraseña y su confirmación no coinciden.");
+    }
+    */
+
+        // Verificar que la nueva contraseña no sea la misma que la actual (si el usuario recuerda la actual por casualidad)
+        if (passwordEncoder.matches(resetPasswordDTO.getNuevaContraseña(), user.getContraseña())) {
+            throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la contraseña actual.");
+        }
+
+        user.setContraseña(passwordEncoder.encode(resetPasswordDTO.getNuevaContraseña()));
+        userRepository.save(user);
+
+        passwordResetToken.setUsed(true);
+        passwordResetTokenRepository.save(passwordResetToken); // Marcar como usado (o eliminarlo)
+
+        // Opcional: Enviar email de confirmación de cambio de contraseña
+        // emailService.sendPasswordChangedConfirmationEmail(user);
+
+        return "Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.";
     }
 }

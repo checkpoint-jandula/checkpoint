@@ -1,9 +1,6 @@
 package mp.tfg.mycheckpoint.service;
 
-import mp.tfg.mycheckpoint.dto.user.PasswordChangeDTO;
-import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
-import mp.tfg.mycheckpoint.dto.user.UserDTO;
-import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
+import mp.tfg.mycheckpoint.dto.user.*;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -16,4 +13,6 @@ public interface UserService {
     UserDTO updateUserProfile(String userEmail, UserProfileUpdateDTO profileUpdateDTO);
     String confirmEmailVerification(String token); // Devuelve un mensaje de éxito/error
     void changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO); // <-- NUEVO MÉTODO
+    void processForgotPassword(ForgotPasswordDTO forgotPasswordDTO);
+    String processResetPassword(ResetPasswordDTO resetPasswordDTO);
 }
