@@ -2,6 +2,7 @@ package mp.tfg.mycheckpoint.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull; // Para campos que pueden ser null pero deben estar en el JSON si se actualizan
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,11 @@ public class UserProfileUpdateDTO {
     // Decidimos aquí que este DTO específico para /me/perfil solo actualiza estos campos.
     // Si quisieras actualizar nombre_usuario o email, considera las implicaciones (unicidad, verificación de email).
     // Por simplicidad, este DTO solo actualiza preferencias de perfil.
+
+    @JsonProperty("nombre_usuario")
+    @Size(min = 3, max = 100, message = "El nombre de usuario debe tener entre 3 y 100 caracteres si se proporciona.")
+    private String nombreUsuario; // Nuevo campo para actualizar nombre de usuario
+
 
     @JsonProperty("tema")
     private TemaEnum tema; // El usuario puede enviar null si no quiere cambiarlo, o un nuevo valor

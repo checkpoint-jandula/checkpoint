@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder; // Importar para Módulo 2
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -99,23 +100,34 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    @Transactional // Operación de escritura, necesita transacción
+    @Transactional
     public UserDTO updateUserProfile(String userEmail, UserProfileUpdateDTO profileUpdateDTO) {
-        // 1. Encontrar la entidad User existente
         User userEntity = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + userEmail + " para actualizar perfil."));
 
-        // 2. Usar el mapper para aplicar los cambios del DTO a la entidad existente
-        //    MapStruct solo actualizará los campos no nulos del DTO.
+        // Lógica para actualizar nombre_usuario si se proporciona y es diferente
+        if (StringUtils.hasText(profileUpdateDTO.getNombreUsuario()) &&
+                !profileUpdateDTO.getNombreUsuario().equals(userEntity.getNombreUsuario())) {
+
+            // Verificar si el nuevo nombre de usuario ya está en uso por OTRO usuario
+            Optional<User> existingUserWithNewUsername = userRepository.findByNombreUsuario(profileUpdateDTO.getNombreUsuario());
+            if (existingUserWithNewUsername.isPresent() && !existingUserWithNewUsername.get().getEmail().equals(userEmail)) {
+                throw new DuplicateEntryException("El nuevo nombre de usuario '" + profileUpdateDTO.getNombreUsuario() + "' ya está en uso.");
+            }
+            // Si no hay conflicto, MapStruct lo actualizará gracias a la siguiente línea.
+            // O podrías asignarlo explícitamente: userEntity.setNombreUsuario(profileUpdateDTO.getNombreUsuario());
+            // pero es mejor dejar que el mapper lo haga si es posible para consistencia.
+        }
+
+        // Usar el mapper para aplicar los cambios del DTO a la entidad existente.
+        // MapStruct solo actualizará los campos no nulos del DTO debido a NullValuePropertyMappingStrategy.IGNORE.
+        // y ya hemos manejado la lógica especial para nombreUsuario.
         userMapper.updateProfileFromDto(profileUpdateDTO, userEntity);
 
-        // 3. Guardar la entidad actualizada.
-        //    La fecha_modificacion debería actualizarse automáticamente por @UpdateTimestamp o el trigger.
         User updatedUser = userRepository.save(userEntity);
-
-        // 4. Devolver el DTO del usuario actualizado
         return userMapper.toDto(updatedUser);
     }
+
 
     @Override
     @Transactional

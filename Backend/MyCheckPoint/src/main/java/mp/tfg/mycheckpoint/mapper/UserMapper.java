@@ -21,6 +21,7 @@ public interface UserMapper {
     @Mapping(target = "fechaModificacion", ignore = true)
     @Mapping(target = "fechaEliminacion", ignore = true)
     @Mapping(target = "contraseña", ignore = true)
+    @Mapping(target = "emailVerified", ignore = true) // Asegúrate de ignorar esto en la creación
     User toEntity(UserCreateDTO userCreateDTO);
 
 

@@ -20,32 +20,31 @@ public class UserDetailsImpl implements UserDetails {
     private final String username; // Usaremos email o nombre_usuario como username para Spring Security
     private final String email;
     private final String password; // Contraseña HASHEADA
+    private final boolean emailVerified; // <-- NUEVO CAMPO
     private final Collection<? extends GrantedAuthority> authorities;
-    // Puedes añadir más campos de User si los necesitas en el objeto Principal
 
     public UserDetailsImpl(Long id, UUID publicId, String usernameForSecurity, String email, String password,
+                           boolean emailVerified, // <-- AÑADIR AL CONSTRUCTOR
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.publicId = publicId;
-        this.username = usernameForSecurity; // Este será el identificador principal para Spring Security
+        this.username = usernameForSecurity;
         this.email = email;
         this.password = password;
+        this.emailVerified = emailVerified; // <-- ASIGNAR
         this.authorities = authorities;
     }
 
     public static UserDetailsImpl build(User user) {
-        // Por ahora, todos los usuarios tienen un rol simple "ROLE_USER".
-        // Más adelante podrías obtener roles desde la entidad User si los implementas.
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // Decidimos usar el email como el "username" principal para UserDetails,
-        // pero también podríamos usar user.getNombreUsuario(). Es importante ser consistente.
         return new UserDetailsImpl(
                 user.getId(),
                 user.getPublicId(),
-                user.getEmail(), // Usamos email como el 'username' para UserDetails
                 user.getEmail(),
-                user.getContraseña(), // La contraseña ya debe estar hasheada aquí
+                user.getEmail(),
+                user.getContraseña(),
+                user.isEmailVerified(), // <-- PASAR EL VALOR
                 authorities
         );
     }
@@ -62,6 +61,11 @@ public class UserDetailsImpl implements UserDetails {
         return email;
     }
 
+    // Getter para emailVerified si lo necesitas fuera
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
@@ -74,14 +78,9 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Este es el "username" que Spring Security usa para identificar al usuario
-        // Puede ser el email, nombre_usuario, etc. Lo establecimos como email en el constructor/build.
         return username;
     }
 
-    // Los siguientes métodos definen el estado de la cuenta.
-    // Por ahora, los dejamos como true. Podrías mapearlos a campos en tu entidad User
-    // si necesitas manejar cuentas bloqueadas, expiradas, etc.
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -89,7 +88,8 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Podrías tener un campo 'is_locked' en User
+        // Aquí podrías añadir lógica si implementas bloqueo de cuentas
+        return true;
     }
 
     @Override
@@ -99,7 +99,8 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true; // Podrías tener un campo 'is_enabled' o usar 'fecha_eliminacion' en User
+        // La cuenta está "habilitada" solo si el email ha sido verificado.
+        return this.emailVerified; // <-- MODIFICADO
     }
 
     @Override
