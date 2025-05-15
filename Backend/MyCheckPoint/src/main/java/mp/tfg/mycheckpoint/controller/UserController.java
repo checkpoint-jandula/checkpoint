@@ -1,6 +1,7 @@
 package mp.tfg.mycheckpoint.controller;
 
 import jakarta.validation.Valid;
+import mp.tfg.mycheckpoint.dto.user.PasswordChangeDTO;
 import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
 import mp.tfg.mycheckpoint.dto.user.UserDTO;
 import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
@@ -9,7 +10,9 @@ import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Importar para obtener de
 import mp.tfg.mycheckpoint.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication; // Importar para obtener el principal
 import org.springframework.security.core.context.SecurityContextHolder; // Importar para obtener el contexto
 // import org.springframework.security.access.prepost.PreAuthorize; // Opcional para autorización a nivel de método
@@ -99,5 +102,29 @@ public class UserController {
 
         UserDTO updatedUser = userService.updateUserProfile(userEmail, profileUpdateDTO);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    // NUEVO ENDPOINT PARA CAMBIAR CONTRASEÑA
+    @PutMapping(value = "/me/password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> changeMyPassword(@Valid @RequestBody PasswordChangeDTO passwordChangeDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String userEmail = userDetails.getEmail();
+
+        try {
+            userService.changePassword(userEmail, passwordChangeDTO);
+            // Devolver una respuesta simple de éxito
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Contraseña actualizada correctamente."));
+        } catch (BadCredentialsException e) { // O tu excepción personalizada
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // 401 si la contraseña actual es incorrecta
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest() // 400 para otros errores de validación (ej. nueva contraseña igual a la antigua)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            // Captura genérica para otros posibles errores
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al cambiar la contraseña."));
+        }
     }
 }

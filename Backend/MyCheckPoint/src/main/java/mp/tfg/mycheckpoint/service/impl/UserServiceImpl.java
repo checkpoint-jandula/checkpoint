@@ -1,5 +1,6 @@
 package mp.tfg.mycheckpoint.service.impl;
 
+import mp.tfg.mycheckpoint.dto.user.PasswordChangeDTO;
 import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
 import mp.tfg.mycheckpoint.dto.user.UserDTO;
 import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
@@ -15,6 +16,7 @@ import mp.tfg.mycheckpoint.service.EmailService;
 import mp.tfg.mycheckpoint.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder; // Importar para Módulo 2
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,5 +158,47 @@ public class UserServiceImpl implements UserService {
         verificationTokenRepository.save(verificationToken); // Opcional: podrías eliminarlo en lugar de marcarlo como usado
 
         return "¡Tu correo electrónico ha sido verificado exitosamente! Ahora puedes iniciar sesión.";
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO) {
+        User userEntity = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + userEmail));
+
+        // 1. Verificar la contraseña actual
+        if (!passwordEncoder.matches(passwordChangeDTO.getContraseñaActual(), userEntity.getContraseña())) {
+            // Puedes usar BadCredentialsException de Spring o una personalizada.
+            // BadCredentialsException suele usarse más en el AuthenticationManager.
+            // Una excepción personalizada podría ser más clara aquí.
+            throw new BadCredentialsException("La contraseña actual proporcionada es incorrecta.");
+            // o throw new InvalidCredentialsException("La contraseña actual proporcionada es incorrecta.");
+        }
+
+        // 2. (Opcional) Verificar si la nueva contraseña y su confirmación coinciden
+        /*
+        if (StringUtils.hasText(passwordChangeDTO.getConfirmarNuevaContraseña()) &&
+            !passwordChangeDTO.getNuevaContraseña().equals(passwordChangeDTO.getConfirmarNuevaContraseña())) {
+            throw new IllegalArgumentException("La nueva contraseña y su confirmación no coinciden.");
+        }
+        */
+
+        // 3. Verificar si la nueva contraseña es diferente a la actual (opcional, pero buena práctica)
+        if (passwordEncoder.matches(passwordChangeDTO.getNuevaContraseña(), userEntity.getContraseña())) {
+            throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la contraseña actual.");
+        }
+
+        // 4. Hashear y establecer la nueva contraseña
+        userEntity.setContraseña(passwordEncoder.encode(passwordChangeDTO.getNuevaContraseña()));
+
+        // 5. Guardar los cambios
+        userRepository.save(userEntity);
+
+        // Consideraciones adicionales:
+        // - Invalidar sesiones/tokens JWT existentes para este usuario.
+        //   Esto es más avanzado y a menudo implica una blacklist de tokens o mecanismos similares.
+        //   Por simplicidad, se suele confiar en la expiración natural del token.
+        // - Enviar un correo de notificación al usuario indicando que su contraseña ha sido cambiada.
+        //   (Podrías usar tu EmailService para esto).
     }
 }
