@@ -5,6 +5,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections; // Para una lista simple de autoridades
 import java.util.List;
@@ -22,9 +23,11 @@ public class UserDetailsImpl implements UserDetails {
     private final String password; // Contraseña HASHEADA
     private final boolean emailVerified; // <-- NUEVO CAMPO
     private final Collection<? extends GrantedAuthority> authorities;
+    private final OffsetDateTime fechaEliminacion;
 
     public UserDetailsImpl(Long id, UUID publicId, String usernameForSecurity, String email, String password,
                            boolean emailVerified, // <-- AÑADIR AL CONSTRUCTOR
+                           OffsetDateTime fechaEliminacion,
                            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.publicId = publicId;
@@ -33,6 +36,7 @@ public class UserDetailsImpl implements UserDetails {
         this.password = password;
         this.emailVerified = emailVerified; // <-- ASIGNAR
         this.authorities = authorities;
+        this.fechaEliminacion = fechaEliminacion;
     }
 
     public static UserDetailsImpl build(User user) {
@@ -44,7 +48,8 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getEmail(),
                 user.getContraseña(),
-                user.isEmailVerified(), // <-- PASAR EL VALOR
+                user.isEmailVerified(),
+                user.getFechaEliminacion(),// <-- PASAR EL VALOR
                 authorities
         );
     }
@@ -100,7 +105,7 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public boolean isEnabled() {
         // La cuenta está "habilitada" solo si el email ha sido verificado.
-        return this.emailVerified; // <-- MODIFICADO
+        return this.emailVerified && (this.fechaEliminacion == null); // <-- MODIFICADO
     }
 
     @Override

@@ -15,4 +15,5 @@ public interface UserService {
     void changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO); // <-- NUEVO MÉTODO
     void processForgotPassword(ForgotPasswordDTO forgotPasswordDTO);
     String processResetPassword(ResetPasswordDTO resetPasswordDTO);
+    void softDeleteUserAccount(String userEmail, AccountDeleteDTO accountDeleteDTO);
 }

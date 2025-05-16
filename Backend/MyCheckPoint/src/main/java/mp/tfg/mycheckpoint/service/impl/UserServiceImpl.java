@@ -60,10 +60,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO createUser(UserCreateDTO userCreateDTO) {
         // Validaciones de duplicados (igual que antes)
-        if (userRepository.existsByEmail(userCreateDTO.getEmail())) {
+        if (userRepository.existsByEmailAndFechaEliminacionIsNull(userCreateDTO.getEmail())) {
             throw new DuplicateEntryException("El email '" + userCreateDTO.getEmail() + "' ya está registrado.");
         }
-        if (userRepository.existsByNombreUsuario(userCreateDTO.getNombreUsuario())) {
+        if (userRepository.existsByNombreUsuarioAndFechaEliminacionIsNull(userCreateDTO.getNombreUsuario())) {
             throw new DuplicateEntryException("El nombre de usuario '" + userCreateDTO.getNombreUsuario() + "' ya está en uso.");
         }
 
@@ -278,5 +278,64 @@ public class UserServiceImpl implements UserService {
         // emailService.sendPasswordChangedConfirmationEmail(user);
 
         return "Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.";
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteUserAccount(String userEmail, AccountDeleteDTO accountDeleteDTO) {
+        logger.info("Intentando eliminar (soft delete) la cuenta para el usuario: {}", userEmail);
+        User userEntity = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> {
+                    logger.warn("Usuario no encontrado con email: {} al intentar eliminar cuenta.", userEmail);
+                    return new ResourceNotFoundException("Usuario no encontrado con email: " + userEmail);
+                });
+
+        // 1. Verificar si la cuenta ya está "eliminada"
+        if (userEntity.getFechaEliminacion() != null) {
+            logger.warn("Intento de eliminar una cuenta ya eliminada para el usuario: {}", userEmail);
+            // Puedes lanzar una excepción o simplemente no hacer nada.
+            // Por ahora, consideraremos que no es un error si se intenta de nuevo.
+            // throw new IllegalStateException("La cuenta ya ha sido eliminada.");
+            return;
+        }
+
+        // 2. Verificar la contraseña actual para confirmar la eliminación
+        if (!passwordEncoder.matches(accountDeleteDTO.getContraseñaActual(), userEntity.getContraseña())) {
+            logger.warn("Contraseña actual incorrecta al intentar eliminar cuenta para el usuario: {}", userEmail);
+            throw new BadCredentialsException("La contraseña actual proporcionada es incorrecta para eliminar la cuenta.");
+        }
+
+        // 3. Establecer la fecha de eliminación (Soft Delete)
+        userEntity.setFechaEliminacion(OffsetDateTime.now());
+
+        // 4. Consideraciones Adicionales sobre los datos del usuario:
+        //    a. Anonimizar datos personales:
+        //       Si por regulaciones de privacidad (GDPR) necesitas anonimizar ciertos datos
+        //       en lugar de solo marcar la cuenta, este es el lugar para hacerlo.
+        //       Ej: userEntity.setEmail("deleted_" + userEntity.getPublicId() + "@example.com");
+        //           userEntity.setNombreUsuario("deleted_user_" + userEntity.getPublicId());
+        //           userEntity.setFotoPerfil(null);
+        //       ¡CUIDADO! Estas acciones son destructivas para esos campos.
+        //
+        //    b. Deshabilitar la cuenta para el login:
+        //       El campo `fechaEliminacion` ya sirve para esto si lo compruebas.
+        //       También puedes modificar `UserDetailsImpl.isEnabled()` para que dependa de `fechaEliminacion == null`.
+        userEntity.setEmailVerified(false); // Podrías querer resetear esto también.
+        // userEntity.setContraseña(passwordEncoder.encode(UUID.randomUUID().toString())); // Invalidar contraseña (opcional)
+
+        //    c. Limpiar tokens:
+        //       Eliminar VerificationTokens y PasswordResetTokens asociados.
+        verificationTokenRepository.findByUser(userEntity).ifPresent(verificationTokenRepository::delete);
+        passwordResetTokenRepository.findByUser(userEntity).ifPresent(passwordResetTokenRepository::delete);
+
+
+        // 5. Guardar los cambios
+        userRepository.save(userEntity);
+        logger.info("Cuenta eliminada (soft delete) exitosamente para el usuario: {}", userEmail);
+
+        // 6. Opcional: Enviar un email de confirmación de eliminación de cuenta.
+        // emailService.sendAccountDeletionConfirmationEmail(userEntity);
+
+        // 7. Opcional: Invalidar tokens JWT activos (más complejo, puede requerir una blacklist).
     }
 }

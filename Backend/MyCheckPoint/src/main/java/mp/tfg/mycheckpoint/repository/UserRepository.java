@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByPublicId(UUID publicId);
 
-    boolean existsByEmail(String email); // Útil para validaciones
+    boolean existsByEmailAndFechaEliminacionIsNull(String email); // Útil para validaciones
 
-    boolean existsByNombreUsuario(String nombreUsuario); // Útil para validaciones
+    boolean existsByNombreUsuarioAndFechaEliminacionIsNull(String nombreUsuario); // Útil para validaciones
 }

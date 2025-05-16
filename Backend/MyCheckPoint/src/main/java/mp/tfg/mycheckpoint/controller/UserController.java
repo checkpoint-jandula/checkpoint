@@ -1,10 +1,7 @@
 package mp.tfg.mycheckpoint.controller;
 
 import jakarta.validation.Valid;
-import mp.tfg.mycheckpoint.dto.user.PasswordChangeDTO;
-import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
-import mp.tfg.mycheckpoint.dto.user.UserDTO;
-import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
+import mp.tfg.mycheckpoint.dto.user.*;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Importar para obtener detalles del Principal
 import mp.tfg.mycheckpoint.service.UserService;
@@ -125,6 +122,35 @@ public class UserController {
             // Captura genérica para otros posibles errores
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al cambiar la contraseña."));
+        }
+    }
+
+    @DeleteMapping(value = "/me", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> deleteMyAccount(@Valid @RequestBody AccountDeleteDTO accountDeleteDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String userEmail = userDetails.getEmail();
+
+        try {
+            userService.softDeleteUserAccount(userEmail, accountDeleteDTO);
+            // Después de eliminar la cuenta, la sesión actual debería invalidarse.
+            // El frontend debería manejar esto borrando el token JWT y redirigiendo.
+            // Spring Security no invalida el token JWT automáticamente aquí.
+            SecurityContextHolder.clearContext(); // Limpiar el contexto de seguridad del servidor para la petición actual.
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Tu cuenta ha sido programada para eliminación y ya no es accesible."));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // 401 si la contraseña actual es incorrecta
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) { // Si el usuario de alguna manera ya no existe
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (IllegalStateException e) { // Ej. si la cuenta ya estaba eliminada
+            return ResponseEntity.badRequest()
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            // Captura genérica
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al eliminar la cuenta."));
         }
     }
 }
