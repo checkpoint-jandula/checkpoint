@@ -5,7 +5,9 @@ import mp.tfg.mycheckpoint.dto.auth.JwtResponseDTO;
 import mp.tfg.mycheckpoint.dto.auth.LoginRequestDTO;
 import mp.tfg.mycheckpoint.dto.user.ForgotPasswordDTO;
 import mp.tfg.mycheckpoint.dto.user.ResetPasswordDTO;
+import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
+import mp.tfg.mycheckpoint.repository.UserRepository;
 import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Para obtener el principal
 import mp.tfg.mycheckpoint.security.jwt.JwtTokenProvider;
 import mp.tfg.mycheckpoint.service.UserService;
@@ -23,6 +25,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthenticationController {
@@ -30,15 +34,18 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
+    private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
 
     @Autowired // Si es un controlador nuevo o necesitas userService aquí
     public AuthenticationController(AuthenticationManager authenticationManager,
                                     JwtTokenProvider jwtTokenProvider,
-                                    UserService userService /* Añadir */) {
+                                    UserService userService /* Añadir */,
+                                    UserRepository userRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userService = userService; // Asignar
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
@@ -52,23 +59,47 @@ public class AuthenticationController {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtTokenProvider.generateToken(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
+            // --- INICIO: Lógica para cancelar eliminación programada ---
+            User userEntity = userRepository.findByEmail(userDetails.getEmail()) // O usa el identificador que tengas en UserDetailsImpl
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado en la base de datos: " + userDetails.getEmail()));
+
+            if (userEntity.getFechaEliminacion() != null) {
+                if (userEntity.getFechaEliminacion().isAfter(OffsetDateTime.now())) {
+                    logger.info("Usuario {} ha iniciado sesión. Cancelando la eliminación programada para {}.", userEntity.getEmail(), userEntity.getFechaEliminacion());
+                    userEntity.setFechaEliminacion(null);
+                    // userEntity.setEmailVerified(true); // No es necesario cambiarlo si nunca se puso a false
+                    userRepository.save(userEntity);
+                    logger.info("Eliminación programada cancelada para el usuario {}.", userEntity.getEmail());
+                    // Opcional: Enviar email de notificación de reactivación de cuenta
+                    // emailService.sendAccountReactivationEmail(userEntity);
+                } else {
+                    // La fecha de eliminación ya pasó. La tarea programada debería haberla eliminado.
+                    // Si el usuario pudo loguearse, es un estado anómalo.
+                    // El login debería fallar debido a UserDetailsImpl.isEnabled() si la tarea aún no ha corrido.
+                    logger.warn("Usuario {} inició sesión, pero su fecha de eliminación programada ({}) ya pasó. La cuenta debería haber sido eliminada por la tarea programada.", userEntity.getEmail(), userEntity.getFechaEliminacion());
+                    SecurityContextHolder.clearContext(); // Invalidar sesión
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Error: Esta cuenta ha sido eliminada.");
+                }
+            }
+            // --- FIN: Lógica para cancelar eliminación programada ---
+
+            String jwt = jwtTokenProvider.generateToken(authentication);
             return ResponseEntity.ok(new JwtResponseDTO(jwt));
 
         } catch (BadCredentialsException e) {
             logger.warn("Intento de login fallido por credenciales incorrectas para el identificador: {}", loginRequest.getIdentificador());
-            // Es importante no dar demasiada información sobre por qué falló (usuario no existe vs contraseña incorrecta)
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Credenciales inválidas.");
         } catch (DisabledException e) {
-            logger.warn("Intento de login fallido porque la cuenta está deshabilitada (email no verificado) para el identificador: {}", loginRequest.getIdentificador());
-            // Aquí puedes ser más específico porque el usuario ya pasó la validación de contraseña.
-            // Opcionalmente, podrías iniciar el flujo de reenvío de email de verificación aquí si el usuario lo solicita.
-            return ResponseEntity.status(HttpStatus.FORBIDDEN) // 403 Forbidden es apropiado aquí
-                    .body("Error: Por favor, verifica tu dirección de correo electrónico para activar tu cuenta.");
+            logger.warn("Intento de login fallido porque la cuenta está deshabilitada (UserDetails.isEnabled() es false) para el identificador: {}", loginRequest.getIdentificador());
+            // Es importante que UserDetailsImpl.isEnabled() permita el login si solo está pendiente de borrado y emailVerified=true.
+            // Si `DisabledException` se lanza, es probable que sea porque emailVerified es false.
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Error: La cuenta está deshabilitada. Por favor, verifica tu correo electrónico o contacta con el soporte.");
         } catch (AuthenticationException e) {
-            // Captura otras excepciones de autenticación
-            logger.error("Error de autenticación inesperado para el identificador: {}", loginRequest.getIdentificador(), e);
+            logger.error("Error de autenticación inesperado para el identificador: {}: {}", loginRequest.getIdentificador(), e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Fallo en la autenticación.");
         }
     }

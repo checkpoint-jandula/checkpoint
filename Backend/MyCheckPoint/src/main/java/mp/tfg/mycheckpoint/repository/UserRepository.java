@@ -2,8 +2,12 @@ package mp.tfg.mycheckpoint.repository;
 
 import mp.tfg.mycheckpoint.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository; // Buena práctica añadir @Repository aunque no es estrictamente necesario para JpaRepository
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndFechaEliminacionIsNull(String email); // Útil para validaciones
 
     boolean existsByNombreUsuarioAndFechaEliminacionIsNull(String nombreUsuario); // Útil para validaciones
+
+    @Query("SELECT u FROM User u WHERE u.fechaEliminacion IS NOT NULL AND u.fechaEliminacion <= :currentTime")
+    List<User> findUsersScheduledForDeletion(@Param("currentTime") OffsetDateTime currentTime);
 }

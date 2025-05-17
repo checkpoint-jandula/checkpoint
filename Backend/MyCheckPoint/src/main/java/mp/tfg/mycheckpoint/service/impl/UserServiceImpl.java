@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final ApplicationEventPublisher eventPublisher; // Para desacoplar el envío de email
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class); // <-- AÑADIR ESTA LÍNEA
+    private static final int ACCOUNT_DELETION_GRACE_PERIOD_DAYS = 10; // Período de gracia de 10 días
 
 
     @Autowired
@@ -283,59 +284,44 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void softDeleteUserAccount(String userEmail, AccountDeleteDTO accountDeleteDTO) {
-        logger.info("Intentando eliminar (soft delete) la cuenta para el usuario: {}", userEmail);
+        logger.info("Solicitando programación de eliminación para la cuenta del usuario: {}", userEmail);
         User userEntity = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> {
-                    logger.warn("Usuario no encontrado con email: {} al intentar eliminar cuenta.", userEmail);
+                    logger.warn("Usuario no encontrado con email: {} al intentar programar eliminación de cuenta.", userEmail);
                     return new ResourceNotFoundException("Usuario no encontrado con email: " + userEmail);
                 });
 
-        // 1. Verificar si la cuenta ya está "eliminada"
-        if (userEntity.getFechaEliminacion() != null) {
-            logger.warn("Intento de eliminar una cuenta ya eliminada para el usuario: {}", userEmail);
-            // Puedes lanzar una excepción o simplemente no hacer nada.
-            // Por ahora, consideraremos que no es un error si se intenta de nuevo.
-            // throw new IllegalStateException("La cuenta ya ha sido eliminada.");
-            return;
+        // 1. Verificar si la cuenta ya tiene una eliminación programada activa
+        if (userEntity.getFechaEliminacion() != null && userEntity.getFechaEliminacion().isAfter(OffsetDateTime.now())) {
+            logger.warn("La cuenta para el usuario: {} ya tiene una eliminación programada para {}.", userEmail, userEntity.getFechaEliminacion());
+            throw new IllegalStateException("Tu cuenta ya está programada para eliminación el " +
+                    userEntity.getFechaEliminacion().toLocalDate() +
+                    ". Si deseas cancelar esta acción, simplemente inicia sesión.");
         }
 
-        // 2. Verificar la contraseña actual para confirmar la eliminación
+        // 2. Verificar la contraseña actual
         if (!passwordEncoder.matches(accountDeleteDTO.getContraseñaActual(), userEntity.getContraseña())) {
-            logger.warn("Contraseña actual incorrecta al intentar eliminar cuenta para el usuario: {}", userEmail);
-            throw new BadCredentialsException("La contraseña actual proporcionada es incorrecta para eliminar la cuenta.");
+            logger.warn("Contraseña actual incorrecta al intentar programar eliminación de cuenta para el usuario: {}", userEmail);
+            throw new BadCredentialsException("La contraseña actual proporcionada es incorrecta.");
         }
 
-        // 3. Establecer la fecha de eliminación (Soft Delete)
-        userEntity.setFechaEliminacion(OffsetDateTime.now());
+        // 3. Establecer la fecha de eliminación futura
+        OffsetDateTime futureDeletionDate = OffsetDateTime.now().plusDays(ACCOUNT_DELETION_GRACE_PERIOD_DAYS);
+        userEntity.setFechaEliminacion(futureDeletionDate);
+        logger.info("Eliminación de cuenta programada para el usuario: {} en la fecha: {}", userEmail, futureDeletionDate);
 
-        // 4. Consideraciones Adicionales sobre los datos del usuario:
-        //    a. Anonimizar datos personales:
-        //       Si por regulaciones de privacidad (GDPR) necesitas anonimizar ciertos datos
-        //       en lugar de solo marcar la cuenta, este es el lugar para hacerlo.
-        //       Ej: userEntity.setEmail("deleted_" + userEntity.getPublicId() + "@example.com");
-        //           userEntity.setNombreUsuario("deleted_user_" + userEntity.getPublicId());
-        //           userEntity.setFotoPerfil(null);
-        //       ¡CUIDADO! Estas acciones son destructivas para esos campos.
-        //
-        //    b. Deshabilitar la cuenta para el login:
-        //       El campo `fechaEliminacion` ya sirve para esto si lo compruebas.
-        //       También puedes modificar `UserDetailsImpl.isEnabled()` para que dependa de `fechaEliminacion == null`.
-        userEntity.setEmailVerified(false); // Podrías querer resetear esto también.
-        // userEntity.setContraseña(passwordEncoder.encode(UUID.randomUUID().toString())); // Invalidar contraseña (opcional)
+        // 4. NO cambiar emailVerified
+        // userEntity.setEmailVerified(false); // Esta línea se elimina o comenta
 
-        //    c. Limpiar tokens:
-        //       Eliminar VerificationTokens y PasswordResetTokens asociados.
+        // 5. Limpiar tokens de verificación y reseteo de contraseña (buena práctica)
         verificationTokenRepository.findByUser(userEntity).ifPresent(verificationTokenRepository::delete);
         passwordResetTokenRepository.findByUser(userEntity).ifPresent(passwordResetTokenRepository::delete);
 
-
-        // 5. Guardar los cambios
+        // 6. Guardar los cambios
         userRepository.save(userEntity);
-        logger.info("Cuenta eliminada (soft delete) exitosamente para el usuario: {}", userEmail);
+        logger.info("Solicitud de eliminación de cuenta procesada y programada exitosamente para el usuario: {}", userEmail);
 
-        // 6. Opcional: Enviar un email de confirmación de eliminación de cuenta.
-        // emailService.sendAccountDeletionConfirmationEmail(userEntity);
-
-        // 7. Opcional: Invalidar tokens JWT activos (más complejo, puede requerir una blacklist).
+        // 7. Opcional: Enviar un email al usuario informando sobre la programación
+        // emailService.sendAccountScheduledForDeletionEmail(userEntity, futureDeletionDate);
     }
 }

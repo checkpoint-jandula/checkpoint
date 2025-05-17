@@ -104,8 +104,16 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // La cuenta está "habilitada" solo si el email ha sido verificado.
-        return this.emailVerified && (this.fechaEliminacion == null); // <-- MODIFICADO
+        // La cuenta está habilitada si el email está verificado.
+        // Si fechaEliminacion tiene un valor futuro, el login debe ser posible para cancelarla.
+        // Si fechaEliminacion ya pasó, la tarea programada debería haber eliminado al usuario.
+        // Si, por alguna razón, la tarea no ha corrido y la fecha ya pasó, este método
+        // correctamente devolvería false, impidiendo el login.
+        if (!this.emailVerified) {
+            return false; // Si el email no está verificado, la cuenta no está habilitada.
+        }
+        // Si el email está verificado, la cuenta está habilitada a menos que la fecha de eliminación haya pasado.
+        return this.fechaEliminacion == null || this.fechaEliminacion.isAfter(OffsetDateTime.now());
     }
 
     @Override
