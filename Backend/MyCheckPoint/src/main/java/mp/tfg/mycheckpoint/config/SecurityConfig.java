@@ -63,6 +63,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/v1/auth/confirm-account").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
+                        // Endpoints de la Biblioteca de Juegos del Usuario (requieren autenticación)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/library/games/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/library/games/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/library/games/**").authenticated()
+                        // Endpoint de detalles del juego (puede ser accedido anónimamente o por usuarios autenticados)
+                        // Si quieres que CUALQUIERA pueda ver detalles de juegos, pero solo los logueados vean sus datos:
+                        .requestMatchers(HttpMethod.GET, "/api/v1/games/{igdbId}/details").permitAll()
                         // Endpoints de Juegos
                         .requestMatchers(HttpMethod.GET, "/api/juegos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/juegos/igdb/**").permitAll()
