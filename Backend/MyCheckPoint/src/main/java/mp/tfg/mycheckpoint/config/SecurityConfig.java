@@ -75,6 +75,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/juegos/igdb/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/juegos/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/juegos/igdb/**").permitAll()
+                        // Endpoints de Listas de Juegos del Usuario (requieren autenticación)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/me/gamelists/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me/gamelists/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/me/gamelists/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me/gamelists/**").authenticated()
+                        // Endpoints públicos para ver listas
+                        .requestMatchers(HttpMethod.GET, "/api/v1/gamelists/public").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/gamelists/{listPublicId}/public").permitAll()
 
 
                         // Por ahora, el resto requerirá autenticación

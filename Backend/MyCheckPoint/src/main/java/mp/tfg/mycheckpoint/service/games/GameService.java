@@ -460,7 +460,8 @@ public class GameService {
 
         Set<Platform> platformsFromDto = new HashSet<>();
         if (gameDto.getPlatforms() != null) {
-            platformsFromDto = gameDto.getPlatforms().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> platformRepository.findByIgdbId(dto.getIgdbId()).map(e -> {Platform m=platformMapper.toEntity(dto);boolean c=false;if(!Objects.equals(e.getName(),m.getName())){e.setName(m.getName());c=true;}if(!Objects.equals(e.getAlternativeName(),m.getAlternativeName())){e.setAlternativeName(m.getAlternativeName());c=true;}if(m.getPlatformLogo() != null && !Objects.equals(e.getPlatformLogo(),m.getPlatformLogo())){e.setPlatformLogo(m.getPlatformLogo());c=true;} else if (m.getPlatformLogo() == null && e.getPlatformLogo() != null) {e.setPlatformLogo(null); c=true;}return c?platformRepository.save(e):e;}).orElseGet(()->platformRepository.save(platformMapper.toEntity(dto)))).collect(Collectors.toSet());
+            platformsFromDto = gameDto.getPlatforms().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> platformRepository.findByIgdbId(dto.getIgdbId()).map(e -> {Platform m=platformMapper.toEntity(dto);
+                boolean c=false;if(!Objects.equals(e.getName(),m.getName())){e.setName(m.getName());c=true;}if(!Objects.equals(e.getAlternativeName(),m.getAlternativeName())){e.setAlternativeName(m.getAlternativeName());c=true;}if(m.getPlatformLogo() != null && !Objects.equals(e.getPlatformLogo(),m.getPlatformLogo())){e.setPlatformLogo(m.getPlatformLogo());c=true;} else if (m.getPlatformLogo() == null && e.getPlatformLogo() != null) {e.setPlatformLogo(null); c=true;}return c?platformRepository.save(e):e;}).orElseGet(()->platformRepository.save(platformMapper.toEntity(dto)))).collect(Collectors.toSet());
         }
         if (!gameEntity.getPlatforms().equals(platformsFromDto)) gameEntity.setPlatforms(platformsFromDto);
 
