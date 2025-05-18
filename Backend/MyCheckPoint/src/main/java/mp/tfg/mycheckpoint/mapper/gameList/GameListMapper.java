@@ -15,6 +15,9 @@ public interface GameListMapper {
     @Mapping(target = "userGames", ignore = true) // Se maneja por separado
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+        // No es necesario un @Mapping explícito para isPublic aquí si los nombres coinciden
+        // y MapStruct lo infiere correctamente para la creación.
+        // GameList.builder().isPublic(requestDTO.getIsPublic()) se encargará.
     GameList toEntity(GameListRequestDTO requestDTO);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -24,12 +27,21 @@ public interface GameListMapper {
     @Mapping(target = "userGames", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    // MODIFICACIÓN: Añadir mapeo explícito para actualizar 'isPublic'.
+    // El 'target' es "public" porque el setter en la entidad GameList (generado por Lombok @Data para boolean isPublic) es setPublic().
+    // El 'source' es "isPublic" del DTO.
+    @Mapping(source = "isPublic", target = "public")
     void updateFromDto(GameListRequestDTO dto, @MappingTarget GameList entity);
 
 
     @Mapping(source = "owner.nombreUsuario", target = "ownerUsername")
     @Mapping(source = "userGames", target = "gamesInList")
     @Mapping(target = "gameCount", expression = "java(gameList.getUserGames() != null ? gameList.getUserGames().size() : 0)")
+    // MODIFICACIÓN: Añadir mapeo explícito para leer 'isPublic' al DTO de respuesta.
+    // El 'source' es "public" porque el getter en la entidad GameList (generado por Lombok @Data para boolean isPublic) es isPublic().
+    // MapStruct interpreta la propiedad de la entidad como "public".
+    // El 'target' es "isPublic" en el DTO de respuesta.
+    @Mapping(source = "public", target = "isPublic")
     GameListResponseDTO toResponseDto(GameList gameList);
 
     // Método helper para mapear Set<UserGame> a List<UserGameResponseDTO>

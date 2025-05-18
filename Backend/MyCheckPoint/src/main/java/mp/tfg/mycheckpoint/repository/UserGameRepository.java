@@ -1,9 +1,12 @@
 package mp.tfg.mycheckpoint.repository;
 
+import mp.tfg.mycheckpoint.dto.enums.VisibilidadEnum;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.entity.UserGame;
 import mp.tfg.mycheckpoint.entity.games.Game;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -25,4 +28,12 @@ public interface UserGameRepository extends JpaRepository<UserGame, Long> {
     boolean existsByUserAndGame_IgdbId(User user, Long igdbId);
 
     void deleteByUserAndGame_IgdbId(User user, Long igdbId);
+
+    @Query("SELECT ug FROM UserGame ug JOIN FETCH ug.user u " +
+            "WHERE ug.game = :game " +
+            "AND ug.comment IS NOT NULL AND ug.comment <> '' " +
+            "AND u.visibilidadPerfil = :visibilidad " +
+            "AND u.fechaEliminacion IS NULL " +
+            "ORDER BY ug.updatedAt DESC")
+    List<UserGame> findPublicCommentsForGame(@Param("game") Game game, @Param("visibilidad") VisibilidadEnum visibilidad);
 }

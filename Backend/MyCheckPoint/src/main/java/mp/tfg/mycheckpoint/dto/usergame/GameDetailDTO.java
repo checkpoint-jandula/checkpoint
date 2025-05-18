@@ -6,7 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import mp.tfg.mycheckpoint.dto.comment.PublicGameCommentDTO;
 import mp.tfg.mycheckpoint.dto.games.GameDto; // El DTO general de juego
+
+import java.util.List;
 
 @Data
 @Builder
@@ -20,5 +23,9 @@ public class GameDetailDTO {
     @JsonProperty("user_game_data")
     @JsonInclude(JsonInclude.Include.NON_NULL) // Solo incluir si el usuario tiene este juego en su biblioteca
     private UserGameResponseDTO userGameData; // Información específica del usuario para este juego
+
+    @JsonProperty("public_comments")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<PublicGameCommentDTO> publicComments;
 
 }
