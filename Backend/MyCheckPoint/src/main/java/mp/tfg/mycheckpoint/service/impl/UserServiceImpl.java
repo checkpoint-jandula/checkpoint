@@ -23,6 +23,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import mp.tfg.mycheckpoint.dto.user.UserSearchResultDTO; // Asegúrate que esté bien importado
+import java.util.Collections; // Para lista vacía
+import java.util.List; // IMPORTAR
+import java.util.stream.Collectors; // IMPORTAR
+import org.springframework.util.StringUtils; // Para StringUtils.hasText
+
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,14 +51,14 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
                            PasswordEncoder passwordEncoder,
                            VerificationTokenRepository verificationTokenRepository,
-                           PasswordResetTokenRepository passwordResetTokenRepository, /* Añadir */
+                           PasswordResetTokenRepository passwordResetTokenRepository,
                            EmailService emailService,
                            ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.verificationTokenRepository = verificationTokenRepository;
-        this.passwordResetTokenRepository = passwordResetTokenRepository; // Asignar
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.emailService = emailService;
         this.eventPublisher = eventPublisher;
     }
@@ -106,6 +112,29 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email)
                 .map(userMapper::toDto);
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserSearchResultDTO> searchUsersByUsername(String usernameQuery, String currentUserEmail) {
+        if (!StringUtils.hasText(usernameQuery) || usernameQuery.trim().length() < 2) { // Evitar búsquedas vacías o muy cortas
+            return Collections.emptyList();
+        }
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario actual no encontrado: " + currentUserEmail));
+
+
+        List<User> foundUsers = userRepository.searchByNombreUsuarioContainingIgnoreCaseAndNotSelf(
+                usernameQuery.trim(),
+                currentUser.getId()
+        );
+
+        return foundUsers.stream()
+                .map(userMapper::toSearchResultDto) // Usa el método del mapper
+                .collect(Collectors.toList());
+    }
+
 
 
     @Override

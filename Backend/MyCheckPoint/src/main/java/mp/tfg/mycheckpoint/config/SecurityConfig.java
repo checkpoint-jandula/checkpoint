@@ -84,6 +84,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/gamelists/public").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/gamelists/{listPublicId}/public").permitAll()
 
+                        // MODIFICACIÓN: Nuevos endpoints de Amistad (requieren autenticación)
+                        .requestMatchers("/api/v1/friends/**").authenticated()
+
+                        // MODIFICACIÓN: Endpoint de búsqueda de usuarios (requiere autenticación)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/search").authenticated()
+
 
                         // Por ahora, el resto requerirá autenticación
                         .anyRequest().authenticated()
