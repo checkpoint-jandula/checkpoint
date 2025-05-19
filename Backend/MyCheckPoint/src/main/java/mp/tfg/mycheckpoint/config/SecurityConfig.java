@@ -91,6 +91,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/search").authenticated()
 
 
+                        .requestMatchers("/profile-pictures/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/me/profile-picture").authenticated()
+
+
                         // Por ahora, el resto requerirá autenticación
                         .anyRequest().authenticated()
                 );

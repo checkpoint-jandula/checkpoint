@@ -20,4 +20,6 @@ public interface UserService {
 
     // MODIFICACIÓN: Nuevo método para buscar usuarios
     List<UserSearchResultDTO> searchUsersByUsername(String usernameQuery, String currentUsernameToExclude);
+
+    UserDTO updateUserProfilePicture(String userEmail, String profilePictureFileName);
 }
