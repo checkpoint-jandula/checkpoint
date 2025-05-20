@@ -4,6 +4,7 @@ import mp.tfg.mycheckpoint.dto.enums.FriendshipStatus;
 import mp.tfg.mycheckpoint.entity.Friendship;
 import mp.tfg.mycheckpoint.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -40,4 +41,10 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long> {
     @Query("SELECT f FROM Friendship f JOIN FETCH f.requester JOIN FETCH f.receiver " +
             "WHERE (f.requester = :user OR f.receiver = :user) AND f.status = :status")
     List<Friendship> findAcceptedFriendshipsForUser(@Param("user") User user, @Param("status") FriendshipStatus status);
+
+    // Opcional: Método para eliminar todas las amistades que involucran a un usuario directamente
+    // Esto es más eficiente si no necesitas procesar las amistades antes de borrarlas.
+    @Modifying
+    @Query("DELETE FROM Friendship f WHERE f.requester = :user OR f.receiver = :user")
+    void deleteAllInvolvingUser(@Param("user") User user);
 }
