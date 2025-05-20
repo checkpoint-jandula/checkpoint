@@ -44,6 +44,7 @@ public class GameService {
     private final GameEngineMapper gameEngineMapper;
     private final KeywordMapper keywordMapper;
     private final PlatformMapper platformMapper;
+    private final PlatformLogoMapper platformLogoMapper;
     private final ThemeMapper themeMapper;
     private final CompanyMapper companyMapper;
     private final InvolvedCompanyMapper involvedCompanyMapper;
@@ -59,8 +60,8 @@ public class GameService {
     public GameService(GameRepository gameRepository, GameModeRepository gameModeRepository,
                        GenreRepository genreRepository, FranchiseRepository franchiseRepository,
                        GameEngineRepository gameEngineRepository, KeywordRepository keywordRepository,
-                       PlatformRepository platformRepository, ThemeRepository themeRepository, CompanyRepository companyRepository,
-                       GameCompanyInvolvementRepository gameCompanyInvolvementRepository,
+                       PlatformRepository platformRepository,PlatformLogoMapper platformLogoMapper, ThemeRepository themeRepository,
+                       CompanyRepository companyRepository, GameCompanyInvolvementRepository gameCompanyInvolvementRepository,
                        GameMapper gameMapper, GameModeMapper gameModeMapper, GenreMapper genreMapper,
                        FranchiseMapper franchiseMapper, GameEngineMapper gameEngineMapper,
                        KeywordMapper keywordMapper, PlatformMapper platformMapper, ThemeMapper themeMapper,
@@ -84,6 +85,7 @@ public class GameService {
         this.gameEngineMapper = gameEngineMapper;
         this.keywordMapper = keywordMapper;
         this.platformMapper = platformMapper;
+        this.platformLogoMapper = platformLogoMapper;
         this.themeMapper = themeMapper;
         this.companyMapper = companyMapper;
         this.involvedCompanyMapper = involvedCompanyMapper;
@@ -412,64 +414,272 @@ public class GameService {
         if (gameDto.getInvolvedCompanies() == null) gameDto.setInvolvedCompanies(new ArrayList<>());
     }
 
+    /**
+     * Obtiene una entidad GameMode existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private GameMode getOrCreateGameMode(GameModeDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return gameModeRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return gameModeRepository.save(existingEntity); // Guardar si hay cambios
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> gameModeRepository.save(gameModeMapper.toEntity(dto)));
+    }
+
+    /**
+     * Obtiene una entidad Genre existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private Genre getOrCreateGenre(GenreDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return genreRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return genreRepository.save(existingEntity);
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> genreRepository.save(genreMapper.toEntity(dto)));
+    }
+
+    /**
+     * Obtiene una entidad Franchise existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private Franchise getOrCreateFranchise(FranchiseDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return franchiseRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return franchiseRepository.save(existingEntity);
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> franchiseRepository.save(franchiseMapper.toEntity(dto)));
+    }
+
+    /**
+     * Obtiene una entidad GameEngine existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private GameEngine getOrCreateGameEngine(GameEngineDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return gameEngineRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return gameEngineRepository.save(existingEntity);
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> gameEngineRepository.save(gameEngineMapper.toEntity(dto)));
+    }
+
+    /**
+     * Obtiene una entidad Keyword existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private Keyword getOrCreateKeyword(KeywordDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return keywordRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return keywordRepository.save(existingEntity);
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> keywordRepository.save(keywordMapper.toEntity(dto)));
+    }
+
+    /**
+     * Obtiene una entidad Platform existente por igdbId o crea una nueva si no existe.
+     * Actualiza campos relevantes si son diferentes.
+     */
+    private Platform getOrCreatePlatform(PlatformDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return platformRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    boolean changed = false;
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        changed = true;
+                    }
+                    if (!Objects.equals(dto.getAlternativeName(), existingEntity.getAlternativeName())) {
+                        existingEntity.setAlternativeName(dto.getAlternativeName());
+                        changed = true;
+                    }
+
+                    PlatformLogoDto logoDto = dto.getPlatformLogo();
+                    PlatformLogo currentLogoEntity = existingEntity.getPlatformLogo();
+
+                    if (logoDto != null) {
+                        // Usa la instancia inyectada de PlatformLogoMapper
+                        PlatformLogo newLogoEntity = platformLogoMapper.toEntity(logoDto); // <--- CORREGIDO AQUÍ
+                        if (currentLogoEntity == null || !currentLogoEntity.equals(newLogoEntity)) {
+                            existingEntity.setPlatformLogo(newLogoEntity);
+                            changed = true;
+                        }
+                    } else if (currentLogoEntity != null) {
+                        existingEntity.setPlatformLogo(null);
+                        changed = true;
+                    }
+
+                    return changed ? platformRepository.save(existingEntity) : existingEntity;
+                })
+                .orElseGet(() -> {
+                    // Usa la instancia inyectada de PlatformMapper
+                    Platform newPlatform = platformMapper.toEntity(dto); // <--- CORREGIDO AQUÍ (usa la instancia de clase)
+                    return platformRepository.save(newPlatform);
+                });
+    }
+
     private void processAssociatedManyToManyCollections(GameDto gameDto, Game gameEntity) {
         logger.debug("Procesando colecciones ManyToMany para el juego completo {}", gameEntity.getIgdbId());
-        Set<GameMode> gameModesFromDto = new HashSet<>();
+
+        // GameModes
         if (gameDto.getGameModes() != null) {
-            gameModesFromDto = gameDto.getGameModes().stream()
-                    .filter(dto -> dto != null && dto.getIgdbId() != null)
-                    .map(dto -> gameModeRepository.findByIgdbId(dto.getIgdbId())
-                            .map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return gameModeRepository.save(e);}return e;})
-                            .orElseGet(()->gameModeRepository.save(gameModeMapper.toEntity(dto))))
+            Set<GameMode> gameModesFromDto = gameDto.getGameModes().stream()
+                    .map(this::getOrCreateGameMode) // Usa el helper
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
-        }
-        if (!gameEntity.getGameModes().equals(gameModesFromDto)) {
-            gameEntity.setGameModes(gameModesFromDto);
+            if (!gameEntity.getGameModes().equals(gameModesFromDto)) {
+                gameEntity.setGameModes(gameModesFromDto);
+            }
+        } else { // Si el DTO viene con la colección nula, podría interpretarse como "eliminar todas"
+            if (!gameEntity.getGameModes().isEmpty()) {
+                gameEntity.getGameModes().clear();
+            }
         }
 
-        Set<Genre> genresFromDto = new HashSet<>();
+        // Genres
         if (gameDto.getGenres() != null) {
-            genresFromDto = gameDto.getGenres().stream()
-                    .filter(dto -> dto != null && dto.getIgdbId() != null)
-                    .map(dto -> genreRepository.findByIgdbId(dto.getIgdbId())
-                            .map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return genreRepository.save(e);}return e;})
-                            .orElseGet(()->genreRepository.save(genreMapper.toEntity(dto))))
+            Set<Genre> genresFromDto = gameDto.getGenres().stream()
+                    .map(this::getOrCreateGenre) // Usa el helper
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
-        }
-        if (!gameEntity.getGenres().equals(genresFromDto)) {
-            gameEntity.setGenres(genresFromDto);
+            if (!gameEntity.getGenres().equals(genresFromDto)) {
+                gameEntity.setGenres(genresFromDto);
+            }
+        } else {
+            if (!gameEntity.getGenres().isEmpty()) {
+                gameEntity.getGenres().clear();
+            }
         }
 
-        Set<Franchise> franchisesFromDto = new HashSet<>();
+        // Franchises
         if (gameDto.getFranchises() != null) {
-            franchisesFromDto = gameDto.getFranchises().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> franchiseRepository.findByIgdbId(dto.getIgdbId()).map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return franchiseRepository.save(e);}return e;}).orElseGet(()->franchiseRepository.save(franchiseMapper.toEntity(dto)))).collect(Collectors.toSet());
+            Set<Franchise> franchisesFromDto = gameDto.getFranchises().stream()
+                    .map(this::getOrCreateFranchise) // Usa el helper
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!gameEntity.getFranchises().equals(franchisesFromDto)) {
+                gameEntity.setFranchises(franchisesFromDto);
+            }
+        } else {
+            if (!gameEntity.getFranchises().isEmpty()) {
+                gameEntity.getFranchises().clear();
+            }
         }
-        if (!gameEntity.getFranchises().equals(franchisesFromDto)) gameEntity.setFranchises(franchisesFromDto);
 
-        Set<GameEngine> gameEnginesFromDto = new HashSet<>();
+        // GameEngines
         if (gameDto.getGameEngines() != null) {
-            gameEnginesFromDto = gameDto.getGameEngines().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> gameEngineRepository.findByIgdbId(dto.getIgdbId()).map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return gameEngineRepository.save(e);}return e;}).orElseGet(()->gameEngineRepository.save(gameEngineMapper.toEntity(dto)))).collect(Collectors.toSet());
+            Set<GameEngine> gameEnginesFromDto = gameDto.getGameEngines().stream()
+                    .map(this::getOrCreateGameEngine) // Usa el helper
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!gameEntity.getGameEngines().equals(gameEnginesFromDto)) {
+                gameEntity.setGameEngines(gameEnginesFromDto);
+            }
+        } else {
+            if (!gameEntity.getGameEngines().isEmpty()) {
+                gameEntity.getGameEngines().clear();
+            }
         }
-        if (!gameEntity.getGameEngines().equals(gameEnginesFromDto)) gameEntity.setGameEngines(gameEnginesFromDto);
 
-        Set<Keyword> keywordsFromDto = new HashSet<>();
+        // Keywords
         if (gameDto.getKeywords() != null) {
-            keywordsFromDto = gameDto.getKeywords().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> keywordRepository.findByIgdbId(dto.getIgdbId()).map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return keywordRepository.save(e);}return e;}).orElseGet(()->keywordRepository.save(keywordMapper.toEntity(dto)))).collect(Collectors.toSet());
+            Set<Keyword> keywordsFromDto = gameDto.getKeywords().stream()
+                    .map(this::getOrCreateKeyword) // Usa el helper
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!gameEntity.getKeywords().equals(keywordsFromDto)) {
+                gameEntity.setKeywords(keywordsFromDto);
+            }
+        } else {
+            if (!gameEntity.getKeywords().isEmpty()) {
+                gameEntity.getKeywords().clear();
+            }
         }
-        if (!gameEntity.getKeywords().equals(keywordsFromDto)) gameEntity.setKeywords(keywordsFromDto);
 
-        Set<Platform> platformsFromDto = new HashSet<>();
+        // Platforms
         if (gameDto.getPlatforms() != null) {
-            platformsFromDto = gameDto.getPlatforms().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> platformRepository.findByIgdbId(dto.getIgdbId()).map(e -> {Platform m=platformMapper.toEntity(dto);
-                boolean c=false;if(!Objects.equals(e.getName(),m.getName())){e.setName(m.getName());c=true;}if(!Objects.equals(e.getAlternativeName(),m.getAlternativeName())){e.setAlternativeName(m.getAlternativeName());c=true;}if(m.getPlatformLogo() != null && !Objects.equals(e.getPlatformLogo(),m.getPlatformLogo())){e.setPlatformLogo(m.getPlatformLogo());c=true;} else if (m.getPlatformLogo() == null && e.getPlatformLogo() != null) {e.setPlatformLogo(null); c=true;}return c?platformRepository.save(e):e;}).orElseGet(()->platformRepository.save(platformMapper.toEntity(dto)))).collect(Collectors.toSet());
+            Set<Platform> platformsFromDto = gameDto.getPlatforms().stream()
+                    .map(this::getOrCreatePlatform) // Usa el helper
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!gameEntity.getPlatforms().equals(platformsFromDto)) {
+                gameEntity.setPlatforms(platformsFromDto);
+            }
+        } else {
+            if (!gameEntity.getPlatforms().isEmpty()) {
+                gameEntity.getPlatforms().clear();
+            }
         }
-        if (!gameEntity.getPlatforms().equals(platformsFromDto)) gameEntity.setPlatforms(platformsFromDto);
 
-        Set<Theme> themesFromDto = new HashSet<>();
+        // Themes
         if (gameDto.getThemes() != null) {
-            themesFromDto = gameDto.getThemes().stream().filter(dto -> dto != null && dto.getIgdbId() != null).map(dto -> themeRepository.findByIgdbId(dto.getIgdbId()).map(e -> {if(!Objects.equals(dto.getName(),e.getName())){e.setName(dto.getName());return themeRepository.save(e);}return e;}).orElseGet(()->themeRepository.save(themeMapper.toEntity(dto)))).collect(Collectors.toSet());
+            Set<Theme> themesFromDto = gameDto.getThemes().stream()
+                    .map(this::getOrCreateTheme) // Usa el helper
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            if (!gameEntity.getThemes().equals(themesFromDto)) {
+                gameEntity.setThemes(themesFromDto);
+            }
+        } else {
+            if (!gameEntity.getThemes().isEmpty()) {
+                gameEntity.getThemes().clear();
+            }
         }
-        if (!gameEntity.getThemes().equals(themesFromDto)) gameEntity.setThemes(themesFromDto);
+    }
+
+
+    /**
+     * Obtiene una entidad Theme existente por igdbId o crea una nueva si no existe.
+     * Actualiza el nombre si es diferente.
+     */
+    private Theme getOrCreateTheme(ThemeDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            return null;
+        }
+        return themeRepository.findByIgdbId(dto.getIgdbId())
+                .map(existingEntity -> {
+                    if (!Objects.equals(dto.getName(), existingEntity.getName())) {
+                        existingEntity.setName(dto.getName());
+                        return themeRepository.save(existingEntity);
+                    }
+                    return existingEntity;
+                })
+                .orElseGet(() -> themeRepository.save(themeMapper.toEntity(dto)));
     }
 
     private void processInvolvedCompanies(GameDto gameDto, Game gameEntity) {

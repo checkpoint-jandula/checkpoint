@@ -54,7 +54,7 @@ public class AccountCleanupService {
      * Para pruebas, puedes usar una expresión más frecuente como "0 * * * * ?" (cada minuto)
      * ¡Pero cámbiala para producción!
      */
-    @Scheduled(cron = "0 * * * * ?") // Ajusta la expresión Cron según tus necesidades
+    @Scheduled(cron = "0 0 2 * * ?") // Ajusta la expresión Cron según tus necesidades
     @Transactional // Importante para que la operación de borrado sea atómica
     public void performScheduledAccountDeletions() {
         OffsetDateTime now = OffsetDateTime.now();
