@@ -123,15 +123,83 @@ public class GameService {
 
     private Game processSingleGameDto(GameDto gameDto, Game prospectiveParentGameEntity) {
         if (gameDto == null || gameDto.getIgdbId() == null) {
-            logger.warn("processSingleGameDto: GameDto nulo o sin IgdbId.");
+            logger.warn("processSingleGameDto: GameDto nulo o sin IgdbId. Saltando.");
             return null;
         }
-        final Game finalProspectiveParentGame = prospectiveParentGameEntity;
-        logger.debug("Procesando GameDto: ID={}, Name={}, isFullDetails={}, ProspectiveParentIGDBID={}",
-                gameDto.getIgdbId(), gameDto.getName(), gameDto.isFullDetails(),
-                (finalProspectiveParentGame != null ? finalProspectiveParentGame.getIgdbId() : "null"));
 
-        Game currentGameEntity = gameRepository.findByIgdbId(gameDto.getIgdbId())
+        logger.debug("Inicio procesando GameDto: ID={}, Name={}, isFullDetails={}, ProspectiveParentIGDBID={}",
+                gameDto.getIgdbId(), gameDto.getName(), gameDto.isFullDetails(),
+                (prospectiveParentGameEntity != null ? prospectiveParentGameEntity.getIgdbId() : "null"));
+
+        // 1. Encontrar o crear la entidad base del juego y guardarla inicialmente
+        Game currentGameEntity = findOrCreateAndUpdateBaseGame(gameDto, prospectiveParentGameEntity);
+        if (currentGameEntity == null) { // No debería ocurrir si gameDto e igdbId no son nulos
+            logger.error("Error: findOrCreateBaseGame devolvió null para GameDto IGDB ID: {}", gameDto.getIgdbId());
+            return null;
+        }
+
+        // Guardamos aquí para asegurar que la entidad está gestionada y tiene un ID interno
+        // antes de procesar relaciones más complejas que podrían depender de ello.
+        try {
+            currentGameEntity = gameRepository.save(currentGameEntity);
+        } catch (Exception e) {
+            logger.error("Error guardando la entidad base del juego (IGDB ID: {}) : {}", gameDto.getIgdbId(), e.getMessage(), e);
+            throw e; // Relanzar para que la transacción haga rollback si es necesario
+        }
+        final Game managedGameEntity = currentGameEntity; // Ahora está gestionada
+
+        // 2. Procesar relaciones jerárquicas (juego padre, versión padre)
+        // Estas relaciones pueden implicar llamadas recursivas a processSingleGameDto,
+        // por lo que es bueno tener la entidad actual ya guardada y gestionada.
+        processParentAndVersionRelationships(gameDto, managedGameEntity);
+
+        // 3. Si el DTO tiene todos los detalles, procesar colecciones y compañías involucradas
+        if (gameDto.isFullDetails()) {
+            logger.debug("DTO completo (ID: {}), procesando colecciones detalladas.", managedGameEntity.getIgdbId());
+            processAssociatedManyToManyCollections(gameDto, managedGameEntity);
+            processInvolvedCompanies(gameDto, managedGameEntity);
+        } else {
+            logger.debug("DTO parcial (ID: {}), se omite procesamiento de colecciones detalladas.", managedGameEntity.getIgdbId());
+        }
+
+        // 4. Guardar la entidad principal después de establecer relaciones ManyToMany y OneToMany (como InvolvedCompanies)
+        // Esto asegura que los cambios en las colecciones se persistan.
+        Game savedMainGameEntity;
+        try {
+            savedMainGameEntity = gameRepository.save(managedGameEntity);
+        } catch (Exception e) {
+            logger.error("Error guardando managedGameEntity (IGDB ID: {}) después de procesar colecciones: {}", gameDto.getIgdbId(), e.getMessage(), e);
+            throw e;
+        }
+
+        // 5. Procesar listas de juegos hijos (DLCs, expansiones, bundles) y relacionados (remakes, remasters, similares)
+        // Estas operaciones pueden implicar más llamadas a processSingleGameDto para esas entidades relacionadas
+        // y luego establecer la relación con 'savedMainGameEntity'.
+        processChildGameLists(gameDto, savedMainGameEntity);
+        processRelatedGameLists(gameDto, savedMainGameEntity); // Incluye remakes, remasters, similar_games
+
+        // 6. Guardado final para persistir cualquier cambio en las relaciones de listas (como similarGames, childGames etc.)
+        Game finalSavedEntity;
+        try {
+            finalSavedEntity = gameRepository.save(savedMainGameEntity);
+        } catch (Exception e) {
+            logger.error("Error en el guardado final del juego (IGDB ID: {}): {}",
+                    (savedMainGameEntity != null ? savedMainGameEntity.getIgdbId() : gameDto.getIgdbId()),
+                    e.getMessage(), e);
+            throw e;
+        }
+
+        // 7. Inicializar colecciones LAZY antes de devolver la entidad (si es necesario para el llamador)
+        if (finalSavedEntity != null) {
+            initializeLazyCollections(finalSavedEntity);
+        }
+
+        logger.debug("Fin procesando GameDto: ID={}", gameDto.getIgdbId());
+        return finalSavedEntity;
+    }
+
+    private Game findOrCreateAndUpdateBaseGame(GameDto gameDto, Game prospectiveParentGameEntity) {
+        return gameRepository.findByIgdbId(gameDto.getIgdbId())
                 .map(existingGame -> {
                     logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails: {}", gameDto.getIgdbId(), gameDto.isFullDetails());
                     if (!gameDto.isFullDetails()) {
@@ -139,128 +207,150 @@ public class GameService {
                         updateSelectiveFields(gameDto, existingGame);
                     } else {
                         logger.debug("GameDto (ID: {}) es completo. Actualización completa vía gameMapper.updateFromDto.", gameDto.getIgdbId());
-                        gameMapper.updateFromDto(gameDto, existingGame);
+                        gameMapper.updateFromDto(gameDto, existingGame); // Asume que este mapper no toca colecciones complejas aquí
                     }
                     setFirstReleaseStatusFromDto(gameDto, existingGame);
-                    if (finalProspectiveParentGame != null && (existingGame.getParentGame() == null || !finalProspectiveParentGame.getIgdbId().equals(existingGame.getParentGame().getIgdbId()))) {
-                        existingGame.setParentGame(finalProspectiveParentGame);
+                    // Asignar el padre prospectivo si aplica y no está ya asignado correctamente
+                    if (prospectiveParentGameEntity != null &&
+                            (existingGame.getParentGame() == null ||
+                                    !existingGame.getParentGame().getIgdbId().equals(prospectiveParentGameEntity.getIgdbId()))) {
+                        existingGame.setParentGame(prospectiveParentGameEntity);
                     }
                     return existingGame;
                 })
                 .orElseGet(() -> {
                     logger.debug("Creando nuevo juego para IGDB ID: {}", gameDto.getIgdbId());
-                    Game newGame = gameMapper.toEntity(gameDto);
+                    Game newGame = gameMapper.toEntity(gameDto); // Asume que toEntity mapea campos básicos, no colecciones complejas
                     setFirstReleaseStatusFromDto(gameDto, newGame);
-                    if (finalProspectiveParentGame != null) newGame.setParentGame(finalProspectiveParentGame);
+                    if (prospectiveParentGameEntity != null) {
+                        newGame.setParentGame(prospectiveParentGameEntity);
+                    }
                     return newGame;
                 });
+    }
 
-        try {
-            currentGameEntity = gameRepository.save(currentGameEntity);
-        } catch (Exception e) {
-            logger.error("Error guardando currentGameEntity (IGDB ID: {}) antes de relaciones detalladas: {}", gameDto.getIgdbId(), e.getMessage(), e);
-            throw e;
-        }
-        final Game managedCurrentGameEntity = currentGameEntity;
-
-        if (gameDto.getParentGameInfo() != null && managedCurrentGameEntity.getParentGame() == null) {
+    private void processParentAndVersionRelationships(GameDto gameDto, Game managedGameEntity) {
+        // Procesar Parent Game (si no se asignó como 'prospectiveParentGameEntity')
+        if (gameDto.getParentGameInfo() != null && managedGameEntity.getParentGame() == null) {
             DlcInfoDto parentDto = gameDto.getParentGameInfo();
-            if (parentDto.getIgdbId() != null && !parentDto.getIgdbId().equals(managedCurrentGameEntity.getIgdbId())) {
-                GameDto parentAsFull = convertDlcInfoToGameDto(parentDto);
-                if (parentAsFull != null) {
-                    Game pEntity = processSingleGameDto(parentAsFull, null);
-                    if (pEntity != null) managedCurrentGameEntity.setParentGame(pEntity);
-                }
-            }
-        }
-        if (gameDto.getVersionParent() != null && managedCurrentGameEntity.getVersionParentGame() == null) {
-            DlcInfoDto vpDto = gameDto.getVersionParent();
-            if (vpDto.getIgdbId() != null && !vpDto.getIgdbId().equals(managedCurrentGameEntity.getIgdbId())) {
-                GameDto vpAsFull = convertDlcInfoToGameDto(vpDto);
-                if (vpAsFull != null) {
-                    Game vpEntity = processSingleGameDto(vpAsFull, null);
-                    if (vpEntity != null) managedCurrentGameEntity.setVersionParentGame(vpEntity);
-                }
-            }
-        }
-
-        if (gameDto.isFullDetails()) {
-            logger.debug("DTO completo (ID: {}), procesando colecciones ManyToMany e InvolvedCompanies.", managedCurrentGameEntity.getIgdbId());
-            processAssociatedManyToManyCollections(gameDto, managedCurrentGameEntity);
-            processInvolvedCompanies(gameDto, managedCurrentGameEntity);
-        } else {
-            logger.debug("DTO parcial (ID: {}), se omite la actualización masiva de colecciones ManyToMany e InvolvedCompanies.", managedCurrentGameEntity.getIgdbId());
-        }
-
-        Game savedMainGameEntity;
-        try {
-            savedMainGameEntity = gameRepository.save(managedCurrentGameEntity);
-        } catch (Exception e) {
-            logger.error("Error guardando managedCurrentGameEntity (IGDB ID: {}) después de procesar colecciones: {}", gameDto.getIgdbId(), e.getMessage(), e);
-            throw e;
-        }
-
-        processChildGameList(gameDto.getDlcs(), savedMainGameEntity, "DLCs");
-        processChildGameList(gameDto.getExpansions(), savedMainGameEntity, "Expansions");
-        processChildGameList(gameDto.getBundles(), savedMainGameEntity, "Bundles");
-        processRelatedGameList(gameDto.getRemakes(), savedMainGameEntity, savedMainGameEntity.getRemakeVersions(), "remake");
-        processRelatedGameList(gameDto.getRemasters(), savedMainGameEntity, savedMainGameEntity.getRemasterVersions(), "remaster");
-
-        if (gameDto.getSimilarGames() != null) {
-            Set<Game> currentSimilars = savedMainGameEntity.getSimilarGames(); // Podría necesitar inicialización si se accede fuera
-            Set<Game> newSimilars = new HashSet<>();
-            for (SimilarGameInfoDto simDto : gameDto.getSimilarGames()) {
-                if (simDto != null && simDto.getIgdbId() != null && !simDto.getIgdbId().equals(savedMainGameEntity.getIgdbId())) {
-                    GameDto simAsFull = convertSimilarGameInfoToGameDto(simDto);
-                    if (simAsFull != null) {
-                        Game simEntity = processSingleGameDto(simAsFull, null);
-                        if (simEntity != null) newSimilars.add(simEntity);
+            if (parentDto.getIgdbId() != null && !parentDto.getIgdbId().equals(managedGameEntity.getIgdbId())) {
+                GameDto parentAsGameDto = convertDlcInfoToGameDto(parentDto);
+                if (parentAsGameDto != null) {
+                    Game parentEntity = processSingleGameDto(parentAsGameDto, null); // El padre no tiene un padre prospectivo en este contexto
+                    if (parentEntity != null) {
+                        managedGameEntity.setParentGame(parentEntity);
                     }
                 }
             }
-            if (!currentSimilars.equals(newSimilars)) {
-                currentSimilars.clear();
-                currentSimilars.addAll(newSimilars);
+        }
+
+        // Procesar Version Parent
+        if (gameDto.getVersionParent() != null && managedGameEntity.getVersionParentGame() == null) {
+            DlcInfoDto vpDto = gameDto.getVersionParent();
+            if (vpDto.getIgdbId() != null && !vpDto.getIgdbId().equals(managedGameEntity.getIgdbId())) {
+                GameDto vpAsGameDto = convertDlcInfoToGameDto(vpDto);
+                if (vpAsGameDto != null) {
+                    Game vpEntity = processSingleGameDto(vpAsGameDto, null);
+                    if (vpEntity != null) {
+                        managedGameEntity.setVersionParentGame(vpEntity);
+                    }
+                }
+            }
+        }
+    }
+
+    private void processChildGameLists(GameDto gameDto, Game parentGame) {
+        processChildGameList(gameDto.getDlcs(), parentGame, "DLCs");
+        processChildGameList(gameDto.getExpansions(), parentGame, "Expansions");
+        processChildGameList(gameDto.getBundles(), parentGame, "Bundles");
+    }
+
+    private void processRelatedGameLists(GameDto gameDto, Game mainGame) {
+        // Remakes
+        if (gameDto.getRemakes() != null) {
+            updateRelatedGameCollection(
+                    gameDto.getRemakes().stream()
+                            .map(this::convertDlcInfoToGameDto)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()),
+                    mainGame,
+                    mainGame.getRemakeVersions(),
+                    "Remakes"
+            );
+        }
+
+        // Remasters
+        if (gameDto.getRemasters() != null) {
+            updateRelatedGameCollection(
+                    gameDto.getRemasters().stream()
+                            .map(this::convertDlcInfoToGameDto)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()),
+                    mainGame,
+                    mainGame.getRemasterVersions(),
+                    "Remasters"
+            );
+        }
+
+        // Similar Games
+        if (gameDto.getSimilarGames() != null) {
+            updateRelatedGameCollection(
+                    gameDto.getSimilarGames().stream()
+                            .map(this::convertSimilarGameInfoToGameDto) // Usa el conversor adecuado
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList()),
+                    mainGame,
+                    mainGame.getSimilarGames(),
+                    "SimilarGames"
+            );
+        }
+    }
+
+    // Método helper para actualizar colecciones de juegos relacionados (remakes, remasters, similar)
+    private void updateRelatedGameCollection(List<GameDto> relatedGameDtos, Game mainGame, Set<Game> existingRelatedCollection, String relationName) {
+        logger.debug("Procesando lista de {} para el juego principal ID: {}", relationName, mainGame.getIgdbId());
+        Set<Game> newRelatedEntities = new HashSet<>();
+
+        for (GameDto relatedDto : relatedGameDtos) {
+            if (relatedDto.getIgdbId() != null && !relatedDto.getIgdbId().equals(mainGame.getIgdbId())) {
+                Game relatedEntity = processSingleGameDto(relatedDto, null); // Procesar como juego independiente
+                if (relatedEntity != null) {
+                    newRelatedEntities.add(relatedEntity);
+                }
             }
         }
 
-        Game finalSavedEntity;
-        try {
-            finalSavedEntity = gameRepository.save(savedMainGameEntity);
-        } catch (Exception e) {
-            logger.error("Error en guardado final para IGDB ID: {}: {}",
-                    (savedMainGameEntity != null ? savedMainGameEntity.getIgdbId() : gameDto.getIgdbId()),
-                    e.getMessage(), e);
-            throw e;
+        // Compara y actualiza la colección solo si hay cambios
+        // Esto es importante para evitar operaciones innecesarias de base de datos
+        // y para que Hibernate maneje correctamente las relaciones ManyToMany.
+        if (!existingRelatedCollection.equals(newRelatedEntities)) {
+            logger.debug("Colección de '{}' para el juego {} ha cambiado. Actualizando.", relationName, mainGame.getIgdbId());
+            existingRelatedCollection.clear();
+            existingRelatedCollection.addAll(newRelatedEntities);
         }
+    }
 
-        // INICIALIZACIÓN DE COLECCIONES LAZY
-        if (finalSavedEntity != null) {
-            logger.debug("Inicializando colecciones LAZY para Game ID: {} antes de devolver.", finalSavedEntity.getIgdbId());
-            Hibernate.initialize(finalSavedEntity.getChildGames()); // Causante del error original
-            Hibernate.initialize(finalSavedEntity.getSimilarGames());
-            Hibernate.initialize(finalSavedEntity.getRemakeVersions());
-            Hibernate.initialize(finalSavedEntity.getRemasterVersions());
-            Hibernate.initialize(finalSavedEntity.getInvolvedCompanies());
-            // También inicializa las colecciones ManyToMany si tu GameMapper accede a ellas
-            // directamente y no solo a través de sus DTOs correspondientes.
-            Hibernate.initialize(finalSavedEntity.getGameModes());
-            Hibernate.initialize(finalSavedEntity.getGenres());
-            Hibernate.initialize(finalSavedEntity.getThemes());
-            Hibernate.initialize(finalSavedEntity.getKeywords());
-            Hibernate.initialize(finalSavedEntity.getPlatforms());
-            Hibernate.initialize(finalSavedEntity.getGameEngines());
-            Hibernate.initialize(finalSavedEntity.getFranchises());
-            // Las colecciones @ElementCollection (artworks, screenshots, etc.)
-            // se cargan EAGER por defecto si no se especifica FetchType,
-            // pero si las tienes como LAZY, también necesitarían inicialización aquí.
-            // Revisando tu entidad Game, son LAZY, así que las añadimos:
-            Hibernate.initialize(finalSavedEntity.getArtworks());
-            Hibernate.initialize(finalSavedEntity.getScreenshots());
-            Hibernate.initialize(finalSavedEntity.getWebsites());
-            Hibernate.initialize(finalSavedEntity.getVideos());
-        }
-        return finalSavedEntity;
+
+    private void initializeLazyCollections(Game game) {
+        if (game == null) return;
+        logger.debug("Inicializando colecciones LAZY para Game ID: {} antes de devolver.", game.getIgdbId());
+        Hibernate.initialize(game.getChildGames());
+        Hibernate.initialize(game.getSimilarGames());
+        Hibernate.initialize(game.getRemakeVersions());
+        Hibernate.initialize(game.getRemasterVersions());
+
+        if (game.getInvolvedCompanies() != null) Hibernate.initialize(game.getInvolvedCompanies());
+        if (game.getGameModes() != null) Hibernate.initialize(game.getGameModes());
+        if (game.getGenres() != null) Hibernate.initialize(game.getGenres());
+        if (game.getThemes() != null) Hibernate.initialize(game.getThemes());
+        if (game.getKeywords() != null) Hibernate.initialize(game.getKeywords());
+        if (game.getPlatforms() != null) Hibernate.initialize(game.getPlatforms());
+        if (game.getGameEngines() != null) Hibernate.initialize(game.getGameEngines());
+        if (game.getFranchises() != null) Hibernate.initialize(game.getFranchises());
+        if (game.getArtworks() != null) Hibernate.initialize(game.getArtworks());
+        if (game.getScreenshots() != null) Hibernate.initialize(game.getScreenshots());
+        if (game.getWebsites() != null) Hibernate.initialize(game.getWebsites());
+        if (game.getVideos() != null) Hibernate.initialize(game.getVideos());
     }
 
     private void updateSelectiveFields(GameDto dto, Game entity) {
