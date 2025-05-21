@@ -812,53 +812,151 @@ public class GameService {
                 .orElseGet(() -> themeRepository.save(themeMapper.toEntity(dto)));
     }
 
+    private Company getOrCreateCompany(CompanyInfoDto dto) {
+        if (dto == null || dto.getIgdbId() == null) {
+            logger.warn("CompanyInfoDto nulo o sin IgdbId. No se puede procesar la compañía.");
+            return null;
+        }
+
+        Optional<Company> existingCompanyOpt = companyRepository.findByIgdbId(dto.getIgdbId());
+        Company companyEntity;
+
+        if (existingCompanyOpt.isPresent()) {
+            companyEntity = existingCompanyOpt.get();
+            if (!Objects.equals(companyEntity.getName(), dto.getName())) {
+                logger.debug("Actualizando nombre de Company existente IGDB ID: {} de '{}' a '{}'",
+                        dto.getIgdbId(), companyEntity.getName(), dto.getName());
+                companyEntity.setName(dto.getName());
+                return companyRepository.save(companyEntity); // Guardar si hay cambios
+            }
+        } else {
+            logger.debug("Creando nueva Company para IGDB ID: {}", dto.getIgdbId());
+            companyEntity = companyMapper.toEntity(dto);
+            return companyRepository.save(companyEntity); // Guardar nueva entidad
+        }
+        return companyEntity;
+    }
+
+    // Helper para GameCompanyInvolvement (ya lo tenías definido o lo definimos ahora)
+    private GameCompanyInvolvement getOrCreateGameCompanyInvolvement(InvolvedCompanyDto invDto, Game gameEntity, Company companyEntity) {
+        if (invDto == null || invDto.getInvolvementIgdbId() == null || companyEntity == null || gameEntity == null) {
+            logger.warn("Datos insuficientes para crear o actualizar GameCompanyInvolvement. invDto: {}, gameEntity: {}, companyEntity: {}",
+                    invDto, gameEntity != null ? gameEntity.getIgdbId() : "null", companyEntity != null ? companyEntity.getIgdbId() : "null");
+            return null;
+        }
+
+        Optional<GameCompanyInvolvement> existingInvolvementOpt = gameCompanyInvolvementRepository.findByInvolvementIgdbId(invDto.getInvolvementIgdbId());
+        GameCompanyInvolvement involvementEntity;
+
+        if (existingInvolvementOpt.isPresent()) {
+            involvementEntity = existingInvolvementOpt.get();
+            logger.debug("Actualizando GameCompanyInvolvement existente IGDB ID: {}", invDto.getInvolvementIgdbId());
+
+            boolean changed = false;
+            // Es importante asegurarse de que la relación 'game' sea la correcta,
+            // aunque si se busca por involvementIgdbId, el juego asociado debería ser consistente.
+            // No obstante, una comprobación no está de más si la fuente de datos pudiera ser inconsistente.
+            if (!involvementEntity.getGame().getIgdbId().equals(gameEntity.getIgdbId())) {
+                logger.warn("GameCompanyInvolvement IGDB ID {} estaba asociado al juego {} pero se está procesando para el juego {}. Re-asociando.",
+                        invDto.getInvolvementIgdbId(), involvementEntity.getGame().getIgdbId(), gameEntity.getIgdbId());
+                involvementEntity.setGame(gameEntity);
+                changed = true;
+            }
+            if (!involvementEntity.getCompany().getIgdbId().equals(companyEntity.getIgdbId())) {
+                involvementEntity.setCompany(companyEntity);
+                changed = true;
+            }
+            if (involvementEntity.isDeveloper() != invDto.isDeveloper()) {
+                involvementEntity.setDeveloper(invDto.isDeveloper());
+                changed = true;
+            }
+            if (involvementEntity.isPublisher() != invDto.isPublisher()) {
+                involvementEntity.setPublisher(invDto.isPublisher());
+                changed = true;
+            }
+            if (involvementEntity.isPorting() != invDto.isPorting()) {
+                involvementEntity.setPorting(invDto.isPorting());
+                changed = true;
+            }
+            if (involvementEntity.isSupporting() != invDto.isSupporting()) {
+                involvementEntity.setSupporting(invDto.isSupporting());
+                changed = true;
+            }
+
+            if (changed) {
+                return gameCompanyInvolvementRepository.save(involvementEntity);
+            }
+        } else {
+            logger.debug("Creando nuevo GameCompanyInvolvement para IGDB ID de involucramiento: {}", invDto.getInvolvementIgdbId());
+            GameCompanyInvolvement newInvolvement = new GameCompanyInvolvement();
+            newInvolvement.setInvolvementIgdbId(invDto.getInvolvementIgdbId());
+            newInvolvement.setGame(gameEntity);
+            newInvolvement.setCompany(companyEntity);
+            newInvolvement.setDeveloper(invDto.isDeveloper());
+            newInvolvement.setPublisher(invDto.isPublisher());
+            newInvolvement.setPorting(invDto.isPorting());
+            newInvolvement.setSupporting(invDto.isSupporting());
+            return gameCompanyInvolvementRepository.save(newInvolvement);
+        }
+        return involvementEntity;
+    }
+
     private void processInvolvedCompanies(GameDto gameDto, Game gameEntity) {
-        logger.debug("Procesando InvolvedCompanies para el juego completo {}", gameEntity.getIgdbId());
-        Set<GameCompanyInvolvement> involvementsFromDtoProcessing = new HashSet<>();
-        if (gameDto.getInvolvedCompanies() != null && !gameDto.getInvolvedCompanies().isEmpty()) {
-            for(InvolvedCompanyDto invDto : gameDto.getInvolvedCompanies()){
-                if(invDto==null||invDto.getInvolvementIgdbId()==null) continue;
-                CompanyInfoDto ciDto=invDto.getCompany();
-                if(ciDto==null||ciDto.getIgdbId()==null){logger.warn("InvolvedCompany (ID: {}) tiene CompanyInfo nula o CompanyInfo.igdbId nulo. Saltando.", invDto.getInvolvementIgdbId());continue;}
+        logger.debug("Procesando InvolvedCompanies para el juego {} (IGDB ID: {})", gameEntity.getName(), gameEntity.getIgdbId());
 
-                Company cEnt=companyRepository.findByIgdbId(ciDto.getIgdbId())
-                        .map(eC->{
-                            if(!Objects.equals(eC.getName(),ciDto.getName())){
-                                eC.setName(ciDto.getName());
-                                return companyRepository.save(eC);
-                            }
-                            return eC;
-                        })
-                        .orElseGet(()->companyRepository.save(companyMapper.toEntity(ciDto)));
+        // Si el DTO no trae información de compañías, y la entidad sí tiene,
+        // se interpretará como que deben eliminarse todas las asociaciones existentes.
+        if (gameDto.getInvolvedCompanies() == null || gameDto.getInvolvedCompanies().isEmpty()) {
+            if (!gameEntity.getInvolvedCompanies().isEmpty()) {
+                logger.debug("DTO no contiene 'involved_companies' o está vacía. Limpiando {} asociaciones existentes para el juego {}.",
+                        gameEntity.getInvolvedCompanies().size(), gameEntity.getIgdbId());
+                gameEntity.getInvolvedCompanies().clear(); // orphanRemoval=true en Game#involvedCompanies se encargará de borrar de la BD.
+            }
+            return; // No hay nada más que procesar
+        }
 
-                GameCompanyInvolvement inv=gameCompanyInvolvementRepository.findByInvolvementIgdbId(invDto.getInvolvementIgdbId())
-                        .map(eI->{
-                            boolean changed = false;
-                            if (!Objects.equals(eI.getGame().getIgdbId(), gameEntity.getIgdbId())) {eI.setGame(gameEntity); changed = true;} // Re-asociar si es necesario
-                            if (!Objects.equals(eI.getCompany().getIgdbId(), cEnt.getIgdbId())) {eI.setCompany(cEnt); changed = true;}
-                            if (eI.isDeveloper() != invDto.isDeveloper()) {eI.setDeveloper(invDto.isDeveloper()); changed = true;}
-                            if (eI.isPublisher() != invDto.isPublisher()) {eI.setPublisher(invDto.isPublisher()); changed = true;}
-                            if (eI.isPorting() != invDto.isPorting()) {eI.setPorting(invDto.isPorting()); changed = true;}
-                            if (eI.isSupporting() != invDto.isSupporting()) {eI.setSupporting(invDto.isSupporting()); changed = true;}
-                            return changed ? gameCompanyInvolvementRepository.save(eI) : eI;
-                        })
-                        .orElseGet(()->{
-                            GameCompanyInvolvement nI=new GameCompanyInvolvement();
-                            nI.setInvolvementIgdbId(invDto.getInvolvementIgdbId());
-                            nI.setGame(gameEntity);
-                            nI.setCompany(cEnt);
-                            nI.setDeveloper(invDto.isDeveloper());
-                            nI.setPublisher(invDto.isPublisher());
-                            nI.setPorting(invDto.isPorting());
-                            nI.setSupporting(invDto.isSupporting());
-                            return gameCompanyInvolvementRepository.save(nI);
-                        });
-                involvementsFromDtoProcessing.add(inv);
+        Set<GameCompanyInvolvement> processedInvolvements = new HashSet<>();
+        List<InvolvedCompanyDto> involvedCompanyDtos = gameDto.getInvolvedCompanies();
+
+        for (InvolvedCompanyDto invDto : involvedCompanyDtos) {
+            if (invDto == null || invDto.getInvolvementIgdbId() == null) {
+                logger.warn("Se encontró un InvolvedCompanyDto nulo o sin ID de involucramiento. Saltando.");
+                continue;
+            }
+
+            CompanyInfoDto companyInfoDto = invDto.getCompany();
+            if (companyInfoDto == null || companyInfoDto.getIgdbId() == null) {
+                logger.warn("InvolvedCompany (ID de involucramiento: {}) tiene CompanyInfo nula o CompanyInfo.igdbId nulo. Saltando.",
+                        invDto.getInvolvementIgdbId());
+                continue;
+            }
+
+            // 1. Obtener o crear la entidad Company
+            Company companyEntity = getOrCreateCompany(companyInfoDto);
+            if (companyEntity == null) {
+                logger.warn("No se pudo obtener o crear la entidad Company para CompanyInfoDto con IGDB ID: {}. Saltando este InvolvedCompany.",
+                        companyInfoDto.getIgdbId());
+                continue;
+            }
+
+            // 2. Obtener o crear la entidad GameCompanyInvolvement
+            GameCompanyInvolvement involvementEntity = getOrCreateGameCompanyInvolvement(invDto, gameEntity, companyEntity);
+            if (involvementEntity != null) {
+                processedInvolvements.add(involvementEntity);
             }
         }
-        if (!gameEntity.getInvolvedCompanies().equals(involvementsFromDtoProcessing)) {
+
+        // 3. Sincronizar la colección de la entidad principal con el conjunto procesado
+        // Esto asegura que solo las asociaciones deseadas permanezcan.
+        // Hibernate, gracias a equals/hashCode en GameCompanyInvolvement y orphanRemoval=true en Game,
+        // manejará eficientemente las adiciones, actualizaciones (si 'changed' fue true en el helper) y eliminaciones.
+        if (!gameEntity.getInvolvedCompanies().equals(processedInvolvements)) {
+            logger.debug("Actualizando la colección 'involvedCompanies' del juego {}. Antes: {}, Después: {}.",
+                    gameEntity.getIgdbId(), gameEntity.getInvolvedCompanies().size(), processedInvolvements.size());
             gameEntity.getInvolvedCompanies().clear();
-            gameEntity.getInvolvedCompanies().addAll(involvementsFromDtoProcessing);
+            gameEntity.getInvolvedCompanies().addAll(processedInvolvements);
+        } else {
+            logger.debug("La colección 'involvedCompanies' del juego {} no ha cambiado. No se requiere actualización de la colección en sí.", gameEntity.getIgdbId());
         }
     }
 
