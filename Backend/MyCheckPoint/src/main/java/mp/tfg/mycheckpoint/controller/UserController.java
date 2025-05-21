@@ -122,6 +122,7 @@ public class UserController {
             @RequestParam("username") String usernameQuery,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
         List<UserSearchResultDTO> users = userService.searchUsersByUsername(usernameQuery, currentUser.getEmail());
+
         return ResponseEntity.ok(users);
     }
 

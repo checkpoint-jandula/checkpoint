@@ -3,9 +3,15 @@ package mp.tfg.mycheckpoint.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND) // 404
-public class ResourceNotFoundException extends RuntimeException {
+public class ResourceNotFoundException extends MyCheckPointException { // Hereda de la nueva base
+
+    private static final HttpStatus STATUS = HttpStatus.NOT_FOUND;
+
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(message, STATUS);
+    }
+
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause, STATUS);
     }
 }

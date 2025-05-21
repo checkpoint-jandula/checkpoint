@@ -1,7 +1,11 @@
 package mp.tfg.mycheckpoint.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,22 +19,27 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Ya no son necesarios aquí si las excepciones usan @ResponseStatus
-    // @ExceptionHandler(DuplicateEntryException.class)
-    // public ResponseEntity<String> handleDuplicateEntryException(DuplicateEntryException ex) {
-    //     return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
-    // }
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // @ExceptionHandler(ResourceNotFoundException.class)
-    // public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
-    //     return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    // }
+    // Handler para todas las excepciones que extiendan de MyCheckPointException
+    @ExceptionHandler(MyCheckPointException.class)
+    public ResponseEntity<Map<String, String>> handleMyCheckPointException(MyCheckPointException ex) {
+        logger.warn("MyCheckPointException capturada: {} - HTTP Status: {} - Mensaje: {}",
+                ex.getClass().getSimpleName(), ex.getHttpStatus(), ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        // También podrías añadir más detalles si los tienes en tus excepciones personalizadas
+        // errorResponse.put("errorCode", ex.getErrorCode()); // Si tuvieras un código de error
+        return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+    }
 
+    // Mantener el handler para errores de validación de DTOs
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, List<String>>> handleValidationErrors(MethodArgumentNotValidException ex) {
         List<String> errors = ex.getBindingResult().getFieldErrors()
                 .stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.toList());
-        return new ResponseEntity<>(getErrorsMap(errors), HttpStatus.BAD_REQUEST); // 400
+        logger.warn("Error de validación: {}", errors);
+        return new ResponseEntity<>(getErrorsMap(errors), HttpStatus.BAD_REQUEST);
     }
 
     private Map<String, List<String>> getErrorsMap(List<String> errors) {
@@ -39,11 +48,31 @@ public class GlobalExceptionHandler {
         return errorResponse;
     }
 
+    // Handler para BadCredentialsException (si no la envuelves en una personalizada)
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
+        logger.warn("Error de credenciales: {}", ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Credenciales inválidas."); // Mensaje genérico para el usuario
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    // Handler para AccessDeniedException de Spring Security (cuando un usuario autenticado no tiene permisos)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(AccessDeniedException ex) {
+        logger.warn("Acceso denegado: {}", ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "No tienes permiso para realizar esta acción.");
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
     // Handler genérico para otras excepciones no controladas explícitamente
+    // Este debería ser el último.
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGenericException(Exception ex) {
-        // Loggear la excepción aquí es una buena práctica
-        // logger.error("Excepción no controlada: ", ex);
-        return new ResponseEntity<>("Ocurrió un error interno en el servidor.", HttpStatus.INTERNAL_SERVER_ERROR); // 500
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        logger.error("Excepción no controlada: ", ex); // Loguear el stack trace completo
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Ocurrió un error interno inesperado en el servidor.");
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

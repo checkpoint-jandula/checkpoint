@@ -6,6 +6,7 @@ import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.entity.VerificationToken;
 import mp.tfg.mycheckpoint.event.OnRegistrationCompleteEvent;
 import mp.tfg.mycheckpoint.exception.DuplicateEntryException;
+import mp.tfg.mycheckpoint.exception.InvalidTokenException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.mapper.UserMapper;
 import mp.tfg.mycheckpoint.repository.PasswordResetTokenRepository;
@@ -125,16 +126,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String confirmEmailVerification(String tokenString) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(tokenString)
-                .orElseThrow(() -> new ResourceNotFoundException("Token de verificación inválido o no encontrado."));
+                .orElseThrow(() -> new InvalidTokenException("Token de verificación inválido o no encontrado."));
         if (verificationToken.isUsed()) {
-            return "Este enlace de verificación ya ha sido utilizado.";
+            throw new InvalidTokenException("Este enlace de verificación ya ha sido utilizado.");
         }
         if (verificationToken.isExpired()) {
-            return "El enlace de verificación ha expirado. Por favor, solicita uno nuevo.";
+            throw new InvalidTokenException("El enlace de verificación ha expirado.");
         }
         User user = verificationToken.getUser();
         if (user.isEmailVerified()) {
-            return "Tu correo electrónico ya ha sido verificado.";
+            throw new InvalidTokenException("Tu correo electrónico ya ha sido verificado.");
         }
         user.setEmailVerified(true);
         userRepository.save(user);
@@ -163,8 +164,7 @@ public class UserServiceImpl implements UserService {
     public void processForgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
         Optional<User> userOptional = userRepository.findByEmail(forgotPasswordDTO.getEmail());
         if (userOptional.isEmpty()) {
-            logger.warn("Solicitud de reseteo de contraseña para email no existente: {}", forgotPasswordDTO.getEmail());
-            return;
+            throw new ResourceNotFoundException("Usuario no encontrado con email: " + forgotPasswordDTO.getEmail());
         }
         User user = userOptional.get();
         passwordResetTokenRepository.findByUserAndUsedFalseAndExpiryDateAfter(user, OffsetDateTime.now())
@@ -231,16 +231,32 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserSearchResultDTO> searchUsersByUsername(String usernameQuery, String currentUserEmail) {
+        // Validación de la query de búsqueda
         if (!StringUtils.hasText(usernameQuery) || usernameQuery.trim().length() < 2) {
+            // Podrías lanzar una InvalidSearchQueryException aquí si quieres un error específico para esto,
+            // o simplemente devolver una lista vacía si prefieres no tratarlo como un error del cliente.
+            // Por ahora, mantendremos la devolución de lista vacía para queries inválidas.
+            // Si quieres un error 400 para query inválida, necesitarías una excepción y manejo.
+            // Alternativamente, podrías lanzar una nueva excepción aquí como:
+            // throw new InvalidInputException("El término de búsqueda debe tener al menos 2 caracteres.", HttpStatus.BAD_REQUEST);
+            // Y tu GlobalExceptionHandler la manejaría.
+            // Por ahora, nos centramos en el "no encontrado".
             return Collections.emptyList();
         }
+
         User currentUser = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario actual no encontrado: " + currentUserEmail + " al realizar búsqueda."));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario actual (solicitante) no encontrado: " + currentUserEmail + ". Búsqueda no realizada."));
 
         List<User> foundUsers = userRepository.searchByNombreUsuarioContainingIgnoreCaseAndNotSelf(
                 usernameQuery.trim(),
                 currentUser.getId()
         );
+
+        if (foundUsers.isEmpty()) {
+            // Si no se encontraron usuarios con ese nombre, lanzamos ResourceNotFoundException.
+            throw new ResourceNotFoundException("No se encontraron usuarios con el nombre: '" + usernameQuery + "'");
+        }
+
         return foundUsers.stream()
                 .map(userMapper::toSearchResultDto)
                 .collect(Collectors.toList());
