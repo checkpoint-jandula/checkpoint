@@ -14,11 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -199,49 +195,78 @@ public class GameService {
     }
 
     private Game findOrCreateAndUpdateBaseGame(GameDto gameDto, Game prospectiveParentGameEntity) {
-        return gameRepository.findByIgdbId(gameDto.getIgdbId())
-                .map(existingGame -> {
-                    logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails DTO: {}, isFullDetails Entidad: {}",
-                            gameDto.getIgdbId(), gameDto.isFullDetails(), existingGame.isFullDetails());
+        // Buscar si el juego ya existe en la base de datos por su IGDB ID.
+        Optional<Game> existingGameOptional = gameRepository.findByIgdbId(gameDto.getIgdbId());
 
-                    if (gameDto.isFullDetails()) {
-                        // El DTO es completo, realizamos una actualización completa.
-                        logger.debug("GameDto (ID: {}) es completo. Actualización completa.", gameDto.getIgdbId());
-                        gameMapper.updateFromDto(gameDto, existingGame); // Mapea campos básicos y listas de embeddables del DTO a la entidad.
+        Game gameToProcess; // Esta será la entidad que se devolverá, ya sea existente o nueva.
 
-                        // Marcamos la entidad como completa si no lo estaba ya.
-                        if (!existingGame.isFullDetails()) {
-                            existingGame.setFullDetails(true);
-                            logger.debug("Entidad Game (ID: {}) marcada como isFullDetails = true.", existingGame.getIgdbId());
-                        }
-                        // Aquí NO se procesan las colecciones ManyToMany ni las relaciones complejas
-                        // eso se hace en processSingleGameDto después de este paso.
-                    } else {
-                        // El DTO es parcial, solo hacemos actualización selectiva de campos básicos.
-                        // No cambiamos el estado de existingGame.isFullDetails.
-                        logger.debug("GameDto (ID: {}) es parcial. Actualización selectiva.", gameDto.getIgdbId());
-                        updateSelectiveFields(gameDto, existingGame);
-                    }
+        if (existingGameOptional.isPresent()) {
+            // El juego ya existe, así que lo vamos a actualizar.
+            Game existingGame = existingGameOptional.get();
+            logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails DTO: {}, isFullDetails Entidad: {}",
+                    gameDto.getIgdbId(), gameDto.isFullDetails(), existingGame.isFullDetails());
 
-                    setFirstReleaseStatusFromDto(gameDto, existingGame);
-                    if (prospectiveParentGameEntity != null &&
-                            (existingGame.getParentGame() == null ||
-                                    !existingGame.getParentGame().getIgdbId().equals(prospectiveParentGameEntity.getIgdbId()))) {
-                        existingGame.setParentGame(prospectiveParentGameEntity);
-                    }
-                    return existingGame;
-                })
-                .orElseGet(() -> {
-                    logger.debug("Creando nuevo juego para IGDB ID: {}", gameDto.getIgdbId());
-                    Game newGame = gameMapper.toEntity(gameDto); // Mapea campos básicos.
-                    newGame.setFullDetails(gameDto.isFullDetails()); // Establece el estado inicial de completitud.
+            if (gameDto.isFullDetails()) {
+                // El DTO entrante se considera completo, por lo que aplicamos una actualización completa
+                // de los campos básicos y las listas de elementos embebidos usando el mapper.
+                logger.debug("GameDto (ID: {}) es completo. Actualización completa.", gameDto.getIgdbId());
+                gameMapper.updateFromDto(gameDto, existingGame); // MapStruct actualiza 'existingGame' en el sitio.
 
-                    setFirstReleaseStatusFromDto(gameDto, newGame);
-                    if (prospectiveParentGameEntity != null) {
-                        newGame.setParentGame(prospectiveParentGameEntity);
-                    }
-                    return newGame;
-                });
+                // Si la entidad existente no estaba marcada como completa, y el DTO sí lo está,
+                // actualizamos la marca en la entidad.
+                if (!existingGame.isFullDetails()) {
+                    // Asumiendo que tu entidad Game tiene un campo boolean isFullDetails y su setter
+                     existingGame.setFullDetails(true); // DESCOMENTA SI TIENES ESTE CAMPO Y SETTER EN LA ENTIDAD GAME
+                    logger.debug("Entidad Game (ID: {}) marcada como isFullDetails = true (si el campo existe).", existingGame.getIgdbId());
+                }
+            } else {
+                // El DTO entrante es parcial (isFullDetails = false), así que solo actualizamos
+                // los campos básicos definidos en updateSelectiveFields.
+                // No cambiamos el estado de existingGame.isFullDetails basado en un DTO parcial.
+                logger.debug("GameDto (ID: {}) es parcial. Actualización selectiva.", gameDto.getIgdbId());
+                updateSelectiveFields(gameDto, existingGame);
+            }
+
+            // Establecer el estado de lanzamiento (ReleaseStatus) basado en el DTO.
+            setFirstReleaseStatusFromDto(gameDto, existingGame);
+
+            // Asignar el 'prospectiveParentGameEntity' si es necesario:
+            // - Si se proporcionó un 'prospectiveParentGameEntity'.
+            // - Y el juego existente no tiene un padre O su padre actual es diferente al prospectivo.
+            if (prospectiveParentGameEntity != null &&
+                    (existingGame.getParentGame() == null ||
+                            !existingGame.getParentGame().getIgdbId().equals(prospectiveParentGameEntity.getIgdbId()))) {
+                existingGame.setParentGame(prospectiveParentGameEntity);
+                logger.debug("Asignado prospectiveParentGameEntity (ID: {}) al juego existente (ID: {}).",
+                        prospectiveParentGameEntity.getIgdbId(), existingGame.getIgdbId());
+            }
+            gameToProcess = existingGame;
+
+        } else {
+            // El juego no existe en la base de datos, así que creamos uno nuevo.
+            logger.debug("Creando nuevo juego para IGDB ID: {}", gameDto.getIgdbId());
+            Game newGame = gameMapper.toEntity(gameDto); // Mapea los campos básicos del DTO a una nueva entidad.
+
+            // Establecer el estado de 'isFullDetails' de la nueva entidad basado en el DTO.
+            // Asumiendo que tu entidad Game tiene un campo boolean isFullDetails y su setter
+            // newGame.setFullDetails(gameDto.isFullDetails()); // DESCOMENTA SI TIENES ESTE CAMPO Y SETTER EN LA ENTIDAD GAME
+            logger.debug("Nueva entidad Game (ID: {}) creada con isFullDetails = {} (si el campo existe).",
+                    newGame.getIgdbId(), gameDto.isFullDetails());
+
+
+            // Establecer el estado de lanzamiento (ReleaseStatus) para el nuevo juego.
+            setFirstReleaseStatusFromDto(gameDto, newGame);
+
+            // Si se proporcionó un 'prospectiveParentGameEntity', asignarlo al nuevo juego.
+            if (prospectiveParentGameEntity != null) {
+                newGame.setParentGame(prospectiveParentGameEntity);
+                logger.debug("Asignado prospectiveParentGameEntity (ID: {}) al nuevo juego (ID: {}).",
+                        prospectiveParentGameEntity.getIgdbId(), newGame.getIgdbId());
+            }
+            gameToProcess = newGame;
+        }
+
+        return gameToProcess; // Devolver la entidad (existente actualizada o nueva).
     }
 
     private void processParentAndVersionRelationships(GameDto gameDto, Game managedGameEntity) {
