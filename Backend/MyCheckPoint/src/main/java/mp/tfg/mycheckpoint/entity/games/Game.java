@@ -45,6 +45,8 @@ public class Game {
     private String summary;
     @Column(name = "storyline", columnDefinition = "TEXT")
     private String storyline;
+    @Column(name = "is_full_details", nullable = false)
+    private boolean isFullDetails = false;
 
     @Enumerated(EnumType.ORDINAL)
     @Column(name = "game_type")

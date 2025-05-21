@@ -68,20 +68,73 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
 
     private Game ensureGameExists(Long igdbId) {
         Optional<Game> gameOpt = gameRepository.findByIgdbId(igdbId);
+
         if (gameOpt.isPresent()) {
-            return gameOpt.get();
+            Game existingGameEntity = gameOpt.get();
+
+            // Comprobar si la ENTIDAD existente tiene todos los detalles.
+            if (!existingGameEntity.isFullDetails()) {
+                logger.info("Juego con IGDB ID {} existe localmente pero está marcado como parcial (entidad.isFullDetails=false). Obteniendo detalles completos de IGDB.", igdbId);
+
+                // 1. Obtener el DTO completo de IGDB.
+                GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block();
+
+                if (gameDtoFromIgdb == null) {
+                    logger.error("No se pudo encontrar el juego con IGDB ID {} en IGDB para completar detalles, aunque existía parcialmente.", igdbId);
+                    // Considera qué hacer aquí. ¿Devolver el parcial? ¿Lanzar error?
+                    // Por coherencia con el flujo deseado, es mejor lanzar un error si no se puede completar.
+                    throw new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId + " para completar detalles.");
+                }
+
+                // 2. Marcar este DTO como que contiene todos los detalles.
+                gameDtoFromIgdb.setFullDetails(true);
+
+                // 3. Llamar a gameService.saveGames() para actualizar la entidad existente.
+                // La lógica dentro de GameService (findOrCreateAndUpdateBaseGame y processSingleGameDto)
+                // debería manejar la actualización completa de 'existingGameEntity' porque
+                // gameDtoFromIgdb.isFullDetails() es true.
+                // Es importante que processSingleGameDto procese TODAS las relaciones (ManyToMany, etc.)
+                // cuando el DTO que recibe está marcado como isFullDetails=true.
+                logger.debug("Llamando a gameService.saveGames para actualizar el juego IGDB ID {} con DTO completo.", igdbId);
+                List<Game> updatedGames = gameService.saveGames(Collections.singletonList(gameDtoFromIgdb));
+
+                if (updatedGames.isEmpty() || updatedGames.get(0) == null) {
+                    logger.error("Error al actualizar el juego (IGDB ID {}) con detalles completos usando gameService.saveGames.", igdbId);
+                    throw new RuntimeException("Falló la actualización del juego desde IGDB con ID: " + igdbId + " después de obtener detalles completos.");
+                }
+
+                Game fullyUpdatedGameEntity = updatedGames.get(0);
+                logger.info("Juego con IGDB ID {} actualizado con detalles completos. Entidad.isFullDetails ahora es: {}", igdbId, fullyUpdatedGameEntity.isFullDetails());
+                return fullyUpdatedGameEntity; // Devuelve la entidad actualizada y ahora completa.
+
+            } else {
+                // El juego existe y la entidad ya está marcada como con detalles completos.
+                logger.debug("Juego con IGDB ID {} existe localmente y ya tiene detalles completos (entidad.isFullDetails=true).", igdbId);
+                return existingGameEntity;
+            }
         } else {
-            logger.info("Game with IGDB ID {} not found in local DB. Fetching from IGDB and saving.", igdbId);
+            // El juego no existe localmente, obtenerlo de IGDB y guardarlo.
+            logger.info("Juego con IGDB ID {} no encontrado en BD local. Obteniendo de IGDB y guardando.", igdbId);
             GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block();
+
             if (gameDtoFromIgdb == null) {
-                throw new ResourceNotFoundException("Game not found in IGDB with ID: " + igdbId);
+                throw new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId);
             }
+
+            // Al obtenerlo por primera vez directamente para añadir a la biblioteca, se asume completo.
             gameDtoFromIgdb.setFullDetails(true);
+
+            logger.debug("Llamando a gameService.saveGames para guardar el nuevo juego IGDB ID {} con DTO completo.", igdbId);
             List<Game> savedGames = gameService.saveGames(Collections.singletonList(gameDtoFromIgdb));
+
             if (savedGames.isEmpty() || savedGames.get(0) == null) {
-                throw new RuntimeException("Failed to save game from IGDB with ID: " + igdbId);
+                logger.error("Error al guardar nuevo juego de IGDB con ID {}.", igdbId);
+                throw new RuntimeException("Falló el guardado del nuevo juego desde IGDB con ID: " + igdbId);
             }
-            return savedGames.get(0);
+
+            Game newSavedGameEntity = savedGames.get(0);
+            logger.info("Nuevo juego con IGDB ID {} guardado. Entidad.isFullDetails: {}", igdbId, newSavedGameEntity.isFullDetails());
+            return newSavedGameEntity;
         }
     }
 

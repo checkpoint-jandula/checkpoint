@@ -201,16 +201,29 @@ public class GameService {
     private Game findOrCreateAndUpdateBaseGame(GameDto gameDto, Game prospectiveParentGameEntity) {
         return gameRepository.findByIgdbId(gameDto.getIgdbId())
                 .map(existingGame -> {
-                    logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails: {}", gameDto.getIgdbId(), gameDto.isFullDetails());
-                    if (!gameDto.isFullDetails()) {
+                    logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails DTO: {}, isFullDetails Entidad: {}",
+                            gameDto.getIgdbId(), gameDto.isFullDetails(), existingGame.isFullDetails());
+
+                    if (gameDto.isFullDetails()) {
+                        // El DTO es completo, realizamos una actualización completa.
+                        logger.debug("GameDto (ID: {}) es completo. Actualización completa.", gameDto.getIgdbId());
+                        gameMapper.updateFromDto(gameDto, existingGame); // Mapea campos básicos y listas de embeddables del DTO a la entidad.
+
+                        // Marcamos la entidad como completa si no lo estaba ya.
+                        if (!existingGame.isFullDetails()) {
+                            existingGame.setFullDetails(true);
+                            logger.debug("Entidad Game (ID: {}) marcada como isFullDetails = true.", existingGame.getIgdbId());
+                        }
+                        // Aquí NO se procesan las colecciones ManyToMany ni las relaciones complejas
+                        // eso se hace en processSingleGameDto después de este paso.
+                    } else {
+                        // El DTO es parcial, solo hacemos actualización selectiva de campos básicos.
+                        // No cambiamos el estado de existingGame.isFullDetails.
                         logger.debug("GameDto (ID: {}) es parcial. Actualización selectiva.", gameDto.getIgdbId());
                         updateSelectiveFields(gameDto, existingGame);
-                    } else {
-                        logger.debug("GameDto (ID: {}) es completo. Actualización completa vía gameMapper.updateFromDto.", gameDto.getIgdbId());
-                        gameMapper.updateFromDto(gameDto, existingGame); // Asume que este mapper no toca colecciones complejas aquí
                     }
+
                     setFirstReleaseStatusFromDto(gameDto, existingGame);
-                    // Asignar el padre prospectivo si aplica y no está ya asignado correctamente
                     if (prospectiveParentGameEntity != null &&
                             (existingGame.getParentGame() == null ||
                                     !existingGame.getParentGame().getIgdbId().equals(prospectiveParentGameEntity.getIgdbId()))) {
@@ -220,7 +233,9 @@ public class GameService {
                 })
                 .orElseGet(() -> {
                     logger.debug("Creando nuevo juego para IGDB ID: {}", gameDto.getIgdbId());
-                    Game newGame = gameMapper.toEntity(gameDto); // Asume que toEntity mapea campos básicos, no colecciones complejas
+                    Game newGame = gameMapper.toEntity(gameDto); // Mapea campos básicos.
+                    newGame.setFullDetails(gameDto.isFullDetails()); // Establece el estado inicial de completitud.
+
                     setFirstReleaseStatusFromDto(gameDto, newGame);
                     if (prospectiveParentGameEntity != null) {
                         newGame.setParentGame(prospectiveParentGameEntity);
