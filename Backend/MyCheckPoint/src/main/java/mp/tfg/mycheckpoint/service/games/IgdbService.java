@@ -54,7 +54,8 @@ public class IgdbService {
     }
 
     public Flux<GameDto> findGamesByName(String gameName) {
-        String queryBody = DEFAULT_GAME_FIELDS + "where name = \"" + gameName + "\"; limit 5;";
+        String fields = "fields name, total_rating, cover.url, first_release_date,game_type,summary, id;";
+        String queryBody = fields + "search \"" + gameName + "\"; limit 5;"; // Ya usa search
         logger.info("Querying IGDB with body: {}", queryBody);
         return igdbWebClient.post()
                 .uri("/games")
