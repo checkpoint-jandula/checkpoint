@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/v1/auth/confirm-account").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/juegos/igdb/filtrar").permitAll()
                         // Endpoints de la Biblioteca de Juegos del Usuario (requieren autenticación)
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/me/library/games/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/me/library/games/**").authenticated()

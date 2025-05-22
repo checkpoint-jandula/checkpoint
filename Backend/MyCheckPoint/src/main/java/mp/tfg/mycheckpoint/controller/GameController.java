@@ -124,4 +124,29 @@ public class GameController {
                     return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<GameDto>build());
                 });
     }
+
+    // NUEVO ENDPOINT GET PARA FILTRADO
+    @GetMapping("/igdb/filtrar")
+    public Flux<GameDto> filtrarJuegosEnIgdb(
+            @RequestParam(name = "fecha_inicio", required = false) Long releaseDateStart,
+            @RequestParam(name = "fecha_fin", required = false) Long releaseDateEnd,
+            @RequestParam(name = "id_genero", required = false) Integer genreId,
+            @RequestParam(name = "id_tema", required = false) Integer themeId,
+            @RequestParam(name = "id_modo_juego", required = false) Integer gameModeId,
+            @RequestParam(name = "limite", required = false, defaultValue = "10") Integer limit) {
+
+        // Validación básica de parámetros (puedes añadir más según necesidad)
+        if (limit != null && limit > 500) { // IGDB tiene un límite máximo de 500
+            limit = 500;
+        }
+        if (limit != null && limit <=0) {
+            limit = 10; // Límite mínimo o por defecto
+        }
+
+        return igdbService.findGamesByCustomFilter(
+                releaseDateStart, releaseDateEnd,
+                genreId, themeId, gameModeId,
+                limit
+        );
+    }
 }

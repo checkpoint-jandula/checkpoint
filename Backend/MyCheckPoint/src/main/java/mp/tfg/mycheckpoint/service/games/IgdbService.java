@@ -11,6 +11,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class IgdbService {
 
@@ -85,5 +88,62 @@ public class IgdbService {
                 .bodyToFlux(GameDto.class)
                 .next()
                 .doOnError(error -> logger.error("Error during IGDB call or deserialization for ID {}: {}", igdbId, error.getMessage(), error));
+    }
+
+    /**
+     * Busca juegos en IGDB aplicando filtros dinámicos.
+     * Los timestamps de fecha deben ser en formato Unix (segundos).
+     * Ejemplo: 1420070400 (1 de enero de 2015) & 1451606399 (31 de diciembre de 2015)
+     */
+    public Flux<GameDto> findGamesByCustomFilter(
+            Long releaseDateStart, Long releaseDateEnd,
+            Integer genreId, Integer themeId, Integer gameModeId,
+            Integer limit) {
+
+        List<String> whereClauses = new ArrayList<>();
+
+        if (releaseDateStart != null) {
+            whereClauses.add("first_release_date >= " + releaseDateStart);
+        }
+        if (releaseDateEnd != null) {
+            whereClauses.add("first_release_date < " + releaseDateEnd);
+        }
+        if (genreId != null) {
+            whereClauses.add("genres = (" + genreId + ")"); // IGDB usa paréntesis para "any of" aunque sea uno solo
+        }
+        if (themeId != null) {
+            whereClauses.add("themes = (" + themeId + ")");
+        }
+        if (gameModeId != null) {
+            whereClauses.add("game_modes = (" + gameModeId + ")");
+        }
+
+        String fields = "fields name, total_rating, cover.url, first_release_date, genres.name, themes.name, game_modes.name, id;"; // Añadimos slug y id para consistencia con GameDto
+        String whereCondition = whereClauses.isEmpty() ? "" : "where " + String.join(" & ", whereClauses) + ";";
+        String limitCondition = (limit != null && limit > 0) ? "limit " + limit + ";" : "limit 10;"; // Límite por defecto
+
+        String queryBody = fields + " " + whereCondition + " " + limitCondition;
+
+        logger.info("Querying IGDB with custom filter body: {}", queryBody);
+
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    logger.error("Error from IGDB API (custom filter): {}, Body: {}", clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new RuntimeException("IGDB API Error (custom filter): " + clientResponse.statusCode() + " - " + errorBody));
+                                }))
+                .bodyToFlux(GameDto.class) // Asumimos que la respuesta puede mapearse a GameDto (o un subconjunto de él)
+                .map(gameDto -> {
+                    // Si los campos son un subconjunto estricto y quieres marcarlo, aquí podrías hacerlo.
+                    // gameDto.setFullDetails(false); // Por ejemplo, si estos filtros siempre devuelven datos parciales.
+                    // Sin embargo, GameDto ya tiene campos para cover, name, total_rating, etc.
+                    return gameDto;
+                })
+                .doOnError(error -> logger.error("Error during IGDB custom filter call or deserialization: {}", error.getMessage(), error));
     }
 }
