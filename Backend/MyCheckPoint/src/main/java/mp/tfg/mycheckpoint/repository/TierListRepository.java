@@ -22,11 +22,13 @@ public interface TierListRepository extends JpaRepository<TierList, Long> {
 
     Optional<TierList> findBySourceGameListAndType(GameList sourceGameList, TierListType type);
 
-    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s LEFT JOIN FETCH s.items i LEFT JOIN FETCH i.userGame ug LEFT JOIN FETCH ug.game g LEFT JOIN FETCH g.cover WHERE tl.publicId = :publicId AND tl.owner = :owner")
-    Optional<TierList> findByPublicIdAndOwnerWithDetails(@Param("publicId") UUID publicId, @Param("owner") User owner);
+    // Modificada: Renombrada y simplificada para cargar solo TierList y sus Sections
+    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.owner = :owner")
+    Optional<TierList> findByPublicIdAndOwnerWithSections(@Param("publicId") UUID publicId, @Param("owner") User owner);
 
-    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s LEFT JOIN FETCH s.items i LEFT JOIN FETCH i.userGame ug LEFT JOIN FETCH ug.game g LEFT JOIN FETCH g.cover WHERE tl.publicId = :publicId AND tl.isPublic = true")
-    Optional<TierList> findByPublicIdAndIsPublicTrueWithDetails(@Param("publicId") UUID publicId);
+    // Modificada: Renombrada y simplificada para cargar solo TierList y sus Sections
+    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.isPublic = true")
+    Optional<TierList> findByPublicIdAndIsPublicTrueWithSections(@Param("publicId") UUID publicId);
 
     @Query("SELECT tl FROM TierList tl WHERE tl.owner = :owner AND tl.type = :type ORDER BY tl.updatedAt DESC")
     List<TierList> findAllByOwnerAndType(@Param("owner") User owner, @Param("type") TierListType type);

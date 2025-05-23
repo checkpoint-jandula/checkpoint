@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.Fetch; // Importar Fetch
+import org.hibernate.annotations.FetchMode; // Importar FetchMode
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -11,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tier_sections") // Nombre de la nueva tabla para Secciones de TierList
+@Table(name = "tier_sections")
 @Getter
 @Setter
 @Builder
@@ -38,8 +40,9 @@ public class TierSection {
     private boolean isDefaultUnclassified = false;
 
     @OneToMany(mappedBy = "tierSection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("itemOrder ASC") // Asegura que los ítems dentro de la sección se recuperen en orden
+    @OrderBy("itemOrder ASC")
     @Builder.Default
+    @Fetch(FetchMode.SUBSELECT) // <--- AÑADE ESTA LÍNEA
     private List<TierListItem> items = new ArrayList<>();
 
     @CreationTimestamp
