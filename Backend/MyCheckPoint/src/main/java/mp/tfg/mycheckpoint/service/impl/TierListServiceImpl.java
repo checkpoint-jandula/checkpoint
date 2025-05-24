@@ -1,9 +1,9 @@
+// Archivo: MyCheckPoint/src/main/java/mp/tfg/mycheckpoint/service/impl/TierListServiceImpl.java
 package mp.tfg.mycheckpoint.service.impl;
 
 import mp.tfg.mycheckpoint.dto.enums.TierListType;
 import mp.tfg.mycheckpoint.dto.tierlist.*;
 import mp.tfg.mycheckpoint.entity.*;
-import mp.tfg.mycheckpoint.exception.DuplicateEntryException;
 import mp.tfg.mycheckpoint.exception.InvalidOperationException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.exception.UnauthorizedOperationException;
@@ -16,9 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.persistence.EntityManager; // Importar EntityManager
-import jakarta.persistence.PersistenceContext; // Importar PersistenceContext
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 public class TierListServiceImpl implements TierListService {
 
     private static final Logger logger = LoggerFactory.getLogger(TierListServiceImpl.class);
-    // ... (constantes sin cambios) ...
     private static final int MAX_USER_DEFINED_SECTIONS = 8;
     private static final int MIN_USER_DEFINED_SECTIONS = 1;
     private static final String UNCLASSIFIED_SECTION_NAME = "Juegos por Clasificar";
@@ -42,7 +40,7 @@ public class TierListServiceImpl implements TierListService {
     private final TierListItemRepository tierListItemRepository;
     private final TierListMapper tierListMapper;
 
-    @PersistenceContext // Inyectar EntityManager
+    @PersistenceContext
     private EntityManager entityManager;
 
     @Autowired
@@ -62,7 +60,6 @@ public class TierListServiceImpl implements TierListService {
         this.tierListMapper = tierListMapper;
     }
 
-    // ... (métodos getUserByEmailOrThrow, initializeTierListDetails, findTierListByPublicIdAndOwnerOrThrow, findTierListByPublicIdForReadOrThrow sin cambios) ...
     private User getUserByEmailOrThrow(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
@@ -70,6 +67,7 @@ public class TierListServiceImpl implements TierListService {
 
     private void initializeTierListDetails(TierList tierList) {
         if (tierList == null) return;
+        Hibernate.initialize(tierList.getSections());
         if (tierList.getSections() != null) {
             for (TierSection section : tierList.getSections()) {
                 Hibernate.initialize(section.getItems());
@@ -100,7 +98,7 @@ public class TierListServiceImpl implements TierListService {
         TierList tierListBasic = tierListRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new ResourceNotFoundException("TierList no encontrada con ID público: " + publicId));
 
-        if (!tierListBasic.isPublic() && (currentUser == null || !tierListBasic.getOwner().getId().equals(currentUser.getId()))) {
+        if (!tierListBasic.isPublic() && (currentUser == null || !Objects.equals(tierListBasic.getOwner().getId(), currentUser.getId()))) {
             throw new UnauthorizedOperationException("No tienes permiso para acceder a esta TierList.");
         }
 
@@ -115,122 +113,8 @@ public class TierListServiceImpl implements TierListService {
         return tierListOpt.orElseThrow(() -> new ResourceNotFoundException("TierList no encontrada o inaccesible con ID: " + publicId));
     }
 
-
-    private void moveItemsToUnclassifiedSectionAndPersist(TierList tierList, TierSection sourceSection, TierSection unclassifiedSection) {
-        if (sourceSection.getItems().isEmpty()) {
-            logger.debug("No hay ítems que mover de la sección '{}' (ID: {})", sourceSection.getName(), sourceSection.getInternalId());
-            return;
-        }
-
-        List<TierListItem> itemsToMove = new ArrayList<>(sourceSection.getItems());
-        sourceSection.getItems().clear(); // Desvincular de la colección de la sección origen en memoria
-
-        int currentOrderInUnclassified = unclassifiedSection.getItems().size();
-
-        for (TierListItem item : itemsToMove) {
-            item.setTierSection(unclassifiedSection); // Actualizar la referencia en el ítem
-            item.setItemOrder(currentOrderInUnclassified++);
-
-            // Como 'item' es una entidad gestionada que se ha vuelto "sucia" (dirty),
-            // y 'unclassifiedSection' también es gestionada, añadir 'item' a la colección
-            // de 'unclassifiedSection' debería ser suficiente para que Hibernate rastree el cambio.
-            // El merge explícito aquí podría ser redundante si el estado ya es gestionado y sucio,
-            // pero se mantiene por robustez si el estado de 'item' fuera incierto.
-            TierListItem managedItem = entityManager.merge(item); // Asegurar que el item está gestionado y los cambios registrados
-            unclassifiedSection.getItems().add(managedItem); // Añadir la instancia gestionada a la colección
-        }
-
-        // Reordenar ítems en la sección "Sin Clasificar" si es necesario
-        reorderItemsAndUpdate(unclassifiedSection.getItems());
-
-        // Guardar la sección "Sin Clasificar" para persistir los ítems movidos y sus nuevos estados.
-        // Esto hace un flush de los cambios en los TierListItem y en la colección de unclassifiedSection.
-        tierSectionRepository.saveAndFlush(unclassifiedSection);
-        logger.debug("Ítems de la sección ID {} movidos y persistidos en la sección 'Sin Clasificar' ID {}", sourceSection.getInternalId(), unclassifiedSection.getInternalId());
-    }
-
-
-    @Override
-    @Transactional
-    public TierListResponseDTO removeSectionFromTierList(String userEmail, UUID tierListPublicId, Long sectionInternalId) {
-        User owner = getUserByEmailOrThrow(userEmail);
-        // Cargar TierList y sus secciones. Los ítems se cargarán al acceder o por initializeTierListDetails.
-        TierList tierList = tierListRepository.findByPublicIdAndOwnerWithSections(tierListPublicId, owner)
-                .orElseThrow(() -> new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario()));
-
-        // Es importante que todas las entidades estén completamente inicializadas y gestionadas.
-        initializeTierListDetails(tierList);
-
-        TierSection sectionToRemove = tierList.getSections().stream()
-                .filter(s -> s.getInternalId().equals(sectionInternalId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
-
-        if (sectionToRemove.isDefaultUnclassified()) {
-            throw new InvalidOperationException("La sección 'Juegos por Clasificar' no puede ser eliminada.");
-        }
-        if (tierList.getSections().stream().filter(s -> !s.isDefaultUnclassified()).count() <= MIN_USER_DEFINED_SECTIONS) {
-            throw new InvalidOperationException("No se puede eliminar la sección. Debe haber al menos " + MIN_USER_DEFINED_SECTIONS + " sección personalizable.");
-        }
-
-        TierSection unclassifiedSection = tierList.getSections().stream()
-                .filter(TierSection::isDefaultUnclassified)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("La sección 'Sin Clasificar' no existe en la TierList " + tierListPublicId));
-
-        if (!sectionToRemove.getItems().isEmpty()) {
-            List<TierListItem> itemsToMove = new ArrayList<>(sectionToRemove.getItems()); // Copia para iterar
-
-            // 1. Actualizar la FK de cada TierListItem y guardarlo.
-            for (TierListItem item : itemsToMove) {
-                item.setTierSection(unclassifiedSection);
-                // El orden se establecerá globalmente más tarde para unclassifiedSection.
-                // No se manipulan las colecciones aquí todavía, solo la referencia en el item.
-                tierListItemRepository.save(item); // Persiste el cambio de FK en 'item'.
-            }
-
-            // 2. Forzar el flush para que los UPDATEs de los TierListItem se envíen a la BD.
-            // Ahora, en la BD, los ítems ya pertenecen a 'unclassifiedSection'.
-            entityManager.flush();
-
-            // 3. Refrescar las secciones para que sus colecciones 'items' reflejen el estado de la BD.
-            // Esto es crucial para que las colecciones en memoria estén sincronizadas con los cambios de FK.
-            entityManager.refresh(unclassifiedSection);
-            entityManager.refresh(sectionToRemove);
-            // Después de refrescar, unclassifiedSection.getItems() debería contener los ítems movidos,
-            // y sectionToRemove.getItems() debería estar vacía (o no contener los ítems movidos).
-
-            // 4. Reordenar los ítems en unclassifiedSection (que ahora tiene los ítems movidos)
-            reorderItemsAndUpdate(unclassifiedSection.getItems());
-            tierSectionRepository.save(unclassifiedSection); // Guardar los cambios de orden
-        }
-
-        // 5. Eliminar 'sectionToRemove' de la colección de 'tierList'.
-        // orphanRemoval en TierList.sections la eliminará de la BD.
-        // orphanRemoval en TierSection.items (para 'sectionToRemove') actuará sobre su colección 'items'.
-        // Como los ítems ya fueron reasignados en BD y la colección de sectionToRemove debería estar
-        // vacía o no contenerlos tras el refresh, no debería haber conflicto.
-        tierList.getSections().remove(sectionToRemove);
-        reorderSections(tierList);
-
-        TierList updatedTierList = tierListRepository.save(tierList);
-
-        logger.info("Sección '{}' (ID: {}) eliminada de TierList. Ítems movidos (si los había). Usuario: {}",
-                sectionToRemove.getName(), sectionInternalId, userEmail);
-
-        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-        return tierListMapper.toResponseDTO(reloadedTierList);
-    }
-
-    // ... (el resto de los métodos de la clase: createProfileTierList, getOrCreateTierListForGameList,
-    //      synchronizeTierListWithGameList, getTierListByPublicId, getAllProfileTierListsForUser,
-    //      getAllPublicTierLists, updateTierListMetadata, deleteTierList, addSectionToTierList,
-    //      updateSectionName, reorderItemsAndUpdate, reorderSections, addItemToTierListSection,
-    //      addItemToUnclassifiedSection, addItemToSectionLogic, moveItemInTierList, removeItemFromTierList
-    //      deben estar aquí, tal como los tenías o con las correcciones previas)
-
-    // Asegúrate de incluir los métodos de ayuda que ya tenías:
     private void reorderItemsAndUpdate(List<TierListItem> items) {
+        if (items == null) return;
         for (int i = 0; i < items.size(); i++) {
             TierListItem currentItem = items.get(i);
             if (currentItem.getItemOrder() != i) {
@@ -240,6 +124,7 @@ public class TierListServiceImpl implements TierListService {
     }
 
     private void reorderSections(TierList tierList) {
+        if (tierList == null || tierList.getSections() == null) return;
         List<TierSection> userSections = tierList.getSections().stream()
                 .filter(s -> !s.isDefaultUnclassified())
                 .sorted(Comparator.comparingInt(TierSection::getSectionOrder))
@@ -249,22 +134,11 @@ public class TierListServiceImpl implements TierListService {
             userSections.get(i).setSectionOrder(USER_SECTION_START_ORDER + i);
         }
     }
-    // ... (y cualquier otro método de la clase) ...
-    // COPIA Y PEGA EL RESTO DE TUS MÉTODOS DE TierListServiceImpl AQUÍ
-    // (los que no te he mostrado para modificar)
-    // Es importante que tengas la clase completa. Solo he modificado removeSectionFromTierList
-    // y he añadido la inyección de EntityManager.
 
-    // ... (métodos createProfileTierList, getOrCreateTierListForGameList, synchronizeTierListWithGameList, etc., como estaban antes o con correcciones previas)
-    // Debes pegar aquí el resto de los métodos de TierListServiceImpl
-    // que no se han modificado en esta respuesta específica.
-    // Solo he mostrado removeSectionFromTierList, reorderItemsAndUpdate, reorderSections, y los métodos de carga/inicialización.
-    // Asegúrate de tener todos los demás métodos (addItemToSection, moveItem, etc.) en tu clase.
     @Override
     @Transactional
     public TierListResponseDTO createProfileTierList(String userEmail, TierListCreateRequestDTO createRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
-
         TierList tierList = TierList.builder()
                 .owner(owner)
                 .name(createRequestDTO.getName())
@@ -272,13 +146,11 @@ public class TierListServiceImpl implements TierListService {
                 .isPublic(createRequestDTO.getIsPublic() != null ? createRequestDTO.getIsPublic() : false)
                 .type(TierListType.PROFILE_GLOBAL)
                 .build();
-
         createDefaultSections(tierList);
         TierList savedTierList = tierListRepository.save(tierList);
-
         initializeTierListDetails(savedTierList);
         logger.info("TierList de perfil '{}' creada para el usuario {}", savedTierList.getName(), userEmail);
-        return tierListMapper.toResponseDTO(savedTierList);
+        return tierListMapper.toTierListResponseDTOWithSections(savedTierList);
     }
 
     private void createDefaultSections(TierList tierList) {
@@ -287,6 +159,7 @@ public class TierListServiceImpl implements TierListService {
                 .name(UNCLASSIFIED_SECTION_NAME)
                 .sectionOrder(UNCLASSIFIED_SECTION_ORDER)
                 .isDefaultUnclassified(true)
+                .items(new ArrayList<>())
                 .build();
         tierList.addSection(unclassifiedSection);
 
@@ -297,6 +170,7 @@ public class TierListServiceImpl implements TierListService {
                     .name(defaultNames[i])
                     .sectionOrder(USER_SECTION_START_ORDER + i)
                     .isDefaultUnclassified(false)
+                    .items(new ArrayList<>())
                     .build();
             tierList.addSection(section);
         }
@@ -309,23 +183,27 @@ public class TierListServiceImpl implements TierListService {
         GameList sourceGameList = gameListRepository.findByPublicId(gameListPublicId)
                 .orElseThrow(() -> new ResourceNotFoundException("GameList no encontrada con ID público: " + gameListPublicId));
 
+        // Cargar explícitamente los userGames si la primera carga no lo hizo (findByPublicId no tiene fetch)
         Hibernate.initialize(sourceGameList.getUserGames());
+        Hibernate.initialize(sourceGameList.getOwner());
 
-        if (!sourceGameList.getOwner().getId().equals(currentUser.getId()) && !sourceGameList.isPublic()) {
+
+        if (!sourceGameList.isPublic() && !Objects.equals(sourceGameList.getOwner().getId(), currentUser.getId())) {
             throw new UnauthorizedOperationException("No tienes permiso para acceder a la GameList asociada.");
         }
+        User ownerOfTierList = sourceGameList.getOwner();
 
         Optional<TierList> existingTierListOpt = tierListRepository.findBySourceGameListAndType(sourceGameList, TierListType.FROM_GAMELIST);
-
         TierList tierList;
         if (existingTierListOpt.isPresent()) {
             tierList = existingTierListOpt.get();
-            initializeTierListDetails(tierList);
+            Hibernate.initialize(tierList.getSections());
+            tierList.getSections().forEach(s -> Hibernate.initialize(s.getItems()));
             logger.debug("TierList existente encontrada para GameList {}. Sincronizando juegos...", gameListPublicId);
         } else {
             logger.info("Creando nueva TierList para GameList {} ({})", sourceGameList.getName(), gameListPublicId);
             tierList = TierList.builder()
-                    .owner(sourceGameList.getOwner())
+                    .owner(ownerOfTierList)
                     .name(sourceGameList.getName())
                     .description("Tier list para la lista de juegos: " + sourceGameList.getName())
                     .isPublic(sourceGameList.isPublic())
@@ -334,18 +212,17 @@ public class TierListServiceImpl implements TierListService {
                     .build();
             createDefaultSections(tierList);
             tierList = tierListRepository.save(tierList);
-            initializeTierListDetails(tierList);
         }
 
         synchronizeTierListWithGameList(tierList, sourceGameList);
 
-        TierList finalTierListState = findTierListByPublicIdForReadOrThrow(tierList.getPublicId(), tierList.getOwner());
-        return tierListMapper.toResponseDTO(finalTierListState);
+        TierList finalTierListState = findTierListByPublicIdForReadOrThrow(tierList.getPublicId(), currentUser); // currentUser para validación de lectura
+        return tierListMapper.toTierListResponseDTOWithSections(finalTierListState);
     }
 
     @Transactional
     protected void synchronizeTierListWithGameList(TierList tierList, GameList gameList) {
-        if (tierList.getType() != TierListType.FROM_GAMELIST || tierList.getSourceGameList() == null || !tierList.getSourceGameList().getInternalId().equals(gameList.getInternalId())) {
+        if (tierList.getType() != TierListType.FROM_GAMELIST || tierList.getSourceGameList() == null || !Objects.equals(tierList.getSourceGameList().getInternalId(), gameList.getInternalId())) {
             logger.warn("Intento de sincronizar TierList ID {} que no es del tipo FROM_GAMELIST o no corresponde a la GameList ID {}", tierList.getPublicId(), gameList.getPublicId());
             return;
         }
@@ -355,7 +232,6 @@ public class TierListServiceImpl implements TierListService {
 
         Set<UserGame> gamesInGameList = new HashSet<>(gameList.getUserGames());
         Map<Long, TierListItem> itemsInTierListMap = new HashMap<>();
-
         tierList.getSections().forEach(section ->
                 section.getItems().forEach(item -> {
                     if (item.getUserGame() != null) {
@@ -368,21 +244,20 @@ public class TierListServiceImpl implements TierListService {
                 .filter(TierSection::isDefaultUnclassified)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("La sección 'Sin Clasificar' no existe en la TierList " + tierList.getPublicId()));
+        Hibernate.initialize(unclassifiedSection.getItems());
+
 
         boolean changesMade = false;
-
         for (UserGame gameFromGameList : gamesInGameList) {
             if (gameFromGameList == null || gameFromGameList.getInternalId() == null) continue;
-
             if (!itemsInTierListMap.containsKey(gameFromGameList.getInternalId())) {
                 TierListItem newItem = TierListItem.builder()
                         .tierSection(unclassifiedSection)
                         .userGame(gameFromGameList)
                         .itemOrder(unclassifiedSection.getItems().size())
                         .build();
-                unclassifiedSection.getItems().add(newItem);
+                unclassifiedSection.addItem(newItem);
                 changesMade = true;
-                logger.debug("Añadiendo UserGame ID {} a la sección 'Sin Clasificar' de TierList {} durante la sincronización", gameFromGameList.getInternalId(), tierList.getPublicId());
             }
         }
 
@@ -398,12 +273,8 @@ public class TierListServiceImpl implements TierListService {
             for (TierListItem itemToRemove : itemsToRemoveFromTierList) {
                 TierSection parentSection = itemToRemove.getTierSection();
                 if (parentSection != null) {
-                    parentSection.getItems().remove(itemToRemove);
+                    parentSection.removeItem(itemToRemove);
                 }
-                logger.debug("Eliminando TierListItem ID {} (UserGame ID {}) de TierList {} durante la sincronización",
-                        itemToRemove.getInternalId(),
-                        (itemToRemove.getUserGame() != null ? itemToRemove.getUserGame().getInternalId() : "N/A"),
-                        tierList.getPublicId());
             }
         }
 
@@ -421,27 +292,27 @@ public class TierListServiceImpl implements TierListService {
     public TierListResponseDTO getTierListByPublicId(UUID tierListPublicId, String userEmail) {
         User currentUser = (userEmail != null) ? userRepository.findByEmail(userEmail).orElse(null) : null;
         TierList tierList = findTierListByPublicIdForReadOrThrow(tierListPublicId, currentUser);
-        return tierListMapper.toResponseDTO(tierList);
+        return tierListMapper.toTierListResponseDTOWithSections(tierList);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TierListResponseDTO> getAllProfileTierListsForUser(String userEmail) {
         User owner = getUserByEmailOrThrow(userEmail);
-        List<TierList> tierLists = tierListRepository.findAllByOwnerAndType(owner, TierListType.PROFILE_GLOBAL);
+        List<TierList> tierLists = tierListRepository.findAllByOwnerAndTypeWithSections(owner, TierListType.PROFILE_GLOBAL);
         tierLists.forEach(this::initializeTierListDetails);
         return tierLists.stream()
-                .map(tierListMapper::toResponseDTO)
+                .map(tierListMapper::toTierListResponseDTOWithSections)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TierListResponseDTO> getAllPublicTierLists() {
-        List<TierList> tierLists = tierListRepository.findAllByIsPublicTrue();
+        List<TierList> tierLists = tierListRepository.findAllByIsPublicTrueAndFetchSections(); // Usando el nuevo método del repo
         tierLists.forEach(this::initializeTierListDetails);
         return tierLists.stream()
-                .map(tierListMapper::toResponseDTO)
+                .map(tierListMapper::toTierListResponseDTOWithSections) // Usando el método correcto del mapper
                 .collect(Collectors.toList());
     }
 
@@ -450,56 +321,45 @@ public class TierListServiceImpl implements TierListService {
     public TierListResponseDTO updateTierListMetadata(String userEmail, UUID tierListPublicId, TierListUpdateRequestDTO updateRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-
         tierListMapper.updateFromUpdateRequestDTO(updateRequestDTO, tierList);
-
         TierList updatedTierList = tierListRepository.save(tierList);
-        logger.info("Metadatos de TierList '{}' (ID público: {}) actualizados por el usuario {}", updatedTierList.getName(), tierListPublicId, userEmail);
-
         initializeTierListDetails(updatedTierList);
-        return tierListMapper.toResponseDTO(updatedTierList);
+        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
     }
 
     @Override
     @Transactional
     public void deleteTierList(String userEmail, UUID tierListPublicId) {
         User owner = getUserByEmailOrThrow(userEmail);
-        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner); // Carga con detalles
-
+        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
         tierListRepository.delete(tierList);
         logger.info("TierList '{}' (ID público: {}) eliminada por el usuario {}", tierList.getName(), tierListPublicId, userEmail);
     }
-
 
     @Override
     @Transactional
     public TierListResponseDTO addSectionToTierList(String userEmail, UUID tierListPublicId, TierSectionRequestDTO sectionRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-
         long currentUserDefinedSections = tierList.getSections().stream().filter(s -> !s.isDefaultUnclassified()).count();
         if (currentUserDefinedSections >= MAX_USER_DEFINED_SECTIONS) {
             throw new InvalidOperationException("No se pueden añadir más secciones. Límite de " + MAX_USER_DEFINED_SECTIONS + " secciones personalizables alcanzado.");
         }
-
         int nextOrder = tierList.getSections().stream()
                 .filter(s -> !s.isDefaultUnclassified())
                 .mapToInt(TierSection::getSectionOrder)
                 .max()
                 .orElse(USER_SECTION_START_ORDER - 1) + 1;
-
         TierSection newSection = TierSection.builder()
                 .name(sectionRequestDTO.getName())
                 .sectionOrder(nextOrder)
                 .isDefaultUnclassified(false)
+                .items(new ArrayList<>())
                 .build();
         tierList.addSection(newSection);
-
         TierList updatedTierList = tierListRepository.save(tierList);
-        logger.info("Sección '{}' añadida a TierList '{}' por el usuario {}", sectionRequestDTO.getName(), tierList.getName(), userEmail);
-
         initializeTierListDetails(updatedTierList);
-        return tierListMapper.toResponseDTO(updatedTierList);
+        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
     }
 
     @Override
@@ -507,19 +367,63 @@ public class TierListServiceImpl implements TierListService {
     public TierListResponseDTO updateSectionName(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-
         TierSection section = tierList.getSections().stream()
-                .filter(s -> s.getInternalId().equals(sectionInternalId))
+                .filter(s -> Objects.equals(s.getInternalId(), sectionInternalId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
+        section.setName(sectionRequestDTO.getName());
+        TierList updatedTierList = tierListRepository.save(tierList);
+        initializeTierListDetails(updatedTierList);
+        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
+    }
+
+    @Override
+    @Transactional
+    public TierListResponseDTO removeSectionFromTierList(String userEmail, UUID tierListPublicId, Long sectionInternalId) {
+        User owner = getUserByEmailOrThrow(userEmail);
+        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
+
+        TierSection sectionToRemove = tierList.getSections().stream()
+                .filter(s -> Objects.equals(s.getInternalId(),sectionInternalId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
 
-        section.setName(sectionRequestDTO.getName());
+        if (sectionToRemove.isDefaultUnclassified()) {
+            throw new InvalidOperationException("La sección 'Juegos por Clasificar' no puede ser eliminada.");
+        }
+        if (tierList.getSections().stream().filter(s -> !s.isDefaultUnclassified()).count() <= MIN_USER_DEFINED_SECTIONS) {
+            throw new InvalidOperationException("No se puede eliminar la sección. Debe haber al menos " + MIN_USER_DEFINED_SECTIONS + " sección personalizable.");
+        }
 
-        TierList updatedTierList = tierListRepository.save(tierList);
-        logger.info("Nombre de sección ID {} actualizado a '{}' en TierList '{}' por el usuario {}", sectionInternalId, sectionRequestDTO.getName(), updatedTierList.getName(), userEmail);
+        TierSection unclassifiedSection = tierList.getSections().stream()
+                .filter(TierSection::isDefaultUnclassified)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("La sección 'Sin Clasificar' no existe en la TierList " + tierListPublicId));
 
-        initializeTierListDetails(updatedTierList);
-        return tierListMapper.toResponseDTO(updatedTierList);
+        Hibernate.initialize(unclassifiedSection.getItems());
+        Hibernate.initialize(sectionToRemove.getItems());
+
+        if (!sectionToRemove.getItems().isEmpty()) {
+            List<TierListItem> itemsToMove = new ArrayList<>(sectionToRemove.getItems());
+            sectionToRemove.getItems().clear(); // Limpiar de la sección a eliminar EN MEMORIA
+
+            for (TierListItem item : itemsToMove) {
+                item.setTierSection(unclassifiedSection);
+                item.setItemOrder(unclassifiedSection.getItems().size());
+                unclassifiedSection.getItems().add(item);
+            }
+            reorderItemsAndUpdate(unclassifiedSection.getItems());
+        }
+
+        tierList.removeSection(sectionToRemove);
+        reorderSections(tierList);
+
+        TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
+        logger.info("Sección '{}' (ID: {}) eliminada de TierList. Ítems movidos (si los había). Usuario: {}",
+                sectionToRemove.getName(), sectionInternalId, userEmail);
+
+        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), owner);
+        return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
     }
 
     @Override
@@ -527,20 +431,16 @@ public class TierListServiceImpl implements TierListService {
     public TierListResponseDTO addItemToTierListSection(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierListItemAddRequestDTO itemAddRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-
         if (tierList.getType() == TierListType.FROM_GAMELIST) {
             throw new InvalidOperationException("Los juegos no se pueden añadir directamente a una TierList vinculada a una GameList. Modifica la GameList original.");
         }
-
         TierSection targetSection = tierList.getSections().stream()
-                .filter(s -> s.getInternalId().equals(sectionInternalId))
+                .filter(s -> Objects.equals(s.getInternalId(),sectionInternalId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
-
         if (targetSection.isDefaultUnclassified()){
             throw new InvalidOperationException("Utiliza el endpoint específico para añadir a la sección 'Juegos por Clasificar'.");
         }
-
         return addItemToSectionLogic(tierList, targetSection, itemAddRequestDTO.getUserGameId(), itemAddRequestDTO.getOrder(), userEmail);
     }
 
@@ -549,40 +449,39 @@ public class TierListServiceImpl implements TierListService {
     public TierListResponseDTO addItemToUnclassifiedSection(String userEmail, UUID tierListPublicId, TierListItemAddRequestDTO itemAddRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-
         if (tierList.getType() == TierListType.FROM_GAMELIST) {
             throw new InvalidOperationException("Los juegos se sincronizan automáticamente para TierLists de GameList. No se pueden añadir manualmente aquí.");
         }
-
         TierSection unclassifiedSection = tierList.getSections().stream()
                 .filter(TierSection::isDefaultUnclassified)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("La sección 'Sin Clasificar' no existe en la TierList " + tierList.getPublicId()));
-
         return addItemToSectionLogic(tierList, unclassifiedSection, itemAddRequestDTO.getUserGameId(), itemAddRequestDTO.getOrder(), userEmail);
     }
 
     private TierListResponseDTO addItemToSectionLogic(TierList tierList, TierSection targetSection, Long userGameId, Integer requestedOrder, String userEmail) {
         UserGame userGame = userGameRepository.findById(userGameId)
                 .orElseThrow(() -> new ResourceNotFoundException("UserGame con ID " + userGameId + " no encontrado."));
-
-        if (!userGame.getUser().getId().equals(tierList.getOwner().getId())) {
+        if (!Objects.equals(userGame.getUser().getId(), tierList.getOwner().getId())) {
             throw new UnauthorizedOperationException("El UserGame ID " + userGameId + " no pertenece al propietario de la TierList.");
         }
 
-        Optional<TierListItem> existingItemOpt = tierList.getSections().stream()
+        Hibernate.initialize(targetSection.getItems()); // Cargar items de la sección destino
+        // Cargar items de todas las secciones para buscar duplicados y para mover si es necesario
+        tierList.getSections().forEach(s -> Hibernate.initialize(s.getItems()));
+
+
+        Optional<TierListItem> existingItemAnywhereOpt = tierList.getSections().stream()
                 .flatMap(s -> s.getItems().stream())
-                .filter(item -> item.getUserGame().getInternalId().equals(userGameId))
+                .filter(item -> Objects.equals(item.getUserGame().getInternalId(), userGameId))
                 .findFirst();
 
         TierListItem itemToProcess;
-
-        if (existingItemOpt.isPresent()) {
-            itemToProcess = existingItemOpt.get();
+        if (existingItemAnywhereOpt.isPresent()) {
+            itemToProcess = existingItemAnywhereOpt.get();
             TierSection oldSection = itemToProcess.getTierSection();
-
-            if (!oldSection.getInternalId().equals(targetSection.getInternalId())) {
-                oldSection.getItems().removeIf(i -> i.getInternalId().equals(itemToProcess.getInternalId()));
+            if (!Objects.equals(oldSection.getInternalId(), targetSection.getInternalId())) {
+                oldSection.getItems().removeIf(i -> i.getInternalId() != null && Objects.equals(i.getInternalId(), itemToProcess.getInternalId()));
                 reorderItemsAndUpdate(oldSection.getItems());
                 itemToProcess.setTierSection(targetSection);
             }
@@ -594,26 +493,20 @@ public class TierListServiceImpl implements TierListService {
         }
 
         List<TierListItem> targetItems = targetSection.getItems();
-        targetItems.removeIf(i -> i.getInternalId() != null && i.getInternalId().equals(itemToProcess.getInternalId()));
+        targetItems.removeIf(i -> i.getInternalId() != null && Objects.equals(i.getInternalId(), itemToProcess.getInternalId()));
 
-        int targetIdx;
-        if (requestedOrder == null || requestedOrder < 0 || requestedOrder > targetItems.size()) {
-            targetIdx = targetItems.size();
-        } else {
-            targetIdx = requestedOrder;
-        }
+        int targetIdx = (requestedOrder == null || requestedOrder < 0 || requestedOrder > targetItems.size()) ? targetItems.size() : requestedOrder;
         targetItems.add(targetIdx, itemToProcess);
         reorderItemsAndUpdate(targetItems);
 
-        TierList updatedTierList = tierListRepository.save(tierList);
+        TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
         logger.info("Item (UserGame ID: {}) {} sección '{}' en TierList '{}'. Usuario: {}",
-                userGameId, existingItemOpt.isPresent() ? "movido/reordenado en" : "añadido a",
+                userGameId, existingItemAnywhereOpt.isPresent() ? "movido/reordenado en" : "añadido a",
                 targetSection.getName(), tierList.getName(), userEmail);
 
-        initializeTierListDetails(updatedTierList);
-        return tierListMapper.toResponseDTO(updatedTierList);
+        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), tierList.getOwner());
+        return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
     }
-
 
     @Override
     @Transactional
@@ -623,45 +516,35 @@ public class TierListServiceImpl implements TierListService {
 
         TierListItem itemToMove = tierList.getSections().stream()
                 .flatMap(s -> s.getItems().stream())
-                .filter(item -> item.getInternalId().equals(tierListItemInternalId))
+                .filter(item -> Objects.equals(item.getInternalId(), tierListItemInternalId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("TierListItem con ID " + tierListItemInternalId + " no encontrado en la TierList " + tierListPublicId));
 
-        TierSection originalOldSectionRef = itemToMove.getTierSection();
-        if (originalOldSectionRef == null) {
-            throw new IllegalStateException("El ítem a mover (ID: " + itemToMove.getInternalId() + ") no tiene una sección antigua asociada.");
-        }
-        final Long oldSectionIdToFilterBy = originalOldSectionRef.getInternalId();
-
-        TierSection oldSection = tierList.getSections().stream()
-                .filter(s -> s.getInternalId().equals(oldSectionIdToFilterBy))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("La sección antigua (ID: " + oldSectionIdToFilterBy + ") del ítem no se encontró en la TierList cargada."));
-
+        TierSection oldSection = itemToMove.getTierSection();
         TierSection newSection = tierList.getSections().stream()
-                .filter(s -> s.getInternalId().equals(itemMoveRequestDTO.getTargetSectionInternalId()))
+                .filter(s -> Objects.equals(s.getInternalId(), itemMoveRequestDTO.getTargetSectionInternalId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Sección destino con ID " + itemMoveRequestDTO.getTargetSectionInternalId() + " no encontrada."));
+
+        Hibernate.initialize(oldSection.getItems());
+        Hibernate.initialize(newSection.getItems());
 
         if (tierList.getType() == TierListType.FROM_GAMELIST) {
             GameList sourceGameList = tierList.getSourceGameList();
             if (sourceGameList != null) Hibernate.initialize(sourceGameList.getUserGames());
-
             if (sourceGameList == null || itemToMove.getUserGame() == null || !sourceGameList.getUserGames().contains(itemToMove.getUserGame())) {
                 throw new InvalidOperationException("El juego asociado a este item ya no pertenece a la GameList origen o hay una inconsistencia.");
             }
         }
 
-        if (!oldSection.getInternalId().equals(newSection.getInternalId())) {
-            oldSection.getItems().removeIf(item -> item.getInternalId().equals(itemToMove.getInternalId()));
+        if (!Objects.equals(oldSection.getInternalId(), newSection.getInternalId())) {
+            oldSection.getItems().removeIf(item -> item.getInternalId() != null && Objects.equals(item.getInternalId(), itemToMove.getInternalId()));
             reorderItemsAndUpdate(oldSection.getItems());
         }
 
         itemToMove.setTierSection(newSection);
-
         List<TierListItem> newSectionItems = newSection.getItems();
-        newSectionItems.removeIf(item -> item.getInternalId().equals(itemToMove.getInternalId()));
-
+        newSectionItems.removeIf(item -> item.getInternalId() != null && Objects.equals(item.getInternalId(), itemToMove.getInternalId()));
         int targetOrderInNewSection = itemMoveRequestDTO.getNewOrder();
         if (targetOrderInNewSection < 0 || targetOrderInNewSection > newSectionItems.size()) {
             newSectionItems.add(itemToMove);
@@ -671,7 +554,6 @@ public class TierListServiceImpl implements TierListService {
         reorderItemsAndUpdate(newSectionItems);
 
         TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
-
         logger.info("Item ID {} (UserGame ID: {}) movido de sección ID {} a sección ID {} (orden final: {}) en TierList '{}' por usuario {}",
                 itemToMove.getInternalId(),
                 (itemToMove.getUserGame() != null ? itemToMove.getUserGame().getInternalId() : "N/A"),
@@ -680,10 +562,9 @@ public class TierListServiceImpl implements TierListService {
                 itemToMove.getItemOrder(),
                 tierList.getName(), userEmail);
 
-        initializeTierListDetails(updatedTierList);
-        return tierListMapper.toResponseDTO(updatedTierList);
+        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), owner);
+        return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
     }
-
 
     @Override
     @Transactional
@@ -693,7 +574,7 @@ public class TierListServiceImpl implements TierListService {
 
         TierListItem itemToRemove = tierList.getSections().stream()
                 .flatMap(s -> s.getItems().stream())
-                .filter(item -> item.getInternalId().equals(tierListItemInternalId))
+                .filter(item -> Objects.equals(item.getInternalId(), tierListItemInternalId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("TierListItem con ID " + tierListItemInternalId + " no encontrado en la TierList " + tierListPublicId));
 
@@ -703,8 +584,11 @@ public class TierListServiceImpl implements TierListService {
 
         TierSection section = itemToRemove.getTierSection();
         if (section != null) {
-            section.getItems().removeIf(i -> i.getInternalId().equals(itemToRemove.getInternalId()));
-            reorderItemsAndUpdate(section.getItems());
+            Hibernate.initialize(section.getItems());
+            boolean removed = section.getItems().removeIf(i -> i.getInternalId() != null && Objects.equals(i.getInternalId(), itemToRemove.getInternalId()));
+            if(removed) {
+                reorderItemsAndUpdate(section.getItems());
+            }
         } else {
             logger.warn("El ítem ID {} a eliminar no tenía una sección asociada.", tierListItemInternalId);
         }
@@ -714,6 +598,6 @@ public class TierListServiceImpl implements TierListService {
                 itemToRemove.getInternalId(), (itemToRemove.getUserGame() != null ? itemToRemove.getUserGame().getInternalId() : "N/A"), tierList.getName(), userEmail);
 
         TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), owner);
-        return tierListMapper.toResponseDTO(reloadedTierList);
+        return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
     }
 }

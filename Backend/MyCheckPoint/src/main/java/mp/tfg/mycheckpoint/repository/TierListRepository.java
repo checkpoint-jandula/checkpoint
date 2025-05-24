@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+// import org.springframework.data.jpa.repository.EntityGraph; // Opcional si prefieres EntityGraph
 
 import java.util.List;
 import java.util.Optional;
@@ -18,21 +19,17 @@ public interface TierListRepository extends JpaRepository<TierList, Long> {
 
     Optional<TierList> findByPublicId(UUID publicId);
 
-    List<TierList> findByOwnerAndTypeOrderByUpdatedAtDesc(User owner, TierListType type);
-
     Optional<TierList> findBySourceGameListAndType(GameList sourceGameList, TierListType type);
 
-    // Modificada: Renombrada y simplificada para cargar solo TierList y sus Sections
-    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.owner = :owner")
+    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.owner = :owner ORDER BY s.sectionOrder ASC")
     Optional<TierList> findByPublicIdAndOwnerWithSections(@Param("publicId") UUID publicId, @Param("owner") User owner);
 
-    // Modificada: Renombrada y simplificada para cargar solo TierList y sus Sections
-    @Query("SELECT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.isPublic = true")
+    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.isPublic = true ORDER BY s.sectionOrder ASC")
     Optional<TierList> findByPublicIdAndIsPublicTrueWithSections(@Param("publicId") UUID publicId);
 
-    @Query("SELECT tl FROM TierList tl WHERE tl.owner = :owner AND tl.type = :type ORDER BY tl.updatedAt DESC")
-    List<TierList> findAllByOwnerAndType(@Param("owner") User owner, @Param("type") TierListType type);
+    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.owner = :owner AND tl.type = :type ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
+    List<TierList> findAllByOwnerAndTypeWithSections(@Param("owner") User owner, @Param("type") TierListType type);
 
-    @Query("SELECT tl FROM TierList tl WHERE tl.isPublic = true ORDER BY tl.updatedAt DESC")
-    List<TierList> findAllByIsPublicTrue();
+    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.isPublic = true ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
+    List<TierList> findAllByIsPublicTrueAndFetchSections(); // Este es el método que añadiste/modificaste
 }
