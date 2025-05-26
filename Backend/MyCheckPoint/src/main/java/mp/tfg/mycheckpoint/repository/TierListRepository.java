@@ -27,8 +27,8 @@ public interface TierListRepository extends JpaRepository<TierList, Long> {
     @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.publicId = :publicId AND tl.isPublic = true ORDER BY s.sectionOrder ASC")
     Optional<TierList> findByPublicIdAndIsPublicTrueWithSections(@Param("publicId") UUID publicId);
 
-    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.owner = :owner AND tl.type = :type ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
-    List<TierList> findAllByOwnerAndTypeWithSections(@Param("owner") User owner, @Param("type") TierListType type);
+    @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.owner = :owner ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
+    List<TierList> findAllByOwnerAndTypeWithSections(@Param("owner") User owner);
 
     @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.isPublic = true ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
     List<TierList> findAllByIsPublicTrueAndFetchSections(); // Este es el método que añadiste/modificaste

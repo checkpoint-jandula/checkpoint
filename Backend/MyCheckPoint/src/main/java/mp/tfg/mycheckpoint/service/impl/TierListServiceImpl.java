@@ -299,7 +299,7 @@ public class TierListServiceImpl implements TierListService {
     @Transactional(readOnly = true)
     public List<TierListResponseDTO> getAllProfileTierListsForUser(String userEmail) {
         User owner = getUserByEmailOrThrow(userEmail);
-        List<TierList> tierLists = tierListRepository.findAllByOwnerAndTypeWithSections(owner, TierListType.PROFILE_GLOBAL);
+        List<TierList> tierLists = tierListRepository.findAllByOwnerAndTypeWithSections(owner);
         tierLists.forEach(this::initializeTierListDetails);
         return tierLists.stream()
                 .map(tierListMapper::toTierListResponseDTOWithSections)
@@ -364,27 +364,17 @@ public class TierListServiceImpl implements TierListService {
 
     @Override
     @Transactional
-    public TierListResponseDTO updateSectionName(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO) {
-        User owner = getUserByEmailOrThrow(userEmail);
-        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
-        TierSection section = tierList.getSections().stream()
-                .filter(s -> Objects.equals(s.getInternalId(), sectionInternalId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
-        section.setName(sectionRequestDTO.getName());
-        TierList updatedTierList = tierListRepository.save(tierList);
-        initializeTierListDetails(updatedTierList);
-        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
-    }
-
-    @Override
-    @Transactional
     public TierListResponseDTO removeSectionFromTierList(String userEmail, UUID tierListPublicId, Long sectionInternalId) {
         User owner = getUserByEmailOrThrow(userEmail);
-        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
+        // Cargar TierList y sus secciones. Los ítems se cargarán al acceder o por initializeTierListDetails.
+        TierList tierList = tierListRepository.findByPublicIdAndOwnerWithSections(tierListPublicId, owner)
+                .orElseThrow(() -> new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario()));
+
+        // Es importante que todas las entidades estén completamente inicializadas y gestionadas.
+        initializeTierListDetails(tierList);
 
         TierSection sectionToRemove = tierList.getSections().stream()
-                .filter(s -> Objects.equals(s.getInternalId(),sectionInternalId))
+                .filter(s -> s.getInternalId().equals(sectionInternalId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
 
@@ -400,30 +390,70 @@ public class TierListServiceImpl implements TierListService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("La sección 'Sin Clasificar' no existe en la TierList " + tierListPublicId));
 
-        Hibernate.initialize(unclassifiedSection.getItems());
-        Hibernate.initialize(sectionToRemove.getItems());
-
         if (!sectionToRemove.getItems().isEmpty()) {
-            List<TierListItem> itemsToMove = new ArrayList<>(sectionToRemove.getItems());
-            sectionToRemove.getItems().clear(); // Limpiar de la sección a eliminar EN MEMORIA
+            List<TierListItem> itemsToMove = new ArrayList<>(sectionToRemove.getItems()); // Copia para iterar
 
+            // 1. Actualizar la FK de cada TierListItem y guardarlo.
             for (TierListItem item : itemsToMove) {
                 item.setTierSection(unclassifiedSection);
-                item.setItemOrder(unclassifiedSection.getItems().size());
-                unclassifiedSection.getItems().add(item);
+                // El orden se establecerá globalmente más tarde para unclassifiedSection.
+                // No se manipulan las colecciones aquí todavía, solo la referencia en el item.
+                tierListItemRepository.save(item); // Persiste el cambio de FK en 'item'.
             }
+
+            // 2. Forzar el flush para que los UPDATEs de los TierListItem se envíen a la BD.
+            // Ahora, en la BD, los ítems ya pertenecen a 'unclassifiedSection'.
+            entityManager.flush();
+
+            // 3. Refrescar las secciones para que sus colecciones 'items' reflejen el estado de la BD.
+            // Esto es crucial para que las colecciones en memoria estén sincronizadas con los cambios de FK.
+            entityManager.refresh(unclassifiedSection);
+            entityManager.refresh(sectionToRemove);
+            // Después de refrescar, unclassifiedSection.getItems() debería contener los ítems movidos,
+            // y sectionToRemove.getItems() debería estar vacía (o no contener los ítems movidos).
+
+            // 4. Reordenar los ítems en unclassifiedSection (que ahora tiene los ítems movidos)
             reorderItemsAndUpdate(unclassifiedSection.getItems());
+            tierSectionRepository.save(unclassifiedSection); // Guardar los cambios de orden
         }
 
-        tierList.removeSection(sectionToRemove);
+        // 5. Eliminar 'sectionToRemove' de la colección de 'tierList'.
+        // orphanRemoval en TierList.sections la eliminará de la BD.
+        // orphanRemoval en TierSection.items (para 'sectionToRemove') actuará sobre su colección 'items'.
+        // Como los ítems ya fueron reasignados en BD y la colección de sectionToRemove debería estar
+        // vacía o no contenerlos tras el refresh, no debería haber conflicto.
+        tierList.getSections().remove(sectionToRemove);
         reorderSections(tierList);
 
-        TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
+        TierList updatedTierList = tierListRepository.save(tierList);
+
         logger.info("Sección '{}' (ID: {}) eliminada de TierList. Ítems movidos (si los había). Usuario: {}",
                 sectionToRemove.getName(), sectionInternalId, userEmail);
 
-        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), owner);
+        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
         return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
+    }
+
+    @Override // Asegúrate de que esta anotación esté presente
+    @Transactional
+    public TierListResponseDTO updateSectionName(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO) {
+        User owner = getUserByEmailOrThrow(userEmail);
+        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
+        TierSection section = tierList.getSections().stream()
+                .filter(s -> Objects.equals(s.getInternalId(), sectionInternalId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId));
+
+        // Actualizar el nombre de la sección
+        section.setName(sectionRequestDTO.getName());
+
+        // Guardar los cambios en la TierList (la sección es parte de TierList y se guardará por cascada)
+        TierList updatedTierList = tierListRepository.save(tierList); // O saveAndFlush si prefieres
+
+        // Es buena práctica inicializar los detalles para el DTO de respuesta
+        initializeTierListDetails(updatedTierList);
+
+        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
     }
 
     @Override
@@ -512,22 +542,35 @@ public class TierListServiceImpl implements TierListService {
     @Transactional
     public TierListResponseDTO moveItemInTierList(String userEmail, UUID tierListPublicId, Long tierListItemInternalId, TierListItemMoveRequestDTO itemMoveRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
-        TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
+        logger.info("INICIO moveItemInTierList - User: {}, TierListID: {}, ItemID: {}, TargetSectionID: {}, NewOrder: {}",
+                userEmail, tierListPublicId, tierListItemInternalId, itemMoveRequestDTO.getTargetSectionInternalId(), itemMoveRequestDTO.getNewOrder());
 
+        TierList tierList = tierListRepository.findByPublicIdAndOwnerWithSections(tierListPublicId, owner)
+                .map(tl -> {
+                    initializeTierListDetails(tl); // Carga profunda inicial
+                    logger.debug("TierList {} y detalles cargados.", tl.getPublicId());
+                    return tl;
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario()));
+
+        final Long finalTierListItemInternalId = tierListItemInternalId;
         TierListItem itemToMove = tierList.getSections().stream()
                 .flatMap(s -> s.getItems().stream())
-                .filter(item -> Objects.equals(item.getInternalId(), tierListItemInternalId))
+                .filter(item -> Objects.equals(item.getInternalId(), finalTierListItemInternalId))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("TierListItem con ID " + tierListItemInternalId + " no encontrado en la TierList " + tierListPublicId));
+                .orElseThrow(() -> {
+                    logger.error("ITEM NO ENCONTRADO - TierListItem con ID {} no encontrado en la TierList {}", finalTierListItemInternalId, tierListPublicId);
+                    return new ResourceNotFoundException("TierListItem con ID " + finalTierListItemInternalId + " no encontrado en la TierList " + tierListPublicId);
+                });
+        logger.debug("Item a mover (ID: {}) encontrado. Sección actual ID: {}. UserGameID: {}",
+                itemToMove.getInternalId(), itemToMove.getTierSection().getInternalId(), itemToMove.getUserGame() != null ? itemToMove.getUserGame().getInternalId() : "N/A");
 
         TierSection oldSection = itemToMove.getTierSection();
         TierSection newSection = tierList.getSections().stream()
                 .filter(s -> Objects.equals(s.getInternalId(), itemMoveRequestDTO.getTargetSectionInternalId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Sección destino con ID " + itemMoveRequestDTO.getTargetSectionInternalId() + " no encontrada."));
-
-        Hibernate.initialize(oldSection.getItems());
-        Hibernate.initialize(newSection.getItems());
+        logger.debug("Sección original ID: {}, Sección destino ID: {}", oldSection.getInternalId(), newSection.getInternalId());
 
         if (tierList.getType() == TierListType.FROM_GAMELIST) {
             GameList sourceGameList = tierList.getSourceGameList();
@@ -537,33 +580,84 @@ public class TierListServiceImpl implements TierListService {
             }
         }
 
-        if (!Objects.equals(oldSection.getInternalId(), newSection.getInternalId())) {
-            oldSection.getItems().removeIf(item -> item.getInternalId() != null && Objects.equals(item.getInternalId(), itemToMove.getInternalId()));
-            reorderItemsAndUpdate(oldSection.getItems());
-        }
+        boolean sectionChanged = !Objects.equals(oldSection.getInternalId(), newSection.getInternalId());
+        logger.debug("¿Secciones diferentes?: {}", sectionChanged);
 
+        // Paso 1: Actualizar la FK del ítem a la nueva sección.
         itemToMove.setTierSection(newSection);
-        List<TierListItem> newSectionItems = newSection.getItems();
-        newSectionItems.removeIf(item -> item.getInternalId() != null && Objects.equals(item.getInternalId(), itemToMove.getInternalId()));
-        int targetOrderInNewSection = itemMoveRequestDTO.getNewOrder();
-        if (targetOrderInNewSection < 0 || targetOrderInNewSection > newSectionItems.size()) {
-            newSectionItems.add(itemToMove);
-        } else {
-            newSectionItems.add(targetOrderInNewSection, itemToMove);
-        }
-        reorderItemsAndUpdate(newSectionItems);
+        logger.debug("itemToMove (ID: {}) FK actualizada a newSection (ID: {}).", itemToMove.getInternalId(), newSection.getInternalId());
 
+        // Paso 2: Guardar el TierListItem individualmente para persistir el cambio de FK.
+        try {
+            tierListItemRepository.save(itemToMove); // Guardar el cambio de FK
+            logger.debug("itemToMove (ID: {}) guardado con nueva sección.", itemToMove.getInternalId());
+        } catch (Exception e) {
+            logger.error("ERROR al guardar itemToMove (ID: {}) después de setTierSection: {}", itemToMove.getInternalId(), e.getMessage(), e);
+            throw e;
+        }
+
+        // Paso 3: Hacer flush del EntityManager para asegurar que el UPDATE de la FK del itemToMove
+        // se envíe a la BD antes de manipular las colecciones que podrían activar orphanRemoval.
+        try {
+            entityManager.flush();
+            logger.debug("EntityManager flusheado después de guardar itemToMove.");
+        } catch (Exception e) {
+            logger.error("ERROR durante entityManager.flush() después de guardar itemToMove (ID: {}): {}", itemToMove.getInternalId(), e.getMessage(), e);
+            throw e; // Si aquí falla, el problema de estado ya es evidente.
+        }
+
+
+        // Paso 4: Manipular las colecciones en memoria.
+        // Como la FK de itemToMove ya (idealmente) apunta a newSection en la BD,
+        // quitarlo de oldSection.items no debería causar un orphanRemoval que lo borre.
+        if (sectionChanged) {
+            if (oldSection != null && oldSection.getItems() != null) {
+                boolean removed = oldSection.getItems().removeIf(it -> Objects.equals(it.getInternalId(), itemToMove.getInternalId()));
+                logger.debug("ItemToMove (ID: {}) {} de oldSection.items. Tamaño oldSection.items: {}", itemToMove.getInternalId(), removed ? "eliminado" : "NO eliminado", oldSection.getItems().size());
+            }
+        }
+
+        // Para asegurar que newSection.items tenga la instancia correcta y en la posición correcta:
+        List<TierListItem> newSectionItemsList = newSection.getItems();
+        newSectionItemsList.removeIf(it -> Objects.equals(it.getInternalId(), itemToMove.getInternalId())); // Quitar cualquier referencia existente por ID
+
+        int targetOrderIdx = itemMoveRequestDTO.getNewOrder();
+        if (targetOrderIdx < 0 || targetOrderIdx > newSectionItemsList.size()) {
+            newSectionItemsList.add(itemToMove); // Añadir al final
+        } else {
+            newSectionItemsList.add(targetOrderIdx, itemToMove); // Añadir en la posición específica
+        }
+        logger.debug("itemToMove (ID: {}) añadido/reinsertado en newSection.items en la posición deseada. Tamaño newSection.items: {}", itemToMove.getInternalId(), newSectionItemsList.size());
+
+
+        // Paso 5: Reordenar los ítems en las secciones afectadas (actualiza el campo 'itemOrder' en memoria).
+        if (sectionChanged && oldSection != null) {
+            reorderItemsAndUpdate(oldSection.getItems());
+            logger.debug("Items de oldSection (ID: {}) reordenados.", oldSection.getInternalId());
+        }
+        reorderItemsAndUpdate(newSectionItemsList);
+        logger.debug("Items de newSection (ID: {}) reordenados. itemToMove (ID: {}) tiene nuevo order: {}.", newSection.getInternalId(), itemToMove.getInternalId(), itemToMove.getItemOrder());
+
+
+        // Paso 6: Guardar la entidad raíz (TierList).
+        // Esto debería ahora principalmente guardar los cambios de orden y las asociaciones de colección.
+        // No debería intentar borrar itemToMove si el flush anterior y la lógica de FK funcionaron.
+        logger.debug("Llamando a tierListRepository.saveAndFlush(tierList) para cambios finales...");
         TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
+        logger.info("TierList (ID: {}) guardada y flusheada FINALMENTE.", updatedTierList.getPublicId());
+
+
         logger.info("Item ID {} (UserGame ID: {}) movido de sección ID {} a sección ID {} (orden final: {}) en TierList '{}' por usuario {}",
                 itemToMove.getInternalId(),
                 (itemToMove.getUserGame() != null ? itemToMove.getUserGame().getInternalId() : "N/A"),
-                oldSection.getInternalId(),
+                (oldSection != null ? oldSection.getInternalId() : "N/A"),
                 newSection.getInternalId(),
                 itemToMove.getItemOrder(),
-                tierList.getName(), userEmail);
+                updatedTierList.getName(),
+                userEmail);
 
-        TierList reloadedTierList = findTierListByPublicIdAndOwnerOrThrow(updatedTierList.getPublicId(), owner);
-        return tierListMapper.toTierListResponseDTOWithSections(reloadedTierList);
+        initializeTierListDetails(updatedTierList); // Para el DTO de respuesta
+        return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
     }
 
     @Override
