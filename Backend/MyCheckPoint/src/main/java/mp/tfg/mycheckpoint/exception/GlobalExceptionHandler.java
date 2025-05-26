@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,18 @@ public class GlobalExceptionHandler {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", "No tienes permiso para realizar esta acción.");
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+
+    // El manejador para MaxUploadSizeExceededException (límite global de Spring) sigue siendo útil
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        logger.warn("Intento de subir un archivo que excede el límite máximo global: {}", ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "El archivo es demasiado grande. El tamaño máximo de subida está configurado en el servidor.");
+        // Para ser más precisos, podrías parsear el tamaño máximo de la configuración general de Spring si es necesario.
+        // O usar un mensaje más genérico como "El archivo excede el tamaño máximo permitido."
+        return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
     // Handler genérico para otras excepciones no controladas explícitamente

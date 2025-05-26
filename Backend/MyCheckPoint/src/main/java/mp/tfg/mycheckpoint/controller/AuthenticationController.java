@@ -62,22 +62,16 @@ public class AuthenticationController {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
             // --- INICIO: Lógica para cancelar eliminación programada ---
-            User userEntity = userRepository.findByEmail(userDetails.getEmail()) // O usa el identificador que tengas en UserDetailsImpl
+            User userEntity = userRepository.findByEmail(userDetails.getEmail())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado en la base de datos: " + userDetails.getEmail()));
 
             if (userEntity.getFechaEliminacion() != null) {
                 if (userEntity.getFechaEliminacion().isAfter(OffsetDateTime.now())) {
                     logger.info("Usuario {} ha iniciado sesión. Cancelando la eliminación programada para {}.", userEntity.getEmail(), userEntity.getFechaEliminacion());
                     userEntity.setFechaEliminacion(null);
-                    // userEntity.setEmailVerified(true); // No es necesario cambiarlo si nunca se puso a false
                     userRepository.save(userEntity);
                     logger.info("Eliminación programada cancelada para el usuario {}.", userEntity.getEmail());
-                    // Opcional: Enviar email de notificación de reactivación de cuenta
-                    // emailService.sendAccountReactivationEmail(userEntity);
                 } else {
-                    // La fecha de eliminación ya pasó. La tarea programada debería haberla eliminado.
-                    // Si el usuario pudo loguearse, es un estado anómalo.
-                    // El login debería fallar debido a UserDetailsImpl.isEnabled() si la tarea aún no ha corrido.
                     logger.warn("Usuario {} inició sesión, pero su fecha de eliminación programada ({}) ya pasó. La cuenta debería haber sido eliminada por la tarea programada.", userEntity.getEmail(), userEntity.getFechaEliminacion());
                     SecurityContextHolder.clearContext(); // Invalidar sesión
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -94,8 +88,6 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error: Credenciales inválidas.");
         } catch (DisabledException e) {
             logger.warn("Intento de login fallido porque la cuenta está deshabilitada (UserDetails.isEnabled() es false) para el identificador: {}", loginRequest.getIdentificador());
-            // Es importante que UserDetailsImpl.isEnabled() permita el login si solo está pendiente de borrado y emailVerified=true.
-            // Si `DisabledException` se lanza, es probable que sea porque emailVerified es false.
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Error: La cuenta está deshabilitada. Por favor, verifica tu correo electrónico o contacta con el soporte.");
         } catch (AuthenticationException e) {

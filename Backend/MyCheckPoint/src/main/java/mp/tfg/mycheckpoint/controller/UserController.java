@@ -69,17 +69,12 @@ public class UserController {
 
     @PutMapping("/me")
     public ResponseEntity<UserDTO> updateCurrentUserProfile(@AuthenticationPrincipal UserDetailsImpl currentUser, @Valid @RequestBody UserProfileUpdateDTO profileUpdateDTO) {
-        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        // String userEmail = userDetails.getEmail();
-        // Es más directo usar @AuthenticationPrincipal
         UserDTO updatedUser = userService.updateUserProfile(currentUser.getEmail(), profileUpdateDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
     @PutMapping(value = "/me/password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> changeMyPassword(@AuthenticationPrincipal UserDetailsImpl currentUser, @Valid @RequestBody PasswordChangeDTO passwordChangeDTO) {
-        // String userEmail = currentUser.getEmail();
         try {
             userService.changePassword(currentUser.getEmail(), passwordChangeDTO);
             return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Contraseña actualizada correctamente."));
@@ -132,15 +127,13 @@ public class UserController {
             @AuthenticationPrincipal UserDetailsImpl currentUser,
             @RequestParam("file") MultipartFile file) {
 
-        if (file.isEmpty()) {
-            // Devolver un error más descriptivo
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(null); // O un DTO de error: .body(new ErrorResponse("El archivo no puede estar vacío."))
-        }
+        // La validación de file.isEmpty() y tamaño ahora la hace fileStorageService.storeProfilePicture()
+        // y lanza FileStorageException si falla, que será manejada por GlobalExceptionHandler.
+
         String userPublicId = currentUser.getPublicId().toString();
 
-        // 1. Guardar el archivo
-        String fileName = fileStorageService.storeProfilePicture(file, userPublicId); // USO DEL CAMPO
+        // 1. Guardar el archivo (puede lanzar FileStorageException)
+        String fileName = fileStorageService.storeProfilePicture(file, userPublicId);
 
         // 2. Actualizar la entidad User con el nombre del archivo
         UserDTO updatedUser = userService.updateUserProfilePicture(currentUser.getEmail(), fileName);
