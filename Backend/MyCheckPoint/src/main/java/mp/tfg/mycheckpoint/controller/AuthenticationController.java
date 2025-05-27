@@ -1,5 +1,14 @@
 package mp.tfg.mycheckpoint.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import mp.tfg.mycheckpoint.dto.auth.JwtResponseDTO;
 import mp.tfg.mycheckpoint.dto.auth.LoginRequestDTO;
@@ -15,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -27,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
 
+@Tag(name = "Autenticación Controller", description = "API para la autenticación de usuarios y gestión de tokens")
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthenticationController {
@@ -49,7 +60,41 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    @Operation(summary = "Autenticar usuario y obtener token JWT",
+            description = "Permite a un usuario iniciar sesión proporcionando su identificador (email o nombre de usuario) y contraseña. " +
+                    "Si las credenciales son válidas y la cuenta está activa, se devuelve un token JWT. " +
+                    "Si el usuario tenía una eliminación de cuenta programada y la fecha aún no ha pasado, esta se cancela.",
+            operationId = "authenticateUser",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody( // <- Aquí importa esta
+                    description = "Credenciales del usuario para iniciar sesión.",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = LoginRequestDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Autenticación exitosa. Devuelve el token JWT.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = JwtResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos. El identificador o la contraseña no cumplen los requisitos de formato o están vacíos.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))),
+            @ApiResponse(responseCode = "401", description = "No autorizado. Credenciales incorrectas o fallo general de autenticación.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
+            @ApiResponse(responseCode = "403", description = "Prohibido. La cuenta está deshabilitada (ej. email no verificado) o la cuenta ha sido eliminada porque su fecha de eliminación programada ya pasó.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Usamos ErrorResponse ya que el cuerpo es {"error": "mensaje"}
+            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado no se pudo encontrar en la base de datos (error interno anómalo durante la cancelación de eliminación).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<?> authenticateUser(@Valid @org.springframework.web.bind.annotation.RequestBody LoginRequestDTO loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -97,7 +142,41 @@ public class AuthenticationController {
     }
 
     @GetMapping("/confirm-account")
-    public ResponseEntity<String> confirmUserAccount(@RequestParam("token") String token) {
+    @Operation(summary = "Confirmar la dirección de correo electrónico de un usuario",
+            description = "Valida un token de verificación enviado al correo electrónico del usuario tras el registro. " +
+                    "Si el token es válido y no ha expirado, la cuenta del usuario se marca como verificada. " +
+                    "Este endpoint es público y se accede a través del enlace en el correo de verificación.",
+            operationId = "confirmUserAccount")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Correo electrónico verificado exitosamente.",
+                    content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE, // El cuerpo es un String simple
+                            schema = @Schema(type = "string"),
+                            examples = @ExampleObject(value = "¡Tu correo electrónico ha sido verificado exitosamente! Ahora puedes iniciar sesión.")
+                    )),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. El token es inválido (ej. ya fue usado, ha expirado, o el correo ya estaba verificado).",
+                    content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE, // El cuerpo es un String simple
+                            schema = @Schema(type = "string"),
+                            examples = @ExampleObject(value = "Este enlace de verificación ya ha sido utilizado.")
+                    )),
+            @ApiResponse(responseCode = "404", description = "No encontrado. El token de verificación proporcionado no existe o es inválido.",
+                    content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE, // El cuerpo es un String simple
+                            schema = @Schema(type = "string"),
+                            examples = @ExampleObject(value = "Token de verificación inválido o no encontrado.")
+                    )),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    // Aunque el método no lo captura explícitamente, GlobalExceptionHandler sí lo haría.
+                    // Aquí, el cuerpo del error de GlobalExceptionHandler sería JSON.
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<String> confirmUserAccount(
+            @Parameter(name = "token",
+                    description = "El token de verificación único enviado al correo electrónico del usuario.",
+                    required = true,
+                    in = ParameterIn.QUERY, // Es un parámetro de query
+                    example = "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                    schema = @Schema(type = "string"))
+            @RequestParam("token") String token) {
         try {
             String resultMessage = userService.confirmEmailVerification(token);
             // Aquí, sin frontend, simplemente devolvemos el mensaje.
@@ -111,7 +190,39 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<Object> forgotPassword(@Valid @RequestBody ForgotPasswordDTO forgotPasswordDTO) {
+    @Operation(summary = "Solicitar restablecimiento de contraseña",
+            description = "Inicia el proceso para restablecer la contraseña de un usuario. El usuario proporciona su dirección de correo electrónico. " +
+                    "Si el correo está registrado, se enviará un email con un token e instrucciones para restablecer la contraseña. " +
+                    "Para no revelar si un email existe en el sistema, este endpoint siempre devuelve una respuesta genérica de éxito, " +
+                    "independientemente de si el email fue encontrado o no. Este endpoint es público.",
+            operationId = "forgotPassword",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "DTO que contiene el correo electrónico del usuario que ha olvidado su contraseña.",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = ForgotPasswordDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Solicitud procesada. Se enviará un correo si el email está registrado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            // Esquema para: {"message": "string"}
+                            schema = @Schema(type = "object"), // O implementation = SuccessMessageDTO.class si lo tienes
+                            examples = @ExampleObject(
+                                    name = "ForgotPasswordSuccess",
+                                    value = "{\"message\": \"Si tu dirección de correo electrónico está registrada, recibirás un enlace para restablecer tu contraseña.\"}"
+                            )
+                    )),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos. El formato del email proporcionado no es válido o el campo está vacío.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse")))
+            // No se documentan explícitamente 404 o 500 aquí porque el método siempre devuelve 200 OK con un mensaje genérico
+            // para el caso de éxito y para las excepciones capturadas internamente.
+            // El único error que el cliente vería con otro código sería un 400 por validación del DTO.
+    })
+    public ResponseEntity<Object> forgotPassword(@Valid @org.springframework.web.bind.annotation.RequestBody ForgotPasswordDTO forgotPasswordDTO) {
         try {
             userService.processForgotPassword(forgotPasswordDTO);
             // Siempre devolver una respuesta genérica para no revelar si un email existe en el sistema
@@ -126,6 +237,41 @@ public class AuthenticationController {
     }
 
     @PostMapping("/reset-password")
+    @Operation(summary = "Restablecer la contraseña del usuario utilizando un token",
+            description = "Permite a un usuario establecer una nueva contraseña utilizando el token de restablecimiento que recibió por correo electrónico. " +
+                    "El token debe ser válido y no haber expirado. Este endpoint es público.",
+            operationId = "resetPassword",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "DTO que contiene el token de restablecimiento y la nueva contraseña deseada.",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = ResetPasswordDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contraseña restablecida exitosamente.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            // Esquema para: {"message": "string"}
+                            schema = @Schema(type = "object"), // O implementation = SuccessMessageDTO.class si lo tienes
+                            examples = @ExampleObject(
+                                    name = "PasswordResetSuccess",
+                                    value = "{\"message\": \"Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tu nueva contraseña.\"}"
+                            )
+                    )),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. Los datos proporcionados en `ResetPasswordDTO` no son válidos (ej. token vacío, contraseña nueva no cumple requisitos), el token ya fue usado, ha expirado, o la nueva contraseña es la misma que la actual.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ValidationPasswordErrorResponse")
+                    )
+            ),
+    @ApiResponse(responseCode = "404", description = "No encontrado. El token de restablecimiento proporcionado no existe o es inválido.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+})
     public ResponseEntity<Object> resetPassword(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
         try {
             String resultMessage = userService.processResetPassword(resetPasswordDTO);
