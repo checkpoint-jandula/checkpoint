@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
 import mp.tfg.mycheckpoint.entity.games.Game;
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
@@ -27,6 +28,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Game Controller", description = "API para interactuar con información de juegos, principalmente a través de IGDB")
 @RestController
 @RequestMapping("/api/juegos")
 public class GameController {
@@ -161,14 +163,72 @@ public class GameController {
 //                });
 //    }
 
-    // NUEVO ENDPOINT GET PARA FILTRADO
+    // ENDPOINT GET PARA FILTRADO
     @GetMapping("/igdb/filtrar")
+    @Operation(summary = "Filtrar juegos en IGDB por múltiples criterios",
+            description = "Permite buscar juegos en IGDB aplicando filtros opcionales como rango de fechas de lanzamiento, ID de género, ID de tema, y ID de modo de juego. " +
+                    "Devuelve un flujo (o lista) de juegos que coinciden, con un conjunto limitado de campos. " +
+                    "Este endpoint es público.",
+            operationId = "filtrarJuegosEnIgdb")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda por filtros exitosa. Devuelve una lista de juegos encontrados (puede estar vacía).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class))
+                    )),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. Ocurre si alguno de los parámetros numéricos no puede ser parseado correctamente (ej. texto en lugar de número).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
     public Flux<GameDto> filtrarJuegosEnIgdb(
+            @Parameter(name = "fecha_inicio",
+                    description = "Fecha de inicio del rango de lanzamiento (timestamp Unix en segundos). Opcional.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "1420070400", // Ejemplo: 1 de enero de 2015
+                    schema = @Schema(type = "integer", format = "int64"))
             @RequestParam(name = "fecha_inicio", required = false) Long releaseDateStart,
+
+            @Parameter(name = "fecha_fin",
+                    description = "Fecha de fin del rango de lanzamiento (timestamp Unix en segundos). Opcional.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "1451606399", // Ejemplo: 31 de diciembre de 2015
+                    schema = @Schema(type = "integer", format = "int64"))
             @RequestParam(name = "fecha_fin", required = false) Long releaseDateEnd,
+
+            @Parameter(name = "id_genero",
+                    description = "ID del género según IGDB para filtrar. Opcional.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "12", // Ejemplo: RPG
+                    schema = @Schema(type = "integer", format = "int32"))
             @RequestParam(name = "id_genero", required = false) Integer genreId,
+
+            @Parameter(name = "id_tema",
+                    description = "ID del tema según IGDB para filtrar. Opcional.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "1", // Ejemplo: Ciencia ficción
+                    schema = @Schema(type = "integer", format = "int32"))
             @RequestParam(name = "id_tema", required = false) Integer themeId,
+
+            @Parameter(name = "id_modo_juego",
+                    description = "ID del modo de juego según IGDB para filtrar. Opcional.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "1", // Ejemplo: Un jugador
+                    schema = @Schema(type = "integer", format = "int32"))
             @RequestParam(name = "id_modo_juego", required = false) Integer gameModeId,
+
+            @Parameter(name = "limite",
+                    description = "Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.",
+                    in = ParameterIn.QUERY,
+                    required = false,
+                    example = "25",
+                    schema = @Schema(type = "integer", format = "int32", defaultValue = "10", minimum = "1", maximum = "500"))
             @RequestParam(name = "limite", required = false, defaultValue = "10") Integer limit) {
 
         // Validación básica de parámetros (puedes añadir más según necesidad)
