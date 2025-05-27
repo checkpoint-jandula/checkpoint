@@ -1,6 +1,14 @@
 package mp.tfg.mycheckpoint.controller;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
 import mp.tfg.mycheckpoint.entity.games.Game;
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
@@ -10,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -70,7 +79,34 @@ public class GameController {
 //    }
 
     @GetMapping("/igdb/buscar")
-    public Flux<GameDto> buscarJuegosEnIgdb(@RequestParam String nombre) {
+    @Operation(summary = "Buscar juegos en IGDB por nombre",
+            description = "Realiza una búsqueda de juegos en la base de datos de IGDB utilizando un término de búsqueda para el nombre. " +
+                    "Devuelve un flujo (o lista) de juegos que coinciden, con un conjunto limitado de campos (nombre, calificación, carátula, fecha de lanzamiento, tipo, resumen, ID). " +
+                    "Este endpoint es público.",
+            operationId = "buscarJuegosEnIgdb")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa. Devuelve una lista de juegos encontrados (puede estar vacía).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            // Un Flux<GameDto> se representa como un array de GameDto en la especificación OpenAPI
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class))
+                    )),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. El parámetro 'nombre' es obligatorio.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+            // No se documenta 401 o 403 porque el endpoint es público.
+            // No se documenta 404 explícitamente porque una búsqueda sin resultados devuelve 200 OK con una lista vacía.
+    })
+    public Flux<GameDto> buscarJuegosEnIgdb(
+            @Parameter(name = "nombre",
+                    description = "Término de búsqueda para el nombre del juego.",
+                    required = true,
+                    in = ParameterIn.QUERY, // Es un parámetro de query
+                    example = "Zelda",
+                    schema = @Schema(type = "string"))
+            @RequestParam String nombre) {
         return igdbService.findGamesByName(nombre)
                 .map(gameDto -> {
                     // Los DTOs que vienen de una búsqueda general pueden ser resúmenes.
