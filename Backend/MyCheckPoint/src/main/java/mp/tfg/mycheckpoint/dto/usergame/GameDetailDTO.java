@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import mp.tfg.mycheckpoint.dto.comment.PublicGameCommentDTO;
-import mp.tfg.mycheckpoint.dto.games.GameDto; // El DTO general de juego
+import mp.tfg.mycheckpoint.dto.games.GameDto;
 
 import java.util.List;
 

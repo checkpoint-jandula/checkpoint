@@ -3,12 +3,12 @@ package mp.tfg.mycheckpoint.mapper;
 import mp.tfg.mycheckpoint.dto.user.UserCreateDTO;
 import mp.tfg.mycheckpoint.dto.user.UserDTO;
 import mp.tfg.mycheckpoint.dto.user.UserProfileUpdateDTO;
-import mp.tfg.mycheckpoint.dto.user.UserSearchResultDTO; // IMPORTANTE: Añadir esta importación
+import mp.tfg.mycheckpoint.dto.user.UserSearchResultDTO;
 import mp.tfg.mycheckpoint.entity.User;
 import org.mapstruct.*;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.List; // IMPORTANTE: Añadir esta importación
+import java.util.List;
 
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,

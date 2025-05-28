@@ -4,10 +4,10 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.media.ArraySchema; // Necesario para ArraySchema
-import io.swagger.v3.oas.models.media.MapSchema; // Necesario para MapSchema (si usas Map)
-import io.swagger.v3.oas.models.media.ObjectSchema; // Necesario para ObjectSchema
-import io.swagger.v3.oas.models.media.StringSchema; // Necesario para StringSchema
+import io.swagger.v3.oas.models.media.ArraySchema;
+
+import io.swagger.v3.oas.models.media.ObjectSchema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Value;

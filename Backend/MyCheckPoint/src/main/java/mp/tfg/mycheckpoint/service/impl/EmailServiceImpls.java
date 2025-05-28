@@ -10,9 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage; // Correcto para texto plano
 import org.springframework.mail.javamail.JavaMailSender;
-// import org.springframework.mail.javamail.MimeMessageHelper; // Para emails HTML
-// import jakarta.mail.MessagingException; // Si usas MimeMessageHelper
-// import jakarta.mail.internet.MimeMessage; // Si usas MimeMessageHelper
+
 import org.springframework.stereotype.Service;
 
 @Service

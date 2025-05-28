@@ -11,22 +11,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
-import mp.tfg.mycheckpoint.entity.games.Game;
+
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
 import mp.tfg.mycheckpoint.service.games.GameService;
 import mp.tfg.mycheckpoint.service.games.IgdbService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.stream.Collectors;
+
+
 
 @Tag(name = "Game Controller", description = "API para interactuar con información de juegos, principalmente a través de IGDB")
 @RestController

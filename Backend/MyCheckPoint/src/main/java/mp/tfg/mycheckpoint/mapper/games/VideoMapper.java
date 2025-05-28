@@ -5,7 +5,7 @@ package mp.tfg.mycheckpoint.mapper.games;
 import mp.tfg.mycheckpoint.dto.games.VideoDto;
 import mp.tfg.mycheckpoint.entity.games.Video;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")

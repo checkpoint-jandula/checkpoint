@@ -1,9 +1,8 @@
 package mp.tfg.mycheckpoint.config;
 
-// Quitar UserDetailsServiceImpl de aquí si ya no se usa directamente
-// import mp.tfg.mycheckpoint.security.UserDetailsServiceImpl;
-import mp.tfg.mycheckpoint.security.jwt.JwtAuthenticationEntryPoint; // Importar
-import mp.tfg.mycheckpoint.security.jwt.JwtAuthenticationFilter;   // Importar
+
+import mp.tfg.mycheckpoint.security.jwt.JwtAuthenticationEntryPoint;
+import mp.tfg.mycheckpoint.security.jwt.JwtAuthenticationFilter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // Importar
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity

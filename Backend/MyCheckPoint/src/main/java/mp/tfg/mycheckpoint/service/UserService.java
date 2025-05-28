@@ -1,8 +1,8 @@
 package mp.tfg.mycheckpoint.service;
 
-import mp.tfg.mycheckpoint.dto.user.*; // Asegúrate que UserSearchResultDTO esté aquí o importa su paquete
+import mp.tfg.mycheckpoint.dto.user.*;
 
-import java.util.List; // IMPORTAR
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

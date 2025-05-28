@@ -1,6 +1,6 @@
 package mp.tfg.mycheckpoint.service;
 
-import mp.tfg.mycheckpoint.dto.tierlist.*; // Asegúrate que todos los DTOs de tierlist estén importados
+import mp.tfg.mycheckpoint.dto.tierlist.*;
 import java.util.List;
 import java.util.UUID;
 

@@ -5,7 +5,7 @@ import mp.tfg.mycheckpoint.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
-// import org.springframework.transaction.event.TransactionalEventListener; // Alternativa
+
 
 @Component
 public class RegistrationListener implements ApplicationListener<OnRegistrationCompleteEvent> {

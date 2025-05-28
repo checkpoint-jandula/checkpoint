@@ -14,7 +14,7 @@ import mp.tfg.mycheckpoint.repository.UserRepository;
 import mp.tfg.mycheckpoint.repository.VerificationTokenRepository;
 import mp.tfg.mycheckpoint.service.EmailService;
 import mp.tfg.mycheckpoint.service.UserService;
-import mp.tfg.mycheckpoint.service.FileStorageService; // ASEGÚRATE QUE ESTA IMPORTACIÓN ES CORRECTA
+import mp.tfg.mycheckpoint.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

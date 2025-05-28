@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO; // Para los juegos dentro de la lista
+import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO;
 
 import java.time.OffsetDateTime;
 import java.util.List;

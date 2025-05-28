@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import mp.tfg.mycheckpoint.dto.enums.UserGamePersonalPlatform;
 import mp.tfg.mycheckpoint.dto.enums.UserGameStatus;
-import mp.tfg.mycheckpoint.entity.games.Game; // Asegúrate que la importación es correcta
+import mp.tfg.mycheckpoint.entity.games.Game;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

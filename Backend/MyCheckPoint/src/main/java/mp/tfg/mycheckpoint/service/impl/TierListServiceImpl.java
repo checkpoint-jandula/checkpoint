@@ -1,4 +1,3 @@
-// Archivo: MyCheckPoint/src/main/java/mp/tfg/mycheckpoint/service/impl/TierListServiceImpl.java
 package mp.tfg.mycheckpoint.service.impl;
 
 import mp.tfg.mycheckpoint.dto.enums.TierListType;
