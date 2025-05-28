@@ -71,3 +71,13 @@ Este documento describe las dependencias clave que utilizarás en el frontend de
     * **Modificación de datos:** Emplear `useMutation` para `añadir/actualizar juegos en la biblioteca`, `crear/actualizar/eliminar listas de juegos`, `enviar/aceptar/rechazar solicitudes de amistad`, `gestionar Tier Lists y sus elementos`, y `actualizar el perfil del usuario/cambiar contraseña`.
     * **Optimización:** Beneficiarme de la caché para una aplicación más rápida y una menor carga en el backend.
     * **Manejo de errores:** Mostrar mensajes de error relevantes a los usuarios de forma consistente (ej. si una petición falla).
+
+## 8. `mui/icons-material`
+
+* **¿Para qué sirve?** Es la biblioteca oficial de iconos de Material Design para ser utilizada con Material-UI (MUI) y React. Proporciona una amplia gama de iconos listos para usar que ayudan a mejorar la usabilidad y el atractivo visual de la interfaz de usuario.
+* **¿Qué hace?** Ofrece cada icono de Material Design como un componente React individual (SVG envuelto). Esto permite importar solo los iconos que necesitas, optimizando el rendimiento. Los iconos son personalizables en términos de tamaño, color y otras propiedades CSS a través de `props`.
+* **¿Cómo lo usaré en mi proyecto?**
+  * **Mejorar la interfaz de usuario:** Integrar iconos en componentes de MUI como `Button` (ej. icono de guardar, enviar), `IconButton`, `List` (ej. iconos para acciones en elementos de lista), `TextField` (ej. iconos para mostrar/ocultar contraseña, limpiar campo), y `AppBar` (ej. icono de menú, perfil).
+  * **Indicadores visuales:** Utilizar iconos para representar acciones comunes en la gestión de `juegos` (ej. añadir a biblioteca, marcar como jugado), `listas de juegos` (ej. editar lista, eliminar lista), `Tier Lists` (ej. mover elemento, añadir sección), y `amistades` (ej. enviar solicitud, aceptar/rechazar).
+  * **Navegación y feedback:** Emplear iconos en la `navegación` (ej. iconos para diferentes secciones en un `Drawer` o `BottomNavigation`) y para dar `feedback visual` al usuario (ej. iconos de éxito, error o advertencia en `Snackbar` o `Dialog`).
+  * **Personalización del perfil:** Utilizar iconos para opciones dentro del `perfil del usuario` o para distinguir tipos de notificaciones.
