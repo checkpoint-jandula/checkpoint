@@ -10,13 +10,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO utilizado para crear o actualizar una lista de juegos personalizada.
+ * Contiene el nombre, una descripción opcional y el estado de visibilidad.
+ */
 @Schema(description = "DTO para crear o actualizar una lista de juegos personalizada.")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameListRequestDTO { // Usado para crear y actualizar
+public class GameListRequestDTO {
 
+    /**
+     * Nombre de la lista de juegos.
+     * Debe tener entre 1 y 150 caracteres.
+     */
     @Schema(description = "Nombre de la lista de juegos. Debe tener entre 1 y 150 caracteres.",
             example = "Mis Juegos Favoritos de RPG", requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 150)
     @NotBlank(message = "List name cannot be blank")
@@ -24,12 +32,20 @@ public class GameListRequestDTO { // Usado para crear y actualizar
     @JsonProperty("name")
     private String name;
 
+    /**
+     * Descripción opcional para la lista de juegos.
+     * No puede exceder los 1000 caracteres.
+     */
     @Schema(description = "Descripción opcional para la lista de juegos. Máximo 1000 caracteres.",
             example = "Una colección de los RPGs que más he disfrutado.", maxLength = 1000, nullable = true)
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     @JsonProperty("description")
-    private String description; // Opcional
+    private String description;
 
+    /**
+     * Indica si la lista de juegos es pública (true) o privada (false).
+     * Este campo es obligatorio.
+     */
     @Schema(description = "Indica si la lista de juegos es pública (true) o privada (false).",
             example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Public status cannot be null")

@@ -91,9 +91,6 @@ public enum ReleaseStatus {
             return UNKNOWN;
         }
         switch (igdbStatusValue) {
-            // El caso 0 de IGDB (GAME_STATUS_NULL) se mapea a nuestro RELEASED(0) aquí.
-            // Si IGDB envía 1 para "Released", este mapeo debe ajustarse.
-            // Según el código original, IGDB 0 es RELEASED en este enum.
             case 0: return RELEASED;
             case 2: return ALPHA;
             case 3: return BETA;

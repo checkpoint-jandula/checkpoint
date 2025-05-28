@@ -7,14 +7,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO para la solicitud de añadir un juego existente de la biblioteca del usuario
+ * a una de sus listas de juegos personalizadas.
+ */
 @Schema(description = "DTO para añadir un juego existente de la biblioteca del usuario a una lista de juegos personalizada.")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddGameToCustomListRequestDTO {
 
-    // Se usará el internalId de la entidad UserGame,
-    // ya que representa un juego específico en la biblioteca de un usuario.
+    /**
+     * ID interno de la entrada 'UserGame' (juego en la biblioteca del usuario) que se desea añadir a la lista.
+     * Este campo es obligatorio.
+     */
     @Schema(description = "ID interno de la entrada 'UserGame' (juego en la biblioteca del usuario) que se desea añadir a la lista. Es obligatorio.",
             example = "101", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "UserGame ID cannot be null")
