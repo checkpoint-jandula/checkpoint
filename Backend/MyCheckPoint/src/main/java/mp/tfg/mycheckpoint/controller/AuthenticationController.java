@@ -23,6 +23,7 @@ import mp.tfg.mycheckpoint.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.time.OffsetDateTime;
 
 @Tag(name = "Autenticación Controller", description = "API para la autenticación de usuarios y gestión de tokens")
@@ -169,23 +171,54 @@ public class AuthenticationController {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
     })
-    public ResponseEntity<String> confirmUserAccount(
+    public ResponseEntity<Void> confirmUserAccount(
             @Parameter(name = "token",
                     description = "El token de verificación único enviado al correo electrónico del usuario.",
                     required = true,
-                    in = ParameterIn.QUERY, // Es un parámetro de query
+                    in = ParameterIn.QUERY,
                     example = "a1b2c3d4-e5f6-7890-1234-567890abcdef",
                     schema = @Schema(type = "string"))
             @RequestParam("token") String token) {
+
+        // Define la URL base de tu frontend.
+        // Para desarrollo, es http://localhost:5173 (el puerto de Vite)
+        // Para producción, esta debería ser la URL pública de tu frontend.
+        // Podrías hacerla configurable a través de application.properties.
+        String frontendLoginUrl = "http://localhost:5173/login";
+
         try {
-            String resultMessage = userService.confirmEmailVerification(token);
-            // Aquí, sin frontend, simplemente devolvemos el mensaje.
-            // Un frontend redirigiría a una página de login o de éxito.
-            return ResponseEntity.ok(resultMessage);
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalStateException e) { // Podrías usar excepciones más específicas
-            return ResponseEntity.badRequest().body(e.getMessage());
+            // Asumo que userService.confirmEmailVerification(token)
+            // lanza una excepción si el token no es válido o ya fue usado,
+            // y no devuelve nada o devuelve algo que no necesitamos para la redirección.
+            userService.confirmEmailVerification(token);
+
+            // Si la verificación es exitosa, redirige al login del frontend con un parámetro de éxito
+            URI successUri = URI.create(frontendLoginUrl + "?verification_success=true");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(successUri);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND); // Código 302 Found para redirección
+
+        } catch (ResourceNotFoundException e) { // Si el token no se encuentra
+            // Redirige al login del frontend con un parámetro de error específico
+            URI errorUri = URI.create(frontendLoginUrl + "?verification_error=token_not_found");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(errorUri);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
+
+        } catch (IllegalStateException e) { // Si el token es inválido (ej. expirado, ya usado)
+            // Redirige al login del frontend con otro parámetro de error
+            URI errorUri = URI.create(frontendLoginUrl + "?verification_error=invalid_token");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(errorUri);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
+
+        } catch (Exception e) { // Un catch-all para otros posibles errores durante la verificación
+            // Loggear el error en el servidor es importante aquí
+            // logger.error("Error inesperado durante la confirmación del email: ", e);
+            URI errorUri = URI.create(frontendLoginUrl + "?verification_error=server_error");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(errorUri);
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
         }
     }
 
