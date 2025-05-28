@@ -1,0 +1,449 @@
+@startuml
+' Descripción del sistema CheckPoint - Gestión de videojuegos, listas y usuarios (Modificado v4 - Estado de Amistad - snake_case)
+
+' === DEFINICIONES DE ENUMERACIONES ===
+enum TemaEnum {
+  CLARO
+  OSCURO
+}
+
+enum VisibilidadEnum {
+  PUBLICO
+  PRIVADO
+  SOLO_AMIGOS
+}
+
+enum GameTypeEnum {
+  JUEGO
+  DLC
+  EXPANSION
+}
+
+enum StatusEnum {
+  RELEASED
+  ALPHA
+  BETA
+  EARLY_ACCESS
+  OFFLINE
+  CANCELLED
+  RUMORED
+  DELISTED
+}
+
+enum EstadoJuegoUsuarioEnum {
+  COMPLETADO_NO_SELECCIONAR
+  COMPLETADO_HISTORIA
+  COMPLETADO_HISTORIA_SECUNDARIAS
+  COMPLETADO_100
+  ARCHIVADO_NO_SELECCIONAR
+  ARCHIVADO_ABANDONADO
+  ARCHIVADO_NO_JUGANDO
+  DESEADO
+  JUGANDO_NO_SELECCIONAR
+  JUGANDO_PAUSADO
+  JUGANDO_INFINITO
+}
+
+' NUEVA ENUMERACIÓN PARA ESTADO DE AMISTAD
+enum EstadoAmistadEnum {
+  PENDIENTE   ' Solicitud enviada, esperando respuesta
+  ACEPTADA    ' Amistad confirmada por ambas partes
+  RECHAZADA   ' Solicitud de amistad rechazada (puede ser temporal o eliminarse la entrada)
+  BLOQUEADA   ' Un usuario ha bloqueado al otro (previene futuras solicitudes o interacciones)
+}
+
+
+' === ENTIDADES PRINCIPALES ===
+
+entity usuario {
+  +id: Long <<PK>>
+  +public_id : UUID <<Identificador público único>>
+  --
+  nombre_usuario: String
+  email: String
+  contraseña: String <<hash>>
+  fecha_registro: DateTime
+  -- Atributos de perfil_usuario integrados --
+  tema: TemaEnum
+  foto_perfil : String <<Ruta a la imagen>>
+  notificaciones: Boolean
+  visibilidad_perfil: VisibilidadEnum
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of usuario
+  Representa a un usuario registrado.
+  Incluye preferencias de perfil directamente.
+  La contraseña se almacena como un hash (ej. BCrypt).
+  'public_id' se usa para URLs de perfil y para identificar en operaciones de amistad.
+end note
+
+entity plataforma {
+  +id: Long <<PK>>
+  --
+  id_igdb: int <<ID externo IGDB, opcional si es plataforma solo interna>>
+  nombre: String
+  nombre_alternativo: String <<nullable>>
+  logo_url: String <<URL, nullable>>
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of plataforma
+  Plataforma de videojuegos (Steam, PS5, etc.) gestionada internamente.
+  'id_igdb' permite el mapeo con la base de datos de IGDB. Si una plataforma
+  proviene de IGDB y no existe, se crea aquí.
+  'logo_url' almacena la URL del logo oficial de la plataforma.
+end note
+
+entity juego {
+  +id: Long <<PK>>
+  --
+  id_igdb: Long <<ID externo IGDB>>
+  nombre: String
+  slug: String
+  game_type: GameTypeEnum
+  resumen: String <<nullable>>
+  historia: String <<nullable>>
+  total_rating: Float <<Puntuación IGDB, nullable>>
+  total_rating_count: int <<Votos IGDB, nullable>>
+  fecha_lanzamiento: Date <<nullable>>
+  cover_url: String <<URL, nullable>>
+  motor_grafico: String <<Nombre o CSV, nullable>>
+  franquicia: String <<Nombre, nullable>>
+  status: StatusEnum
+  ' -- Las siguientes listas se definen por relaciones, no como atributos directos --
+  ' -- generos: List<genero> -- Comentario informativo
+  ' -- modos_juego: List<modo_juego> -- Comentario informativo
+  ' -- companias: List<compania> -- Comentario informativo
+  ' -- keywords: List<keyword> -- Comentario informativo
+  ' -- plataformas: List<plataforma> -- Comentario informativo (AHORA APUNTA A plataforma)
+  ' -- temas: List<tema> -- Comentario informativo
+  ' -- imagenes: List<artwork> -- Comentario informativo
+  ' -- videos: List<video> -- Comentario informativo
+  ' -- webs: List<web> -- Comentario informativo
+  ' -- idiomas: List<idioma> -- Comentario informativo
+  ' -- dlcs: List<juego> -- Comentario informativo
+  ' -- expansiones: List<juego> -- Comentario informativo
+  ' -- similares: List<juego> -- Comentario informativo
+}
+note right of juego
+  Información base de un videojuego, mayormente sincronizada desde IGDB.
+  'motor_grafico' y 'franquicia' son ahora Strings simples para facilitar la gestión.
+  Las plataformas en las que un juego está disponible se gestionan a través
+  de la relación con la entidad 'plataforma'.
+end note
+
+entity genero {
+  +id: Long <<PK>>
+  --
+  nombre: String
+}
+note right of genero
+  Categoría de género para videojuegos (Ej: Acción, RPG, Estrategia).
+  Sincronizado o mapeado desde IGDB.
+end note
+
+entity compania {
+  +id: Long <<PK>>
+  --
+  nombre: String
+  developer: Boolean
+  publisher: Boolean
+  porting: Boolean
+  supporting: Boolean
+}
+note right of compania
+  Empresas relacionadas con los videojuegos.
+  Los booleanos indican el rol de la compañía (desarrolladora, editora, etc.).
+end note
+
+entity keyword {
+  +id: Long <<PK>>
+  --
+  nombre: String
+}
+note right of keyword
+  Palabras clave o etiquetas asociadas a los juegos (Ej: "mundo abierto", "cyberpunk").
+  Principalmente obtenidas de IGDB.
+end note
+
+entity modo_juego {
+  +id: Long <<PK>>
+  --
+  nombre: String
+}
+note right of modo_juego
+  Modos de juego disponibles (Ej: "Un jugador", "Multijugador online", "Cooperativo local").
+end note
+
+entity artwork {
+  +id: Long <<PK>>
+  --
+  url: String <<URL>>
+  'juego_id: Long <<FK>> ' Opcional si se modela relación directa
+}
+note right of artwork
+  Almacena URLs de imágenes y arte conceptual de los juegos.
+  Podría tener una relación directa con Juego si se gestionan individualmente.
+end note
+
+entity video {
+  +id: Long <<PK>>
+  --
+  nombre: String
+  video_id: String <<ID del video en la plataforma, ej. YouTube>>
+  'juego_id: Long <<FK>> ' Opcional
+}
+note right of video
+  Información sobre vídeos relacionados con los juegos.
+  'video_id' es el identificador en la plataforma de origen (ej. YouTube).
+end note
+
+entity web {
+  +id: Long <<PK>>
+  --
+  url: String <<URL>>
+  'juego_id: Long <<FK>> ' Opcional
+}
+note right of web
+  Enlaces a sitios web relevantes para un juego (oficial, comunidad, etc.).
+end note
+
+entity idioma {
+  +id: Long <<PK>>
+  --
+  nombre: String
+  tipo_soporte: int <<1=Interfaz, 2=Audio, 3=Subtítulos>>
+}
+note right of idioma
+  Idiomas soportados por un juego y el tipo de soporte.
+  'tipo_soporte' es un código numérico que debe ser interpretado.
+end note
+
+entity tema {
+  +id: Long <<PK>>
+  --
+  nombre: String
+}
+note top of tema: Representa temas de juegos, ej. Fantasía, Ciencia Ficción.
+note right of tema
+  Temas principales de un videojuego (Ej: Fantasía, Ciencia Ficción, Histórico).
+  Sincronizado o mapeado desde IGDB.
+end note
+
+
+entity juego_usuario {
+  +id: Long <<PK>>
+  --
+  usuario_id: Long <<FK>>
+  juego_id: Long <<FK>>
+  plataforma_id: Long <<FK, nullable, a la entidad plataforma nuestra>>
+  estado: EstadoJuegoUsuarioEnum
+  posesion: Boolean
+  puntuacion: Float <<nullable>>
+  comentario: String <<nullable>>
+  comentario_privado: String <<nullable>>
+  fecha_inicio: Date <<nullable>>
+  fecha_fin: Date <<nullable>>
+  duracion_historia: Float <<horas, nullable>>
+  duracion_historia_secundarias: Float <<horas, nullable>>
+  duracion_completista: Float <<horas, nullable>>
+  importado: Boolean
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of juego_usuario
+  Relación personalizada entre un usuario y un juego específico.
+  Contiene el estado del juego para el usuario, puntuación, comentarios, etc.
+  'plataforma_id' (opcional) indica en qué plataforma (de nuestra entidad plataforma)
+  el usuario posee o juega este título.
+end note
+
+entity duracion_juego {
+  +id_duracion: Long <<PK>>
+  --
+  juego_id: Long <<FK>>
+  media_historia: Float <<nullable>>
+  media_historia_secundarias: Float <<nullable>>
+  media_completista: Float <<nullable>>
+  numero_usuarios: int
+}
+note right of duracion_juego
+  Almacena la duración promedio de los juegos, calculada
+  a partir de los datos proporcionados por los usuarios
+  en sus entradas de 'juego_usuario'.
+  Se actualiza periódicamente o bajo demanda.
+end note
+
+entity lista {
+  +id: Long <<PK>>
+  --
+  usuario_id: Long <<FK>>
+  nombre: String
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of lista
+  Listas personalizadas creadas por los usuarios
+  para organizar videojuegos (ej: "Favoritos", "Pendientes").
+end note
+
+entity lista_juego {
+  +id: Long <<PK>> 'Opcional, podría ser clave compuesta (lista_id, juego_id)'
+  --
+  lista_id: Long <<FK>>
+  juego_id: Long <<FK>>
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime <<nullable>>
+  fecha_eliminacion: DateTime <<nullable>>
+  ' orden: int <<Opcional: si los juegos en la lista tienen un orden específico>>'
+}
+note top of lista_juego: Tabla de unión para lista y juego.
+note right of lista_juego
+  Asociación entre un juego y una lista de usuario.
+  'fecha_modificacion' podría usarse si se permite
+  reordenar juegos dentro de la lista o añadir notas/metadatos
+  a la entrada específica de un juego en una lista.
+  El campo 'orden' (comentado) permitiría listas ordenadas.
+end note
+
+
+entity tier_list {
+  +id: Long <<PK>>
+  --
+  usuario_id: Long <<FK>>
+  nombre: String
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of tier_list
+  Lista de clasificación personalizada donde un usuario
+  organiza juegos en diferentes niveles o "tiers"
+  según su criterio subjetivo.
+end note
+
+entity nivel_tier {
+  +id: Long <<PK>>
+  --
+  tier_list_id: Long <<FK>>
+  nombre: String
+  orden: int <<Posición ordinal del nivel>>
+  color: String <<Hex, nullable>>
+  descripcion: String <<nullable>>
+}
+note right of nivel_tier
+  Define un nivel específico dentro de una tier_list
+  (ej: "S Tier", "A Tier", "Meh").
+  'orden' determina la posición visual del nivel.
+  'color' permite personalizar la apariencia del nivel.
+end note
+
+entity tier_list_juego {
+  +id: Long <<PK>> 'Opcional, podría ser clave compuesta (tier_list_id, juego_id)'
+  --
+  tier_list_id: Long <<FK>>
+  juego_id: Long <<FK>>
+  nivel_tier_id: Long <<FK>>
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime
+  fecha_modificacion: DateTime
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note top of tier_list_juego: Tabla de unión para tier_list, juego y nivel_tier.
+note right of tier_list_juego
+  Asocia un juego a un nivel específico dentro de una tier_list.
+  Un juego solo puede estar en un nivel por tier_list.
+end note
+
+entity ranking {
+  ' +id: Long <<PK>> ' Podría tener su propio ID si se quiere tratar como entidad manejable
+  --
+  juego_id: Long <<FK, o parte de PK compuesta>>
+  puntuacion_media: Float <<nullable>>
+  numero_votos: int
+}
+note right of ranking
+  Información agregada de puntuaciones de los usuarios de CheckPoint
+  sobre cada juego. Podría actualizarse periódicamente o en tiempo real
+  a medida que los usuarios puntúan los juegos.
+  La PK podría ser 'juego_id' si es una relación 1 a 1 con juego.
+end note
+
+entity amistad {
+  '+id: Long <<PK>> ' Opcional, podría ser clave compuesta (usuario1_id, usuario2_id)
+  --
+  usuario_solicitante_id: Long <<FK a usuario>> 'Quien envía la solicitud'
+  usuario_receptor_id: Long <<FK a usuario>> 'Quien recibe la solicitud'
+  estado: EstadoAmistadEnum  'MODIFICADO: Añadido campo estado'
+  -- Fechas de auditoría --
+  fecha_creacion: DateTime 'Fecha de creación de la solicitud/relación'
+  fecha_modificacion: DateTime 'Fecha de última actualización del estado'
+  fecha_eliminacion: DateTime <<nullable>>
+}
+note right of amistad
+  Relación de amistad entre dos usuarios, con gestión de estados.
+  'usuario_solicitante_id' es quien inicia la acción.
+  'usuario_receptor_id' es quien debe responder (si el estado es PENDIENTE).
+  El estado puede ser PENDIENTE, ACEPTADA, RECHAZADA, BLOQUEADA.
+end note
+
+
+' === RELACIONES ==='
+
+' usuario (fusionado con Perfil) y sus relaciones directas'
+usuario "1" -- "0..*" juego_usuario : "registra/puntúa"
+usuario "1" -- "0..*" lista : "crea"
+usuario "1" -- "0..*" tier_list : "crea"
+usuario "1..*" -- "0..*" amistad : "involucrado en" 'Un usuario puede ser solicitante o receptor en muchas amistades'
+
+
+' juego y sus datos relacionados y plataformas'
+juego "1" -- "0..*" genero : "pertenece a"
+juego "1" -- "0..*" compania : "desarrollado/publicado por"
+juego "1" -- "0..*" keyword : "etiquetado con"
+juego "1" -- "0..*" modo_juego : "tiene modo"
+juego "1" -- "0..*" artwork : "tiene artworks"
+juego "1" -- "0..*" video : "tiene videos"
+juego "1" -- "0..*" web : "tiene sitios web"
+juego "1" -- "0..*" idioma : "soporta idioma"
+juego "1" -- "0..*" tema : "trata sobre"
+juego "1" -- "0..*" plataforma : "disponible en"
+
+' Relaciones de juego para expansiones, DLCs, etc.'
+juego "1" -- "0..*" juego : "tiene DLCs"
+juego "1" -- "0..*" juego : "tiene expansiones"
+juego "1" -- "0..*" juego : "es similar a"
+
+' juego_usuario (conexión entre usuario, juego y plataforma del usuario)'
+juego_usuario "N" -- "1" juego : "es sobre el juego"
+juego_usuario "N" -- "1" usuario : "pertenece al usuario"
+juego_usuario "N" -- "0..1" plataforma : "jugado en/poseído en" : plataforma_especifica_usuario
+
+' listas y sus juegos'
+lista "1" -- "0..*" lista_juego : "contiene entradas de"
+lista_juego "N" -- "1" juego : "referencia al juego"
+
+' tier_lists, sus niveles y los juegos en ellos'
+tier_list "1" -- "0..*" nivel_tier : "define niveles"
+tier_list "1" -- "0..*" tier_list_juego : "clasifica juegos en"
+tier_list_juego "N" -- "1" juego : "referencia al juego"
+tier_list_juego "N" -- "1" nivel_tier : "asignado al nivel"
+
+' ranking y duracion_juego'
+juego "1" -- "0..1" ranking : "tiene ranking"
+juego "1" -- "0..1" duracion_juego : "tiene duración promedio"
+duracion_juego "1" -- "1" juego : "es de" 'Relación 1 a 1 con juego'
+
+
+@enduml
