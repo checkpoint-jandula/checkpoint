@@ -5,7 +5,7 @@ import mp.tfg.mycheckpoint.entity.games.GameCompanyInvolvement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
-import java.util.Set;
+
 
 @Repository
 public interface GameCompanyInvolvementRepository extends JpaRepository<GameCompanyInvolvement, Long> {

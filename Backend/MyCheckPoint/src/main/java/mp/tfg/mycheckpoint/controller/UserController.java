@@ -17,7 +17,7 @@ import mp.tfg.mycheckpoint.dto.user.*;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.security.UserDetailsImpl;
 import mp.tfg.mycheckpoint.service.UserService;
-import mp.tfg.mycheckpoint.service.FileStorageService; // ASEGÚRATE QUE ESTA IMPORTACIÓN ES CORRECTA
+import mp.tfg.mycheckpoint.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,13 +26,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.ErrorResponse;
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile; // IMPORTAR
 
 import java.util.List;
 import java.util.UUID;
-// Ya no necesitas ServletUriComponentsBuilder ni URI aquí si no construyes la URL de descarga en la respuesta.
+
 
 @RestController
 @RequestMapping("/api/v1/usuarios")

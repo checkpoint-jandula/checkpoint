@@ -3,7 +3,7 @@ package mp.tfg.mycheckpoint.dto.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
+
 
 public enum GameType {
     GAME(0, "Juego Principal"), // 0 representa un JUEGO

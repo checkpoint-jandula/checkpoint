@@ -17,7 +17,7 @@ import mp.tfg.mycheckpoint.dto.user.ResetPasswordDTO;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.repository.UserRepository;
-import mp.tfg.mycheckpoint.security.UserDetailsImpl; // Para obtener el principal
+import mp.tfg.mycheckpoint.security.UserDetailsImpl;
 import mp.tfg.mycheckpoint.security.jwt.JwtTokenProvider;
 import mp.tfg.mycheckpoint.service.UserService;
 import org.slf4j.Logger;

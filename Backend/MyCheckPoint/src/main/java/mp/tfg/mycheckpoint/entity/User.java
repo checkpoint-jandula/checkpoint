@@ -9,15 +9,13 @@ import mp.tfg.mycheckpoint.dto.enums.VisibilidadEnum;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
-// import org.hibernate.annotations.UuidGenerator; // No es necesario si la BBDD lo genera y @Column(name="...") está bien
+
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "usuario") // Tu BBDD.txt ahora usa 'Usuario' en mayúscula, verifica esto. Si es 'usuario', cambia aquí.
-// Basado en tu BBDD.txt reciente, los nombres de tabla son en CamelCase: Usuario, Plataforma, Juego.
-// Los nombres de columna son en snake_case.
+@Table(name = "usuario")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

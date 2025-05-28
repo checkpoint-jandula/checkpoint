@@ -17,7 +17,7 @@ import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO;
 import mp.tfg.mycheckpoint.security.UserDetailsImpl;
 import mp.tfg.mycheckpoint.service.UserGameLibraryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

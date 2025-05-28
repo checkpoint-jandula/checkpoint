@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import java.util.Objects; // Para equals y hashCode
+import java.util.Objects;
 
 @Embeddable // Indica que esta clase puede ser embebida en otras entidades
 @Getter

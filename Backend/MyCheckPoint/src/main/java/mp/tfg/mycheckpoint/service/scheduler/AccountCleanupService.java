@@ -1,6 +1,6 @@
 package mp.tfg.mycheckpoint.service.scheduler;
 
-import mp.tfg.mycheckpoint.entity.Friendship;
+
 import mp.tfg.mycheckpoint.entity.GameList;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.entity.UserGame;
@@ -11,12 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 
 @Service
 public class AccountCleanupService {
