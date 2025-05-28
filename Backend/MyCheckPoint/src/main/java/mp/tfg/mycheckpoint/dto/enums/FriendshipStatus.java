@@ -1,10 +1,23 @@
 package mp.tfg.mycheckpoint.dto.enums; // O el paquete que elijas para enums de modelo
 
+/**
+ * Define los posibles estados de una relación de amistad entre usuarios.
+ */
 public enum FriendshipStatus {
-    PENDING,  // Solicitud enviada, esperando respuesta
-    ACCEPTED, // Solicitud aceptada, son amigos
-    DECLINED, // Solicitud rechazada
-    BLOCKED   // Un usuario ha bloqueado al otro (podría ser una mejora futura, por ahora nos centramos en PENDING y ACCEPTED)
-    // REMOVED // Opcional, si quieres marcar explícitamente una amistad eliminada en lugar de borrar la fila.
-    // Por simplicidad, borrar la fila para una amistad aceptada es más directo para "eliminar amigo".
+    /**
+     * La solicitud de amistad ha sido enviada y está esperando una respuesta.
+     */
+    PENDING,
+    /**
+     * La solicitud de amistad ha sido aceptada y los usuarios son amigos.
+     */
+    ACCEPTED,
+    /**
+     * La solicitud de amistad ha sido rechazada por el receptor.
+     */
+    DECLINED,
+    /**
+     * Un usuario ha bloqueado al otro. (Consideración para futuras mejoras)
+     */
+    BLOCKED
 }
