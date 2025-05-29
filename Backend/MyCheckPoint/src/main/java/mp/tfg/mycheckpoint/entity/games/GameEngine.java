@@ -10,6 +10,10 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Entidad que representa un motor de videojuego (Game Engine).
+ * Los motores de juego son el software subyacente utilizado para crear juegos.
+ */
 @Entity
 @Getter
 @Setter
@@ -18,25 +22,49 @@ import java.util.Set;
 @Table(name = "game_engines")
 public class GameEngine {
 
+    /**
+     * Identificador interno único del motor de juego en la base de datos local (clave primaria).
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long internalId; // PK de nuestra BDD
+    private Long internalId;
 
+    /**
+     * ID único del motor de juego proveniente de una fuente externa (ej. IGDB).
+     * Este ID debe ser único.
+     */
     @Column(unique = true, nullable = false)
-    private Long igdbId; // El ID que viene del JSON
+    private Long igdbId;
 
-    @Column(nullable = false) // Asumimos que el nombre no puede ser nulo
+    /**
+     * Nombre del motor de juego. No puede ser nulo.
+     */
+    @Column(nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "gameEngines") // 'gameEngines' es el campo en la entidad Game
+    /**
+     * Conjunto de juegos que utilizan este motor de juego.
+     * Mapea la relación inversa con la entidad {@link Game}.
+     */
+    @ManyToMany(mappedBy = "gameEngines") // campo en la entidad Game
     private Set<Game> games = new HashSet<>();
 
-    // Constructor útil
+    /**
+     * Constructor útil para crear una instancia de GameEngine con su ID de IGDB y nombre.
+     * @param igdbId El ID del motor de juego en IGDB.
+     * @param name El nombre del motor de juego.
+     */
     public GameEngine(Long igdbId, String name) {
         this.igdbId = igdbId;
         this.name = name;
     }
 
+    /**
+     * Compara este GameEngine con otro objeto para determinar si son iguales.
+     * La igualdad se basa en el {@code igdbId}.
+     * @param o El objeto a comparar.
+     * @return {@code true} si los objetos son iguales, {@code false} en caso contrario.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -45,6 +73,11 @@ public class GameEngine {
         return Objects.equals(igdbId, that.igdbId);
     }
 
+    /**
+     * Genera un código hash para este GameEngine.
+     * El hash se basa en el {@code igdbId}.
+     * @return El código hash.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(igdbId);
