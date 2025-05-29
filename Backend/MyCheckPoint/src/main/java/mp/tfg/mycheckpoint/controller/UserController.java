@@ -34,20 +34,43 @@ import java.util.List;
 import java.util.UUID;
 
 
+/**
+ * Controlador API para la gestión de usuarios.
+ * Ofrece endpoints para el registro de nuevos usuarios, obtención de información
+ * de perfiles (públicos y del usuario autenticado), actualización del perfil,
+ * cambio de contraseña, gestión de la eliminación de cuenta, búsqueda de usuarios
+ * y subida de fotos de perfil.
+ */
 @RestController
 @RequestMapping("/api/v1/usuarios")
 @Tag(name = "Usuarios", description = "API para la gestión de usuarios")
 public class UserController {
 
     private final UserService userService;
-    private final FileStorageService fileStorageService; // DECLARACIÓN DEL CAMPO
+    private final FileStorageService fileStorageService;
 
+    /**
+     * Constructor para {@code UserController}.
+     * Inyecta los servicios necesarios para la lógica de negocio relacionada con
+     * usuarios y el almacenamiento de archivos (para fotos de perfil).
+     *
+     * @param userService El servicio para gestionar las operaciones de usuario.
+     * @param fileStorageService El servicio para gestionar el almacenamiento de archivos.
+     */
     @Autowired
-    public UserController(UserService userService, FileStorageService fileStorageService) { // PARÁMETRO EN CONSTRUCTOR
+    public UserController(UserService userService, FileStorageService fileStorageService) {
         this.userService = userService;
-        this.fileStorageService = fileStorageService; // ASIGNACIÓN EN CONSTRUCTOR
+        this.fileStorageService = fileStorageService;
     }
 
+    /**
+     * Registra un nuevo usuario en el sistema.
+     * Tras el registro exitoso, se enviará un correo electrónico de verificación
+     * a la dirección proporcionada para activar la cuenta.
+     *
+     * @param userCreateDTO DTO que contiene los datos del nuevo usuario a registrar (nombre de usuario, email, contraseña).
+     * @return ResponseEntity con un {@link UserDTO} representando al usuario recién creado y el código HTTP 201 Created.
+     */
     @PostMapping
     @Operation(summary = "Registrar un nuevo usuario",
             description = "Crea una nueva cuenta de usuario en el sistema. Tras el registro exitoso, se enviará un correo electrónico de verificación a la dirección proporcionada para activar la cuenta.",
@@ -58,10 +81,10 @@ public class UserController {
                             schema = @Schema(implementation = UserDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos. Ocurre si los datos proporcionados en `UserCreateDTO` no pasan las validaciones (ej. email no válido, contraseña corta).",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))), // Refiere al esquema global de error de validación
+                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))),
             @ApiResponse(responseCode = "409", description = "Conflicto. El email o el nombre de usuario proporcionado ya se encuentra registrado en el sistema.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(ref = "#/components/schemas/DuplicatedResourceResponse"))), // Refiere al esquema global de error genérico
+                            schema = @Schema(ref = "#/components/schemas/DuplicatedResourceResponse"))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor. Ocurrió un problema inesperado durante el proceso de registro.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
@@ -74,6 +97,14 @@ public class UserController {
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
+    /**
+     * Obtiene un usuario por su ID interno.
+     * Este endpoint está oculto en la documentación de Swagger y es probablemente para uso interno o de desarrollo.
+     *
+     * @param id El ID interno (Long) del usuario a obtener.
+     * @return ResponseEntity con un {@link UserDTO} si se encuentra el usuario y el código HTTP 200 OK.
+     * @throws ResourceNotFoundException si no se encuentra un usuario con el ID proporcionado.
+     */
     @Hidden
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUsuarioById(
@@ -83,6 +114,14 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID interno: " + id));
     }
 
+    /**
+     * Obtiene un usuario por su ID público (UUID).
+     * Este endpoint es público y no requiere autenticación.
+     *
+     * @param publicId El ID público (UUID) del usuario a obtener.
+     * @return ResponseEntity con un {@link UserDTO} si se encuentra el usuario y el código HTTP 200 OK.
+     * @throws ResourceNotFoundException si no se encuentra un usuario con el ID público proporcionado.
+     */
     @GetMapping("/public/{publicId}")
     @Operation(summary = "Obtener un usuario por su ID público",
             description = "Recupera los detalles de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.",
@@ -111,20 +150,25 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con Public ID: " + publicId));
     }
 
+    /**
+     * Obtiene los datos del perfil del usuario actualmente autenticado.
+     * Requiere un token JWT válido en la cabecera de autorización.
+     *
+     * @return ResponseEntity con un {@link UserDTO} conteniendo los datos del usuario autenticado y el código HTTP 200 OK.
+     * @throws ResourceNotFoundException si el usuario autenticado (identificado por el token) no se encuentra en la base de datos.
+     */
     @GetMapping("/me")
     @Operation(summary = "Obtener los datos del usuario autenticado actualmente",
             description = "Recupera los detalles del perfil y preferencias del usuario que ha iniciado sesión. Requiere un token JWT válido en la cabecera de autorización.",
             operationId = "getCurrentAuthenticatedUser",
-            security = { @SecurityRequirement(name = "bearerAuth") }) // Indica que este endpoint requiere el esquema de seguridad 'bearerAuth'
+            security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Datos del usuario autenticado devueltos exitosamente.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserDTO.class))),
-            @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
+            @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó, o el contexto de seguridad no contiene un principal válido.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
-            // Aunque el método tiene una comprobación que podría llevar a 401,
-            // si el token es válido pero el usuario no se encuentra en la BBDD, se lanza ResourceNotFoundException (404).
             @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -135,6 +179,8 @@ public class UserController {
     public ResponseEntity<UserDTO> getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
+            // Este caso debería ser manejado por el filtro de seguridad antes de llegar aquí si el endpoint está protegido.
+            // Sin embargo, es una buena práctica de defensa en profundidad.
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -144,18 +190,27 @@ public class UserController {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado en la base de datos con email: " + userEmail));
     }
 
+    /**
+     * Actualiza el perfil del usuario actualmente autenticado.
+     * Permite modificar detalles como nombre de usuario, tema, foto de perfil (URL),
+     * preferencias de notificación y visibilidad del perfil.
+     * Solo los campos proporcionados en el DTO serán actualizados.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param profileUpdateDTO DTO con los datos del perfil a actualizar.
+     * @return ResponseEntity con un {@link UserDTO} representando el perfil actualizado y el código HTTP 200 OK.
+     */
     @PutMapping("/me")
     @Operation(summary = "Actualizar el perfil del usuario autenticado actualmente",
             description = "Permite al usuario autenticado modificar los detalles de su perfil, como el nombre de usuario, tema, foto de perfil, preferencias de notificación y visibilidad del perfil. Requiere un token JWT válido.",
             operationId = "updateCurrentUserProfile",
             security = { @SecurityRequirement(name = "bearerAuth") },
-            // AQUÍ se define el RequestBody para la documentación OpenAPI
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody( // Usamos el FQN para evitar ambigüedad si también importas la de Spring aquí, aunque es mejor no hacerlo.
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Datos del perfil del usuario a actualizar. Solo se actualizarán los campos proporcionados.",
                     required = true,
                     content = @Content(
                             schema = @Schema(implementation = UserProfileUpdateDTO.class),
-                            mediaType = MediaType.APPLICATION_JSON_VALUE // Opcional, ya que es el default para JSON
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
                     )
             )
     )
@@ -186,167 +241,15 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping(value = "/me/password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Cambiar la contraseña del usuario autenticado actualmente",
-            description = "Permite al usuario autenticado cambiar su contraseña actual por una nueva. Se requiere la contraseña actual para la verificación. Requiere un token JWT válido.",
-            operationId = "changeMyPassword",
-            security = { @SecurityRequirement(name = "bearerAuth") },
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "DTO con la contraseña actual y la nueva contraseña.",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = PasswordChangeDTO.class),
-                            mediaType = MediaType.APPLICATION_JSON_VALUE
-                    )
-            )
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Contraseña actualizada correctamente.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            // Define el esquema en línea para el mensaje de éxito simple
-                            schema = @Schema(type = "object", properties = {
-                                    // La forma de definir propiedades aquí es usando el atributo 'properties'
-                                    // de @Schema, que toma un array de @StringToClassMapItem o similar,
-                                    // o más comúnmente, crear una pequeña clase DTO como SuccessMessageDTO
-                                    // y referenciarla con implementation = SuccessMessageDTO.class
-                            }, example = "{\"message\": \"Contraseña actualizada correctamente.\"}"), // El ejemplo es muy útil aquí
-                            examples = @ExampleObject(name = "RespuestaExitosaCambioPass", value = "{\"message\": \"Contraseña actualizada correctamente.\"}")
-                    )),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual).",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ValidationPasswordErrorResponse")
-                    )),
-            @ApiResponse(responseCode = "401", description = "No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
-            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo).",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-    })
-    public ResponseEntity<Object> changeMyPassword(
-            @AuthenticationPrincipal UserDetailsImpl currentUser,
-            @Valid @org.springframework.web.bind.annotation.RequestBody PasswordChangeDTO passwordChangeDTO) {
-        try {
-            userService.changePassword(currentUser.getEmail(), passwordChangeDTO);
-            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Contraseña actualizada correctamente."));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al cambiar la contraseña."));
-        }
-    }
-
-    @DeleteMapping(value = "/me", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Programar la eliminación de la cuenta del usuario autenticado",
-            description = "Permite al usuario autenticado solicitar la eliminación de su cuenta. Se requiere la contraseña actual para confirmación. " +
-                    "La cuenta se marcará para eliminación y se borrará permanentemente después de un período de gracia. " +
-                    "Tras esta operación, la sesión actual del usuario se invalidará. Requiere un token JWT válido.",
-            operationId = "deleteMyAccount",
-            security = { @SecurityRequirement(name = "bearerAuth") },
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "DTO que contiene la contraseña actual del usuario para confirmar la eliminación de la cuenta.",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = AccountDeleteDTO.class),
-                            mediaType = MediaType.APPLICATION_JSON_VALUE
-                    )
-            )
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            // Para el Map devuelto: {"message": "string"}
-                            schema = @Schema(type = "object"), // Un objeto genérico
-                            examples = @ExampleObject(
-                                    name = "AccountDeletionScheduled",
-                                    summary = "Ejemplo de respuesta exitosa",
-                                    value = "{\"message\": \"Tu cuenta ha sido programada para eliminación vuelve a iniciar sesion si quieres mantenerla.\"}"
-                            )
-                    )),
-            @ApiResponse(responseCode = "401", description = "No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))
-            ),
-            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo).",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
-            ),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-    })
-    public ResponseEntity<Object> deleteMyAccount(
-            @AuthenticationPrincipal UserDetailsImpl currentUser,
-            @Valid @org.springframework.web.bind.annotation.RequestBody AccountDeleteDTO accountDeleteDTO) {
-        try {
-            userService.softDeleteUserAccount(currentUser.getEmail(), accountDeleteDTO);
-            SecurityContextHolder.clearContext();
-            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Tu cuenta ha sido programada para eliminación y ya no es accesible."));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest()
-                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al eliminar la cuenta."));
-        }
-    }
-
-    @GetMapping("/search")
-    @Operation(summary = "Buscar usuarios por nombre de usuario",
-            description = "Permite a un usuario autenticado buscar otros usuarios en el sistema por su nombre de usuario. " +
-                    "La búsqueda es parcial (contiene) e ignora mayúsculas/minúsculas. " +
-                    "El propio usuario que realiza la búsqueda será excluido de los resultados. " +
-                    "Se requiere un término de búsqueda de al menos 2 caracteres. Requiere autenticación.",
-            operationId = "searchUsersByUsername",
-            security = { @SecurityRequirement(name = "bearerAuth") })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            array = @ArraySchema(schema = @Schema(implementation = UserSearchResultDTO.class))
-                    )),
-            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. El parámetro 'username' es obligatorio y debe tener al menos 2 caracteres.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/RequiredErrorResponse")
-                    )),
-            @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
-            @ApiResponse(responseCode = "404", description = "No encontrado. No se encontraron usuarios con el nombre de usuario proporcionado",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-    })
-    public ResponseEntity<List<UserSearchResultDTO>> searchUsersByUsername(
-            @Parameter(name = "username",
-                    description = "Término de búsqueda para el nombre de usuario. Debe tener al menos 2 caracteres.",
-                    required = true,
-                    in = ParameterIn.QUERY, // Es un parámetro de query
-                    example = "jua",
-                    schema = @Schema(type = "string", minLength = 2)) // minLength aquí es para documentación
-            @RequestParam("username") String usernameQuery,
-            @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        List<UserSearchResultDTO> users = userService.searchUsersByUsername(usernameQuery, currentUser.getEmail());
-
-        return ResponseEntity.ok(users);
-    }
-
-    // Endpoint para subir/actualizar foto de perfil
+    /**
+     * Sube o actualiza la foto de perfil del usuario autenticado.
+     * El archivo de imagen debe cumplir con los formatos y límites de tamaño configurados.
+     * Si ya existe una foto, será reemplazada.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param file El archivo de imagen (MultipartFile) a subir como foto de perfil.
+     * @return ResponseEntity con un {@link UserDTO} representando el perfil del usuario con la foto actualizada y el código HTTP 200 OK.
+     */
     @PostMapping(value="/me/profile-picture", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Subir o actualizar la foto de perfil del usuario autenticado",
             description = "Permite al usuario autenticado subir un nuevo archivo de imagen para su foto de perfil. " +
@@ -377,27 +280,204 @@ public class UserController {
     public ResponseEntity<UserDTO> uploadProfilePicture(
             @AuthenticationPrincipal UserDetailsImpl currentUser,
             @Parameter(
-                    name = "file", // Este nombre debe coincidir con @RequestParam("file")
+                    name = "file",
                     description = "El archivo de imagen a subir como foto de perfil.",
                     required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-                    // Springdoc usualmente infiere el `schema: {type: string, format: binary}`
-                    // para un MultipartFile a partir del tipo del parámetro.
-                    // No necesitas un @Schema complejo aquí para el @Parameter.
             )
             @RequestParam("file") MultipartFile file) {
 
-        // La validación de file.isEmpty() y tamaño ahora la hace fileStorageService.storeProfilePicture()
-        // y lanza FileStorageException si falla, que será manejada por GlobalExceptionHandler.
-
         String userPublicId = currentUser.getPublicId().toString();
-
-        // 1. Guardar el archivo (puede lanzar FileStorageException)
         String fileName = fileStorageService.storeProfilePicture(file, userPublicId);
-
-        // 2. Actualizar la entidad User con el nombre del archivo
         UserDTO updatedUser = userService.updateUserProfilePicture(currentUser.getEmail(), fileName);
 
         return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * Cambia la contraseña del usuario autenticado.
+     * Se requiere la contraseña actual para verificación.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param passwordChangeDTO DTO que contiene la contraseña actual y la nueva contraseña deseada.
+     * @return ResponseEntity con un mensaje de éxito y código HTTP 200 OK, o un mensaje de error
+     * y el código HTTP correspondiente (401 Unauthorized, 400 Bad Request) en caso de fallo.
+     */
+    @PutMapping(value = "/me/password", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cambiar la contraseña del usuario autenticado actualmente",
+            description = "Permite al usuario autenticado cambiar su contraseña actual por una nueva. Se requiere la contraseña actual para la verificación. Requiere un token JWT válido.",
+            operationId = "changeMyPassword",
+            security = { @SecurityRequirement(name = "bearerAuth") },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "DTO con la contraseña actual y la nueva contraseña.",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = PasswordChangeDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contraseña actualizada correctamente.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(type = "object", properties = {}),
+                            examples = @ExampleObject(name = "RespuestaExitosaCambioPass", value = "{\"message\": \"Contraseña actualizada correctamente.\"}")
+                    )),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ValidationPasswordErrorResponse")
+                    )),
+            @ApiResponse(responseCode = "401", description = "No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
+            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<Object> changeMyPassword(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @Valid @org.springframework.web.bind.annotation.RequestBody PasswordChangeDTO passwordChangeDTO) {
+        try {
+            userService.changePassword(currentUser.getEmail(), passwordChangeDTO);
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Contraseña actualizada correctamente."));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) { // Considerar manejar ResourceNotFoundException específicamente si es esperada.
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al cambiar la contraseña."));
+        }
+    }
+
+    /**
+     * Programa la eliminación de la cuenta del usuario autenticado.
+     * Se requiere la contraseña actual para confirmación. La cuenta se marcará para eliminación
+     * y se borrará permanentemente después de un período de gracia.
+     * La sesión actual del usuario se invalidará tras esta operación.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param accountDeleteDTO DTO que contiene la contraseña actual del usuario para confirmar la eliminación.
+     * @return ResponseEntity con un mensaje de éxito y código HTTP 200 OK si la solicitud es procesada,
+     * o un mensaje de error y el código HTTP correspondiente en caso de fallo.
+     */
+    @DeleteMapping(value = "/me", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Programar la eliminación de la cuenta del usuario autenticado",
+            description = "Permite al usuario autenticado solicitar la eliminación de su cuenta. Se requiere la contraseña actual para confirmación. " +
+                    "La cuenta se marcará para eliminación y se borrará permanentemente después de un período de gracia. " +
+                    "Tras esta operación, la sesión actual del usuario se invalidará. Requiere un token JWT válido.",
+            operationId = "deleteMyAccount",
+            security = { @SecurityRequirement(name = "bearerAuth") },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "DTO que contiene la contraseña actual del usuario para confirmar la eliminación de la cuenta.",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = AccountDeleteDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(type = "object"),
+                            examples = @ExampleObject(
+                                    name = "AccountDeletionScheduled",
+                                    summary = "Ejemplo de respuesta exitosa",
+                                    value = "{\"message\": \"Tu cuenta ha sido programada para eliminación vuelve a iniciar sesion si quieres mantenerla.\"}"
+                            )
+                    )),
+            @ApiResponse(responseCode = "401", description = "No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))
+            ),
+            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo).",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))
+            ),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<Object> deleteMyAccount(
+            @AuthenticationPrincipal UserDetailsImpl currentUser,
+            @Valid @org.springframework.web.bind.annotation.RequestBody AccountDeleteDTO accountDeleteDTO) {
+        try {
+            userService.softDeleteUserAccount(currentUser.getEmail(), accountDeleteDTO);
+            SecurityContextHolder.clearContext(); // Invalida la sesión actual
+            return ResponseEntity.ok().body(java.util.Collections.singletonMap("message", "Tu cuenta ha sido programada para eliminación y ya no es accesible."));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (IllegalStateException e) { // Por ejemplo, si la cuenta ya está programada para eliminación
+            return ResponseEntity.badRequest()
+                    .body(java.util.Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Collections.singletonMap("error", "Ocurrió un error inesperado al eliminar la cuenta."));
+        }
+    }
+
+    /**
+     * Busca usuarios por su nombre de usuario.
+     * La búsqueda es parcial (contiene), ignora mayúsculas/minúsculas y requiere
+     * un término de búsqueda de al menos 2 caracteres.
+     * El propio usuario que realiza la búsqueda es excluido de los resultados.
+     *
+     * @param usernameQuery El término de búsqueda para el nombre de usuario.
+     * @param currentUser El principal del usuario autenticado que realiza la búsqueda.
+     * @return ResponseEntity con una lista de {@link UserSearchResultDTO} con los usuarios encontrados y código HTTP 200 OK.
+     * Puede devolver una lista vacía si no hay coincidencias o el término es muy corto.
+     */
+    @GetMapping("/search")
+    @Operation(summary = "Buscar usuarios por nombre de usuario",
+            description = "Permite a un usuario autenticado buscar otros usuarios en el sistema por su nombre de usuario. " +
+                    "La búsqueda es parcial (contiene) e ignora mayúsculas/minúsculas. " +
+                    "El propio usuario que realiza la búsqueda será excluido de los resultados. " +
+                    "Se requiere un término de búsqueda de al menos 2 caracteres. Requiere autenticación.",
+            operationId = "searchUsersByUsername",
+            security = { @SecurityRequirement(name = "bearerAuth") })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = UserSearchResultDTO.class))
+                    )),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. El parámetro 'username' es obligatorio y debe tener al menos 2 caracteres.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/RequiredErrorResponse") // Asumiendo que existe un esquema para esto
+                    )),
+            @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
+            @ApiResponse(responseCode = "404", description = "No encontrado. No se encontraron usuarios con el nombre de usuario proporcionado",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<List<UserSearchResultDTO>> searchUsersByUsername(
+            @Parameter(name = "username",
+                    description = "Término de búsqueda para el nombre de usuario. Debe tener al menos 2 caracteres.",
+                    required = true,
+                    in = ParameterIn.QUERY,
+                    example = "jua",
+                    schema = @Schema(type = "string", minLength = 2))
+            @RequestParam("username") String usernameQuery,
+            @AuthenticationPrincipal UserDetailsImpl currentUser) {
+        // La validación de la longitud de usernameQuery (>2 caracteres) la maneja el servicio,
+        // pero se podría añadir aquí también si se desea un fallo más temprano.
+        List<UserSearchResultDTO> users = userService.searchUsersByUsername(usernameQuery, currentUser.getEmail());
+        // El servicio podría lanzar ResourceNotFoundException si no hay resultados (y la query es válida),
+        // o devolver una lista vacía. El controlador simplemente devuelve lo que el servicio proporcione.
+        return ResponseEntity.ok(users);
     }
 }

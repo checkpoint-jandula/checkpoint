@@ -26,6 +26,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador API para la gestión de listas de juegos personalizadas por el usuario.
+ * Proporciona endpoints para que los usuarios autenticados puedan crear,
+ * ver, actualizar y eliminar sus propias listas de juegos, así como añadir o
+ * quitar juegos de ellas. También permite la visualización de listas públicas.
+ */
 @Tag(name = "GameList Controller", description = "API para la gestión de listas de juegos personalizadas por el usuario")
 @RestController
 @RequestMapping("/api/v1")
@@ -33,13 +39,27 @@ public class GameListController {
 
     private final GameListService gameListService;
 
+    /**
+     * Constructor para {@code GameListController}.
+     * Inyecta el servicio necesario para la lógica de negocio de las listas de juegos.
+     *
+     * @param gameListService El servicio para gestionar las operaciones de listas de juegos.
+     */
     @Autowired
     public GameListController(GameListService gameListService) {
         this.gameListService = gameListService;
     }
 
-    // --- Endpoints para listas del usuario autenticado ---
+    /**
+     * Crea una nueva lista de juegos para el usuario autenticado.
+     * Se requiere un nombre para la lista y se puede especificar su visibilidad (pública/privada) y una descripción.
+     *
+     * @param currentUser El principal del usuario autenticado que crea la lista.
+     * @param requestDTO DTO que contiene el nombre, descripción (opcional) y estado de visibilidad de la lista.
+     * @return ResponseEntity con un {@link GameListResponseDTO} representando la lista creada y el código HTTP 201 Created.
+     */
 
+    // --- Endpoints para listas del usuario autenticado ---
     @PostMapping("/users/me/gamelists")
     @Operation(summary = "Crear una nueva lista de juegos para el usuario autenticado",
             description = "Permite al usuario autenticado crear una nueva lista de juegos personalizada. " +
@@ -70,6 +90,14 @@ public class GameListController {
         return new ResponseEntity<>(createdList, HttpStatus.CREATED);
     }
 
+    /**
+     * Obtiene todas las listas de juegos creadas por el usuario autenticado.
+     * Las listas se devuelven ordenadas por la fecha de última actualización de forma descendente.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link GameListResponseDTO} y el código HTTP 200 OK.
+     * La lista puede estar vacía si el usuario no ha creado ninguna lista.
+     */
     @GetMapping("/users/me/gamelists")
     @Operation(summary = "Obtener todas las listas de juegos del usuario autenticado",
             description = "Recupera una lista de todas las listas de juegos personalizadas creadas por el usuario actualmente autenticado. " +
@@ -97,6 +125,13 @@ public class GameListController {
         return ResponseEntity.ok(lists);
     }
 
+    /**
+     * Obtiene una lista de juegos específica del usuario autenticado, identificada por su ID público.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a obtener.
+     * @return ResponseEntity con un {@link GameListResponseDTO} representando la lista encontrada y el código HTTP 200 OK.
+     */
     @GetMapping("/users/me/gamelists/{listPublicId}")
     @Operation(summary = "Obtener una lista de juegos específica del usuario autenticado por su ID público",
             description = "Recupera los detalles y los juegos contenidos en una lista de juegos específica, identificada por su ID público (UUID), " +
@@ -131,6 +166,15 @@ public class GameListController {
         return ResponseEntity.ok(list);
     }
 
+    /**
+     * Actualiza una lista de juegos existente del usuario autenticado.
+     * Solo los campos proporcionados en el DTO (nombre, descripción, visibilidad) serán actualizados.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a actualizar.
+     * @param requestDTO DTO con los datos a actualizar.
+     * @return ResponseEntity con un {@link GameListResponseDTO} representando la lista actualizada y el código HTTP 200 OK.
+     */
     @PutMapping("/users/me/gamelists/{listPublicId}")
     @Operation(summary = "Actualizar una lista de juegos existente del usuario autenticado",
             description = "Permite al usuario autenticado modificar los detalles (nombre, descripción, visibilidad) de una de sus listas de juegos existentes, " +
@@ -168,6 +212,14 @@ public class GameListController {
         return ResponseEntity.ok(updatedList);
     }
 
+    /**
+     * Elimina una lista de juegos del usuario autenticado.
+     * Esto no elimina los juegos de la biblioteca del usuario, solo la lista y sus asociaciones.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a eliminar.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     @DeleteMapping("/users/me/gamelists/{listPublicId}")
     @Operation(summary = "Eliminar una lista de juegos del usuario autenticado",
             description = "Permite al usuario autenticado eliminar una de sus listas de juegos existentes, identificada por su ID público (UUID). " +
@@ -176,7 +228,6 @@ public class GameListController {
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Lista de juegos eliminada exitosamente. No hay contenido en la respuesta."),
-            // No se especifica 'content' para 204
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
@@ -200,8 +251,16 @@ public class GameListController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Añade un juego de la biblioteca del usuario a una de sus listas de juegos personalizadas.
+     * El juego no se añade si ya está presente en la lista.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a la que se añadirá el juego.
+     * @param requestDTO DTO que contiene el ID interno del UserGame a añadir.
+     * @return ResponseEntity con un {@link GameListResponseDTO} representando la lista actualizada y el código HTTP 200 OK.
+     */
     // --- Endpoints para gestionar juegos DENTRO de una lista del usuario autenticado ---
-
     @PostMapping("/users/me/gamelists/{listPublicId}/games")
     @Operation(summary = "Añadir un juego de la biblioteca del usuario a una de sus listas de juegos",
             description = "Permite al usuario autenticado añadir una entrada de juego existente en su biblioteca personal (identificada por su `user_game_id` interno) " +
@@ -244,9 +303,15 @@ public class GameListController {
         return ResponseEntity.ok(updatedList);
     }
 
-    // Se usa el userGameInternalId como PathVariable aquí para la eliminación.
-    // Podrías optar por usar gameIgdbId si es más conveniente para el frontend,
-    // pero entonces el servicio necesitaría buscar UserGame basado en user + gameIgdbId.
+    /**
+     * Elimina un juego de una lista de juegos personalizada del usuario autenticado.
+     * Esto no elimina el juego de la biblioteca general del usuario, solo de esta lista.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param listPublicId El ID público (UUID) de la lista de juegos de la cual se eliminará el juego.
+     * @param userGameInternalId El ID interno del UserGame (juego en la biblioteca del usuario) a eliminar de la lista.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     @DeleteMapping("/users/me/gamelists/{listPublicId}/games/{userGameInternalId}")
     @Operation(summary = "Eliminar un juego de una lista de juegos personalizada del usuario autenticado",
             description = "Permite al usuario autenticado eliminar un juego específico (identificado por su `userGameInternalId`) de una de sus listas de juegos " +
@@ -255,7 +320,6 @@ public class GameListController {
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Juego eliminado de la lista exitosamente (o no se encontraba en ella). No hay contenido en la respuesta."),
-            // No se especifica 'content' para 204
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
@@ -290,8 +354,14 @@ public class GameListController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Obtiene todas las listas de juegos que han sido marcadas como públicas por sus creadores.
+     * Este endpoint es público y no requiere autenticación.
+     *
+     * @return ResponseEntity con una lista de {@link GameListResponseDTO} de las listas públicas y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     // --- Endpoints públicos para visualización de listas ---
-
     @GetMapping("/gamelists/public")
     @Operation(summary = "Obtener todas las listas de juegos públicas",
             description = "Recupera una lista de todas las listas de juegos que han sido marcadas como públicas por sus creadores. " +
@@ -305,14 +375,19 @@ public class GameListController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-            // No se documentan 401, 403, 404 como errores primarios ya que el endpoint es público y simplemente devuelve lo que hay.
     })
     public ResponseEntity<List<GameListResponseDTO>> viewAllPublicGameLists() {
         List<GameListResponseDTO> publicLists = gameListService.getAllPublicGameLists();
         return ResponseEntity.ok(publicLists);
     }
 
-
+    /**
+     * Obtiene una lista de juegos pública específica, identificada por su ID público.
+     * Este endpoint es público y no requiere autenticación.
+     *
+     * @param listPublicId El ID público (UUID) de la lista de juegos pública a obtener.
+     * @return ResponseEntity con un {@link GameListResponseDTO} representando la lista pública y el código HTTP 200 OK.
+     */
     @GetMapping("/gamelists/{listPublicId}/public")
     @Operation(summary = "Obtener una lista de juegos pública específica por su ID público",
             description = "Recupera los detalles y los juegos contenidos en una lista de juegos específica que haya sido marcada como pública, " +
@@ -329,7 +404,6 @@ public class GameListController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-            // No se documentan 401 o 403 ya que el endpoint es público.
     })
     public ResponseEntity<GameListResponseDTO> viewPublicGameList(
             @Parameter(name = "listPublicId",

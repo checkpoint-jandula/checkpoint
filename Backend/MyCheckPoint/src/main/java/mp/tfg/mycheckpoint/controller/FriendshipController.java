@@ -23,6 +23,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador API para la gestión de amistades y solicitudes de amistad entre usuarios.
+ * Ofrece endpoints para enviar, aceptar, rechazar o cancelar solicitudes de amistad,
+ * así como para eliminar amigos existentes y listar amigos o solicitudes pendientes.
+ * Todas las operaciones requieren autenticación.
+ */
 @Tag(name = "Friendship Controller", description = "API para la gestión de amistades y solicitudes de amistad")
 @RestController
 @RequestMapping("/api/v1/friends") // Base path para la funcionalidad de amigos
@@ -30,12 +36,25 @@ public class FriendshipController {
 
     private final FriendshipService friendshipService;
 
+    /**
+     * Constructor para {@code FriendshipController}.
+     * Inyecta el servicio necesario para la lógica de negocio de las amistades.
+     *
+     * @param friendshipService El servicio para gestionar las operaciones de amistad.
+     */
     @Autowired
     public FriendshipController(FriendshipService friendshipService) {
         this.friendshipService = friendshipService;
     }
 
-    // Enviar una solicitud de amistad
+    /**
+     * Envía una solicitud de amistad desde el usuario autenticado a otro usuario.
+     * Si ya existe una solicitud pendiente del receptor hacia el emisor, la amistad se aceptará automáticamente.
+     *
+     * @param currentUser El principal del usuario autenticado que envía la solicitud.
+     * @param receiverUserPublicId El ID público (UUID) del usuario que recibirá la solicitud.
+     * @return ResponseEntity con un {@link FriendshipResponseDTO} que representa el estado de la amistad/solicitud y el código HTTP 200 OK.
+     */
     @PostMapping("/requests/send/{receiverUserPublicId}")
     @Operation(summary = "Enviar una solicitud de amistad",
             description = "Permite al usuario autenticado enviar una solicitud de amistad a otro usuario especificado por su ID público. " +
@@ -58,7 +77,7 @@ public class FriendshipController {
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "409", description = "Conflicto. Ya existe una amistad o una solicitud de amistad pendiente con este usuario.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(ref = "#/components/schemas/DuplicatedResourceResponse"))), // Usando tu esquema
+                            schema = @Schema(ref = "#/components/schemas/DuplicatedResourceResponse"))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
@@ -73,12 +92,17 @@ public class FriendshipController {
                     schema = @Schema(type = "string", format = "uuid"))
             @PathVariable UUID receiverUserPublicId) {
         FriendshipResponseDTO response = friendshipService.sendFriendRequest(currentUser.getEmail(), receiverUserPublicId);
-        // El status code podría variar dependiendo de si se creó una nueva solicitud (CREATED) o se auto-aceptó una existente (OK)
-        // Por simplicidad, devolveremos OK en ambos casos exitosos desde la perspectiva del cliente que hizo la acción.
         return ResponseEntity.ok(response);
     }
 
-    // Aceptar una solicitud de amistad
+    /**
+     * Acepta una solicitud de amistad pendiente.
+     * El usuario autenticado (receptor) acepta la solicitud enviada por otro usuario.
+     *
+     * @param currentUser El principal del usuario autenticado que acepta la solicitud.
+     * @param requesterUserPublicId El ID público (UUID) del usuario que envió la solicitud de amistad.
+     * @return ResponseEntity con un {@link FriendshipResponseDTO} que representa la amistad aceptada y el código HTTP 200 OK.
+     */
     @PutMapping("/requests/accept/{requesterUserPublicId}")
     @Operation(summary = "Aceptar una solicitud de amistad pendiente",
             description = "Permite al usuario autenticado (que es el receptor de la solicitud) aceptar una solicitud de amistad pendiente de otro usuario. " +
@@ -94,7 +118,7 @@ public class FriendshipController {
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
             @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el receptor de la solicitud de amistad pendiente o no tiene permisos para realizar esta acción.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Asumiendo que UnauthorizedOperationException usa ErrorResponse
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "404", description = "No encontrado. No se encontró una solicitud de amistad pendiente del usuario especificado, o el usuario solicitante/actual no existe.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -115,13 +139,21 @@ public class FriendshipController {
         return ResponseEntity.ok(response);
     }
 
-    // Rechazar/Cancelar una solicitud de amistad
+    /**
+     * Rechaza o cancela una solicitud de amistad pendiente.
+     * Si el usuario autenticado es el receptor, la rechaza. Si es el emisor, la cancela.
+     * La solicitud se elimina de la base de datos.
+     *
+     * @param currentUser El principal del usuario autenticado que realiza la acción.
+     * @param requesterUserPublicId El ID público (UUID) del usuario que envió originalmente la solicitud.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     @DeleteMapping("/requests/decline/{requesterUserPublicId}")
     @Operation(summary = "Rechazar o cancelar una solicitud de amistad pendiente",
             description = "Permite al usuario autenticado (que es el receptor de la solicitud) rechazar una solicitud de amistad pendiente. " +
                     "Alternativamente, si el usuario autenticado fue quien envió la solicitud y esta aún está pendiente, puede usar este endpoint para cancelarla (aunque semánticamente esto último podría ser un endpoint diferente, la lógica actual del servicio elimina la solicitud PENDIENTE). " +
                     "La solicitud de amistad es eliminada de la base de datos. Requiere autenticación.",
-            operationId = "declineOrCancelFriendRequest", // Nombre más genérico dado el comportamiento
+            operationId = "declineOrCancelFriendRequest",
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Solicitud de amistad rechazada/cancelada y eliminada exitosamente. No hay contenido en la respuesta."),
@@ -148,10 +180,16 @@ public class FriendshipController {
                     schema = @Schema(type = "string", format = "uuid"))
             @PathVariable UUID requesterUserPublicId) {
         friendshipService.declineFriendRequest(currentUser.getEmail(), requesterUserPublicId);
-        return ResponseEntity.noContent().build(); // HTTP 204
+        return ResponseEntity.noContent().build();
     }
 
-    // Eliminar un amigo
+    /**
+     * Elimina una amistad existente entre el usuario autenticado y otro usuario.
+     *
+     * @param currentUser El principal del usuario autenticado que elimina la amistad.
+     * @param friendUserPublicId El ID público (UUID) del amigo a eliminar.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     @DeleteMapping("/{friendUserPublicId}")
     @Operation(summary = "Eliminar un amigo",
             description = "Permite al usuario autenticado eliminar una amistad existente con otro usuario, especificado por su ID público. " +
@@ -160,7 +198,6 @@ public class FriendshipController {
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Amigo eliminado exitosamente. No hay contenido en la respuesta."),
-            // No se especifica 'content' para 204
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
@@ -181,10 +218,16 @@ public class FriendshipController {
                     schema = @Schema(type = "string", format = "uuid"))
             @PathVariable UUID friendUserPublicId) {
         friendshipService.removeFriend(currentUser.getEmail(), friendUserPublicId);
-        return ResponseEntity.noContent().build(); // HTTP 204
+        return ResponseEntity.noContent().build();
     }
 
-    // Listar todos los amigos aceptados del usuario actual
+    /**
+     * Obtiene la lista de todos los amigos aceptados del usuario autenticado.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link FriendshipResponseDTO} que representan a los amigos y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     @GetMapping
     @Operation(summary = "Obtener la lista de amigos del usuario autenticado",
             description = "Recupera una lista de todos los usuarios que son amigos del usuario actualmente autenticado (es decir, aquellas relaciones con estado 'ACCEPTED'). " +
@@ -212,7 +255,13 @@ public class FriendshipController {
         return ResponseEntity.ok(friends);
     }
 
-    // Listar solicitudes de amistad pendientes recibidas por el usuario actual
+    /**
+     * Obtiene todas las solicitudes de amistad pendientes que el usuario autenticado ha recibido.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link FriendshipResponseDTO} que representan las solicitudes recibidas y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     @GetMapping("/requests/received")
     @Operation(summary = "Obtener las solicitudes de amistad pendientes recibidas por el usuario autenticado",
             description = "Recupera una lista de todas las solicitudes de amistad que el usuario actualmente autenticado ha recibido y aún están pendientes de acción (aceptar o rechazar). " +
@@ -240,7 +289,13 @@ public class FriendshipController {
         return ResponseEntity.ok(requests);
     }
 
-    // Listar solicitudes de amistad pendientes enviadas por el usuario actual
+    /**
+     * Obtiene todas las solicitudes de amistad pendientes que el usuario autenticado ha enviado.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link FriendshipResponseDTO} que representan las solicitudes enviadas y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     @GetMapping("/requests/sent")
     @Operation(summary = "Obtener las solicitudes de amistad pendientes enviadas por el usuario autenticado",
             description = "Recupera una lista de todas las solicitudes de amistad que el usuario actualmente autenticado ha enviado y que aún están pendientes de respuesta por parte de los destinatarios. " +
