@@ -1,4 +1,4 @@
-package mp.tfg.mycheckpoint.mapper.games;
+package mp.tfg.mycheckpoint.repository.games;
 
 
 import mp.tfg.mycheckpoint.entity.games.Keyword;
