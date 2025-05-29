@@ -22,6 +22,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Implementación del servicio {@link GameListService} para gestionar las listas
+ * de juegos personalizadas de los usuarios.
+ * Proporciona la lógica de negocio para crear, leer, actualizar y eliminar (CRUD)
+ * listas de juegos, así como para añadir y quitar juegos de dichas listas.
+ * Todas las operaciones que modifican datos son transaccionales.
+ */
 @Service
 public class GameListServiceImpl implements GameListService {
 
@@ -29,9 +36,18 @@ public class GameListServiceImpl implements GameListService {
 
     private final UserRepository userRepository;
     private final GameListRepository gameListRepository;
-    private final UserGameRepository userGameRepository; // Para encontrar el UserGame a añadir
+    private final UserGameRepository userGameRepository;
     private final GameListMapper gameListMapper;
 
+    /**
+     * Constructor para GameListServiceImpl.
+     * Inyecta las dependencias necesarias para la gestión de listas de juegos.
+     *
+     * @param userRepository Repositorio para acceder a los datos de los usuarios.
+     * @param gameListRepository Repositorio para acceder a los datos de las listas de juegos.
+     * @param userGameRepository Repositorio para acceder a las entradas de juegos en la biblioteca de los usuarios.
+     * @param gameListMapper Mapper para convertir entre entidades GameList y sus DTOs.
+     */
     @Autowired
     public GameListServiceImpl(UserRepository userRepository,
                                GameListRepository gameListRepository,
@@ -43,81 +59,134 @@ public class GameListServiceImpl implements GameListService {
         this.gameListMapper = gameListMapper;
     }
 
+    /**
+     * Obtiene una entidad {@link User} por su dirección de correo electrónico.
+     * Lanza una {@link ResourceNotFoundException} si el usuario no se encuentra.
+     *
+     * @param email El email del usuario a buscar.
+     * @return La entidad {@link User} encontrada.
+     * @throws ResourceNotFoundException Si no se encuentra ningún usuario con el email proporcionado.
+     */
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
     }
 
+    /**
+     * Crea una nueva lista de juegos para el usuario especificado por su email.
+     * El ID público de la lista se genera automáticamente.
+     *
+     * @param userEmail El email del usuario que será el propietario de la nueva lista.
+     * @param requestDTO El DTO que contiene los datos para la creación de la lista (nombre, descripción, visibilidad).
+     * @return Un {@link GameListResponseDTO} que representa la lista de juegos recién creada.
+     * @throws ResourceNotFoundException Si el usuario con el {@code userEmail} especificado no se encuentra.
+     */
     @Override
     @Transactional
     public GameListResponseDTO createGameList(String userEmail, GameListRequestDTO requestDTO) {
         User owner = getUserByEmail(userEmail);
         GameList gameList = gameListMapper.toEntity(requestDTO);
         gameList.setOwner(owner);
-        // gameList.setPublicId(UUID.randomUUID()); // Se genera en @PrePersist
+        // gameList.setPublicId(UUID.randomUUID()); // Se genera en @PrePersist de la entidad GameList
         GameList savedGameList = gameListRepository.save(gameList);
         logger.info("User {} created GameList '{}' (Public ID: {})", userEmail, savedGameList.getName(), savedGameList.getPublicId());
         return gameListMapper.toResponseDto(savedGameList);
     }
 
+    /**
+     * Obtiene todas las listas de juegos pertenecientes a un usuario específico,
+     * ordenadas por la fecha de última actualización de forma descendente.
+     *
+     * @param userEmail El email del usuario propietario de las listas.
+     * @return Una lista de {@link GameListResponseDTO}. La lista puede estar vacía si el usuario no tiene listas.
+     * @throws ResourceNotFoundException Si el usuario con el {@code userEmail} especificado no se encuentra.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<GameListResponseDTO> getAllGameListsForUser(String userEmail) {
         User owner = getUserByEmail(userEmail);
-        // Para asegurar que userGames se carga, podrías necesitar un método de repo con JOIN FETCH
-        // o confiar en que la sesión de Hibernate siga abierta o que el mapper lo maneje bien.
-        // Si usas el mapper con `uses = {UserGameMapper.class}` y las entidades están gestionadas, debería funcionar.
+        // El método del repositorio findByOwnerOrderByUpdatedAtDesc no especifica carga FETCH de userGames.
+        // Si se necesita userGames poblado aquí, se debería usar un método de repo con JOIN FETCH
+        // o cargar la colección explícitamente si la sesión de Hibernate lo permite.
+        // Por ahora, se asume que el mapper o el contexto transaccional manejan la carga LAZY si es necesaria.
         return gameListRepository.findByOwnerOrderByUpdatedAtDesc(owner).stream()
-                .map(gameList -> {
-                    // Carga explícita si es necesario y no se usó FETCH en el repo.
-                    // Hibernate.initialize(gameList.getUserGames());
-                    return gameListMapper.toResponseDto(gameList);
-                })
+                .map(gameListMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene una lista de juegos específica por su ID público (UUID), verificando que
+     * pertenezca al usuario indicado por {@code userEmail}.
+     * Utiliza un método del repositorio que carga la lista junto con sus juegos asociados (userGames).
+     *
+     * @param userEmail El email del usuario que se asume es el propietario de la lista.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a obtener.
+     * @return Un {@link GameListResponseDTO} representando la lista de juegos encontrada.
+     * @throws ResourceNotFoundException Si el usuario no se encuentra, o si la lista de juegos
+     * con el {@code listPublicId} especificado no se encuentra o no pertenece al usuario.
+     */
     @Override
     @Transactional(readOnly = true)
     public GameListResponseDTO getGameListByPublicIdForUser(String userEmail, UUID listPublicId) {
         User owner = getUserByEmail(userEmail);
-        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner)
+        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner) // Carga con juegos
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
         return gameListMapper.toResponseDto(gameList);
     }
 
+    /**
+     * Obtiene una lista de juegos pública específica por su ID público (UUID).
+     * Utiliza un método del repositorio que carga la lista junto con sus juegos asociados (userGames).
+     *
+     * @param listPublicId El ID público (UUID) de la lista de juegos pública a obtener.
+     * @return Un {@link GameListResponseDTO} representando la lista de juegos pública encontrada.
+     * @throws ResourceNotFoundException Si la lista de juegos con el {@code listPublicId} especificado
+     * no se encuentra o no es pública.
+     */
     @Override
     @Transactional(readOnly = true)
     public GameListResponseDTO getPublicGameListByPublicId(UUID listPublicId) {
-        GameList gameList = gameListRepository.findByPublicIdAndIsPublicTrueWithGames(listPublicId)
+        GameList gameList = gameListRepository.findByPublicIdAndIsPublicTrueWithGames(listPublicId) // Carga con juegos
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Public GameList with Public ID " + listPublicId + " not found or is not public."));
         return gameListMapper.toResponseDto(gameList);
     }
 
+    /**
+     * Obtiene todas las listas de juegos que han sido marcadas como públicas.
+     * Las listas se devuelven ordenadas por la fecha de última actualización de forma descendente.
+     *
+     * @return Una lista de {@link GameListResponseDTO} de todas las listas públicas.
+     * Puede estar vacía si no hay ninguna lista de juegos pública.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<GameListResponseDTO> getAllPublicGameLists() {
+        // Asume que el gameListMapper maneja correctamente la carga LAZY de userGames o
+        // que la transacción sigue activa. Para mayor seguridad, el método del repositorio
+        // debería hacer un JOIN FETCH si los juegos siempre son necesarios en esta vista.
         return gameListRepository.findByIsPublicTrueOrderByUpdatedAtDesc().stream()
                 .map(gameList -> {
-                    // Opcional: Cargar userGames si no se hizo con JOIN FETCH en el repositorio
-                    // Hibernate.initialize(gameList.getUserGames());
-                    // Si el método del repositorio es simple y no usa JOIN FETCH,
-                    // y necesitas los juegos, una opción es volver a buscar cada lista
-                    // con un método que sí haga JOIN FETCH o cargar la colección aquí.
-                    // Por simplicidad, asumimos que si se necesitan los juegos se usa un método de repo con JOIN FETCH.
-                    // Si se usa un repo simple, gameList.getUserGames() podría estar vacío o causar LazyInitException
-                    // si se accede fuera de la transacción.
-                    // Alternativa:
-                    // GameList fetchedList = gameListRepository.findByPublicIdAndIsPublicTrueWithGames(gameList.getPublicId())
-                    //                                          .orElse(gameList); // Fallback a la lista original si no se encuentra (no debería pasar)
+                    // GameList fetchedList = gameListRepository.findByPublicIdAndIsPublicTrueWithGames(gameList.getPublicId()).orElse(gameList);
                     // return gameListMapper.toResponseDto(fetchedList);
-                    return gameListMapper.toResponseDto(gameList); // Asume que el mapeo maneja la carga LAZY o el repo la hizo.
+                    return gameListMapper.toResponseDto(gameList);
                 })
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * Actualiza una lista de juegos existente perteneciente al usuario especificado.
+     * Solo los campos proporcionados en el {@link GameListRequestDTO} (nombre, descripción, visibilidad)
+     * serán actualizados en la entidad.
+     *
+     * @param userEmail El email del usuario propietario de la lista.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a actualizar.
+     * @param requestDTO El DTO con los nuevos datos para la lista.
+     * @return Un {@link GameListResponseDTO} representando la lista de juegos actualizada.
+     * @throws ResourceNotFoundException Si el usuario no se encuentra, o si la lista de juegos
+     * con el {@code listPublicId} especificado no se encuentra o no pertenece al usuario.
+     */
     @Override
     @Transactional
     public GameListResponseDTO updateGameList(String userEmail, UUID listPublicId, GameListRequestDTO requestDTO) {
@@ -132,6 +201,16 @@ public class GameListServiceImpl implements GameListService {
         return gameListMapper.toResponseDto(updatedGameList);
     }
 
+    /**
+     * Elimina una lista de juegos perteneciente al usuario especificado.
+     * La eliminación de la lista desasocia los juegos de ella (se eliminan las entradas
+     * de la tabla de unión), pero no elimina los juegos de la biblioteca general del usuario.
+     *
+     * @param userEmail El email del usuario propietario de la lista.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a eliminar.
+     * @throws ResourceNotFoundException Si el usuario no se encuentra, o si la lista de juegos
+     * con el {@code listPublicId} especificado no se encuentra o no pertenece al usuario.
+     */
     @Override
     @Transactional
     public void deleteGameList(String userEmail, UUID listPublicId) {
@@ -140,58 +219,82 @@ public class GameListServiceImpl implements GameListService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
 
-        // La relación ManyToMany con UserGame se eliminará de la tabla de unión
-        // pero las entidades UserGame no se eliminarán.
         gameListRepository.delete(gameList);
         logger.info("User {} deleted GameList '{}' (Public ID: {})", userEmail, gameList.getName(), listPublicId);
     }
 
+    /**
+     * Añade una entrada de juego existente en la biblioteca del usuario ({@link UserGame})
+     * a una de sus listas de juegos personalizadas.
+     * El juego no se añade si ya está presente en la lista para evitar duplicados.
+     *
+     * @param userEmail El email del usuario propietario de la lista y del juego.
+     * @param listPublicId El ID público (UUID) de la lista de juegos a la que se añadirá el juego.
+     * @param userGameInternalId El ID interno de la entidad {@link UserGame} que se desea añadir.
+     * @return Un {@link GameListResponseDTO} representando la lista de juegos actualizada.
+     * @throws ResourceNotFoundException Si el usuario, la lista de juegos o la entrada UserGame no se encuentran.
+     * @throws UnauthorizedOperationException Si la entrada UserGame especificada no pertenece al usuario propietario de la lista.
+     */
     @Override
     @Transactional
     public GameListResponseDTO addGameToCustomList(String userEmail, UUID listPublicId, Long userGameInternalId) {
         User owner = getUserByEmail(userEmail);
-        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner) // Cargar con juegos
+        // Cargar la GameList junto con sus juegos para verificar si el UserGame ya existe
+        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
 
         UserGame userGame = userGameRepository.findById(userGameInternalId)
                 .orElseThrow(() -> new ResourceNotFoundException("UserGame entry with ID " + userGameInternalId + " not found."));
 
-        // Verificar que el UserGame pertenece al mismo usuario que es dueño de la lista
         if (!userGame.getUser().getId().equals(owner.getId())) {
             throw new UnauthorizedOperationException(
-                    "Cannot add game to list: UserGame entry does not belong to the owner of the list.");
+                    "Cannot add game to list: UserGame entry ID " + userGameInternalId + " does not belong to the owner ("+ userEmail +") of the list " + listPublicId + ".");
         }
 
         if (gameList.getUserGames().contains(userGame)) {
             logger.warn("Game (UserGame ID: {}) is already in list '{}' (Public ID: {}). No action taken.",
                     userGameInternalId, gameList.getName(), listPublicId);
-            // Devolver la lista tal cual o un mensaje/error específico
-            return gameListMapper.toResponseDto(gameList);
+            return gameListMapper.toResponseDto(gameList); // Devuelve la lista sin cambios
         }
 
         gameList.getUserGames().add(userGame);
-        GameList updatedGameList = gameListRepository.save(gameList); // Guardar para persistir la asociación
+        GameList updatedGameList = gameListRepository.save(gameList);
         logger.info("Added game (UserGame ID: {}) to list '{}' (Public ID: {}) for user {}",
                 userGameInternalId, updatedGameList.getName(), listPublicId, userEmail);
         return gameListMapper.toResponseDto(updatedGameList);
     }
 
+    /**
+     * Elimina una entrada de juego ({@link UserGame}) de una lista de juegos personalizada del usuario.
+     * Esta operación solo elimina la asociación del juego con la lista, no elimina el juego
+     * de la biblioteca general del usuario.
+     *
+     * @param userEmail El email del usuario propietario de la lista.
+     * @param listPublicId El ID público (UUID) de la lista de juegos de la cual se eliminará el juego.
+     * @param userGameInternalId El ID interno de la entidad {@link UserGame} a eliminar de la lista.
+     * @throws ResourceNotFoundException Si el usuario, la lista de juegos o la entrada UserGame no se encuentran.
+     * @throws UnauthorizedOperationException Si la entrada UserGame no pertenece al propietario (aunque esto es implícito
+     * si se valida que la lista pertenece al usuario y se busca el UserGame por ID).
+     */
     @Override
     @Transactional
     public void removeGameFromCustomList(String userEmail, UUID listPublicId, Long userGameInternalId) {
         User owner = getUserByEmail(userEmail);
-        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner) // Cargar con juegos
+        // Cargar la GameList junto con sus juegos para poder realizar la operación de remove
+        GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
 
         UserGame userGameToRemove = userGameRepository.findById(userGameInternalId)
                 .orElseThrow(() -> new ResourceNotFoundException("UserGame entry with ID " + userGameInternalId + " not found."));
 
-        // No es estrictamente necesario verificar pertenencia aquí si solo se remueve, pero es buena práctica
+        // Opcional: Verificar que userGameToRemove pertenece al 'owner', aunque si se accede a través de gameList.getUserGames().remove(),
+        // y la lista ya está filtrada por owner, podría ser redundante si solo se opera sobre la colección.
+        // Sin embargo, para una búsqueda directa de UserGame, es una buena práctica.
         if (!userGameToRemove.getUser().getId().equals(owner.getId())) {
             throw new UnauthorizedOperationException(
-                    "Cannot remove game from list: UserGame entry does not belong to the owner of the list.");
+                    "Cannot remove game from list: UserGame entry ID " + userGameInternalId + " does not belong to the owner ("+ userEmail +") of the list " + listPublicId + ".");
         }
 
         boolean removed = gameList.getUserGames().remove(userGameToRemove);
@@ -202,7 +305,7 @@ public class GameListServiceImpl implements GameListService {
         } else {
             logger.warn("Game (UserGame ID: {}) was not found in list '{}' (Public ID: {}). No action taken.",
                     userGameInternalId, gameList.getName(), listPublicId);
-            // Puedes lanzar una excepción o simplemente no hacer nada si no estaba.
+            // Considerar si se debe lanzar una excepción si el juego no estaba en la lista.
             // throw new ResourceNotFoundException("Game (UserGame ID: " + userGameInternalId + ") not in list " + listPublicId);
         }
     }
