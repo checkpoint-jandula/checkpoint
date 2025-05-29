@@ -81,6 +81,10 @@ export const getUserByPublicId = (publicId) => { //
 export const searchUsers = (username) => {
   return usersApi.searchUsersByUsername(username); //
 };
+export const fetchGameDetailsByIgdbId = (igdbId) => {
+  // userGameLibraryApi es la instancia de UserGameLibraryControllerApi
+  return userGameLibraryApi.getGameDetails(igdbId); //
+};
 
 // ... y así sucesivamente para los otros controladores y sus métodos.
 // Puedes optar por exportar las instancias completas si prefieres:
