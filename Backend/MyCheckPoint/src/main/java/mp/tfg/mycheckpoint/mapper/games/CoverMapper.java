@@ -7,15 +7,34 @@ import org.mapstruct.Mapper;
 
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring") // Para que Spring lo detecte como un Bean y se pueda inyectar
+/**
+ * Mapper para la conversión entre la entidad embebible {@link Cover} y su DTO {@link CoverDto}.
+ * Utiliza MapStruct para la generación automática del código de mapeo.
+ */
+@Mapper(componentModel = "spring")
 public interface CoverMapper {
 
-    CoverMapper INSTANCE = Mappers.getMapper(CoverMapper.class); // Para uso estático si no se inyecta
+    /**
+     * Instancia del mapper para uso estático si no se inyecta.
+     */
+    CoverMapper INSTANCE = Mappers.getMapper(CoverMapper.class);
 
-    // MapStruct mapea automáticamente campos con el mismo nombre.
-    // Cover.igdbId (Embeddable) a CoverDto.igdbId
-    // Cover.url a CoverDto.url
+    /**
+     * Convierte una entidad {@link Cover} a un {@link CoverDto}.
+     * Mapea automáticamente los campos {@code igdbId} y {@code url}
+     * ya que tienen el mismo nombre en ambas clases.
+     *
+     * @param cover La entidad Cover a convertir.
+     * @return El CoverDto resultante.
+     */
     CoverDto toDto(Cover cover);
 
+    /**
+     * Convierte un {@link CoverDto} a una entidad {@link Cover}.
+     * Mapea automáticamente los campos {@code igdbId} y {@code url}.
+     *
+     * @param coverDto El CoverDto a convertir.
+     * @return La entidad Cover resultante.
+     */
     Cover toEntity(CoverDto coverDto);
 }
