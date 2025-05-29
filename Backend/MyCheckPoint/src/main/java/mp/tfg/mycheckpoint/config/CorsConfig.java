@@ -17,6 +17,12 @@ public class CorsConfig {
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
                         .allowedHeaders("*") // Cabeceras permitidas
                         .allowCredentials(true); // Si usas cookies o autenticación basada en sesión
+
+                registry.addMapping("/api/juegos/**") // <--- AÑADIR ESTO
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "OPTIONS") // Para la búsqueda solo necesitarías GET y OPTIONS
+                        .allowedHeaders("*")
+                        .allowCredentials(true); // Probablemente no necesites credenciales para búsqueda pública
             }
         };
     }
