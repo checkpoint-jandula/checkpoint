@@ -75,7 +75,7 @@ public class EmailServiceImpls implements EmailService {
 
             // Construye la URL que apuntará a tu página de frontend para resetear la contraseña
             // Esta página en el frontend leerá el token de la URL.
-            String frontendResetUrl = frontendBaseUrl + "/resetear-password?token=" + token;
+            String frontendResetUrl = frontendBaseUrl + "resetear-password?token=" + token;
 
             String emailBody = String.format(
                     "Hola %s,\n\n" +
