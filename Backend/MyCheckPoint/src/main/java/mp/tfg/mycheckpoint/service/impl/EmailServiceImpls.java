@@ -110,7 +110,7 @@ public class EmailServiceImpls implements EmailService {
             message.setSubject("MyCheckPoint - Restablecimiento de Contraseña");
 
             // Construye la URL que apuntará a la página del frontend para resetear la contraseña.
-            String frontendResetUrl = frontendBaseUrl + "/resetear-password?token=" + token;
+            String frontendResetUrl = frontendBaseUrl + "resetear-password?token=" + token;
 
             String emailBody = String.format(
                     "Hola %s,\n\n" +
