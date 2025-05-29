@@ -23,6 +23,9 @@ public class EmailServiceImpls implements EmailService {
     @Value("${app.api.base-url:http://localhost:8080}")
     private String apiBaseUrl;
 
+    @Value("${app.frontend.base-url:http://localhost:5173}") // Nueva propiedad para la URL base del frontend
+    private String frontendBaseUrl;
+
     // Spring inyectará el username configurado en spring.mail.username aquí.
     // Este será el remitente ("De:") de tus correos.
     @Value("${spring.mail.username}")
@@ -70,34 +73,24 @@ public class EmailServiceImpls implements EmailService {
             message.setTo(user.getEmail());
             message.setSubject("MyCheckPoint - Restablecimiento de Contraseña");
 
-            // IMPORTANTE: Sin frontend, el enlace apuntará a una página/endpoint donde el usuario
-            // pueda introducir el token y su nueva contraseña.
-            // O, si quieres simplificar al máximo, el enlace podría llevar el token
-            // y el frontend luego haría una petición POST con ese token y la nueva contraseña.
-            // Por ahora, el enlace solo informa. Un frontend construiría la URL de reseteo.
-            // Si tuvieras un frontend en http://localhost:3000/reset-password?token=TOKEN_AQUI
-            // String resetUrl = "http://localhost:3000/reset-password?token=" + token;
-
-            // Dado que no hay frontend, el email podría instruir al usuario a usar
-            // una herramienta como Postman con el token, o simplemente informar que se ha generado un token.
-            // Para una implementación real, el enlace llevaría a una página del frontend.
-            // Aquí simulamos un enlace que el usuario podría usar en un futuro frontend.
-            String hypotheticalFrontendResetUrl = apiBaseUrl.replace(":8080", ":3000") + "/reset-password?token=" + token; // Asumiendo frontend en puerto 3000
+            // Construye la URL que apuntará a tu página de frontend para resetear la contraseña
+            // Esta página en el frontend leerá el token de la URL.
+            String frontendResetUrl = frontendBaseUrl + "/resetear-password?token=" + token;
 
             String emailBody = String.format(
                     "Hola %s,\n\n" +
                             "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en MyCheckPoint.\n" +
                             "Si no solicitaste esto, puedes ignorar este correo de forma segura.\n\n" +
-                            "Para restablecer tu contraseña, necesitarás el siguiente token y utilizarlo en la funcionalidad de reseteo de contraseña:\n" +
-                            "Token: %s\n\n" +
-                            "O, si tuvieras una interfaz frontend, podrías hacer clic aquí (este enlace es hipotético por ahora):\n" +
+                            "Para restablecer tu contraseña, por favor haz clic en el siguiente enlace o cópialo en tu navegador:\n" +
                             "%s\n\n" +
+                            "Si no puedes hacer clic en el enlace, también puedes ir a la sección de restablecer contraseña de nuestra web e introducir manualmente el siguiente token:\n" +
+                            "Token: %s\n\n" +
                             "Este token expirará en %d minutos.\n\n" +
                             "Saludos,\nEl equipo de MyCheckPoint",
                     user.getNombreUsuario(),
-                    token, // Mostrar el token directamente en el correo ya que no hay UI
-                    hypotheticalFrontendResetUrl,
-                    PasswordResetToken.EXPIRATION_MINUTES // Asumiendo que EXPIRATION_MINUTES es public static final
+                    frontendResetUrl, // El enlace directo a tu frontend
+                    token,            // El token por si necesitan copiarlo
+                    PasswordResetToken.EXPIRATION_MINUTES
             );
 
             message.setText(emailBody);
@@ -106,33 +99,6 @@ public class EmailServiceImpls implements EmailService {
         } catch (MailException e) {
             logger.error("Error al enviar correo de restablecimiento de contraseña a {} desde {}: {}", user.getEmail(), fromEmail, e.getMessage(), e);
         }
-
     }
-        // Si quisieras enviar emails con formato HTML en el futuro:
-    /*
-    public void sendHtmlVerificationEmail(User user, String token) {
-        try {
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8"); // true para multipart si adjuntas archivos
-
-            String confirmationUrl = apiBaseUrl + "/api/v1/auth/confirm-account?token=" + token;
-            String htmlMsg = "<h3>Hola " + user.getNombreUsuario() + ",</h3>" +
-                             "<p>Gracias por registrarte en MyCheckPoint. Por favor, haz clic en el siguiente enlace para confirmar tu correo:</p>" +
-                             "<p><a href=\"" + confirmationUrl + "\">Confirmar mi Correo</a></p>" +
-                             "<p>O copia y pega esta URL en tu navegador: " + confirmationUrl + "</p>" +
-                             "<p>Saludos,<br/>El equipo de MyCheckPoint</p>";
-
-            helper.setText(htmlMsg, true); // true indica que es HTML
-            helper.setTo(user.getEmail());
-            helper.setSubject("MyCheckPoint - Confirma tu dirección de correo electrónico");
-            helper.setFrom(fromEmail);
-
-            mailSender.send(mimeMessage);
-            logger.info("Correo de verificación HTML enviado a {} desde {}", user.getEmail(), fromEmail);
-        } catch (MessagingException | MailException e) {
-            logger.error("Error al enviar correo de verificación HTML a {} desde {}: {}", user.getEmail(), fromEmail, e.getMessage(), e);
-        }
-    }
-    */
 
 }
