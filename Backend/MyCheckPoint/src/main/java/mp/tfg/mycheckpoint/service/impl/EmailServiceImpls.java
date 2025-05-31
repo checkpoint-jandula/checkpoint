@@ -119,13 +119,13 @@ public class EmailServiceImpls implements EmailService {
                             "Para restablecer tu contraseña, por favor haz clic en el siguiente enlace o cópialo en tu navegador:\n" +
                             "%s\n\n" +
                             "Si no puedes hacer clic en el enlace, también puedes ir a la sección de restablecer contraseña de nuestra web e introducir manualmente el siguiente token:\n" +
-                            "Token: %s\n\n" +
+                            //"Token: %s\n\n" +
                             "Este token expirará en %d minutos.\n\n" +
                             "Saludos,\nEl equipo de MyCheckPoint",
                     user.getNombreUsuario(),
                     frontendResetUrl, // El enlace directo al frontend
                     token,            // El token para copia manual
-                    PasswordResetToken.EXPIRATION_MINUTES // Asume que EXPIRATION_MINUTES es accesible
+                    PasswordResetToken.EXPIRATION_MINUTES
             );
 
             message.setText(emailBody);

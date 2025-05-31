@@ -26,16 +26,16 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/v1/") // Aplica a todos tus endpoints bajo /api/v1
-                        .allowedOrigins("http://localhost:5173") // URL de tu frontend Vite
+                        .allowedOrigins("http://localhost:5173") // URL del frontend Vite
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
                         .allowedHeaders("*") // Cabeceras permitidas
                         .allowCredentials(true); // Si usas cookies o autenticación basada en sesión
 
-                registry.addMapping("/api/juegos/") // <--- AÑADIR ESTO
+                registry.addMapping("/api/juegos/")
                         .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("GET", "OPTIONS") // Para la búsqueda solo necesitarías GET y OPTIONS
+                        .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(true); // Probablemente no necesites credenciales para búsqueda pública
+                        .allowCredentials(true);
             }
         };
     }
