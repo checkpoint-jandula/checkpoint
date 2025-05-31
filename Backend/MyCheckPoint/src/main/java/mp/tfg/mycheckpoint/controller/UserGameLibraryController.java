@@ -26,6 +26,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlador API para gestionar la biblioteca de juegos personal de un usuario.
+ * Proporciona endpoints para añadir, actualizar, obtener y eliminar juegos de la
+ * biblioteca del usuario autenticado, así como para ver detalles completos de un juego
+ * que pueden incluir datos personalizados del usuario y comentarios públicos.
+ */
 @Tag(name = "User Game Library Controller", description = "API para gestionar la biblioteca de juegos personal de un usuario")
 @RestController
 @RequestMapping("/api/v1") // Base path general
@@ -33,11 +39,27 @@ public class UserGameLibraryController {
 
     private final UserGameLibraryService userGameLibraryService;
 
+    /**
+     * Constructor para {@code UserGameLibraryController}.
+     * Inyecta el servicio necesario para la lógica de negocio de la biblioteca de juegos del usuario.
+     *
+     * @param userGameLibraryService El servicio para gestionar las operaciones de la biblioteca de juegos.
+     */
     @Autowired
     public UserGameLibraryController(UserGameLibraryService userGameLibraryService) {
         this.userGameLibraryService = userGameLibraryService;
     }
 
+    /**
+     * Añade un juego a la biblioteca del usuario autenticado o actualiza una entrada existente.
+     * Si el juego no existe en la base de datos local, se intentará obtener de IGDB.
+     * Se proporcionan datos específicos del usuario para este juego (estado, puntuación, plataforma, etc.).
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param igdbId El ID de IGDB del juego a añadir o actualizar.
+     * @param userGameDataDTO DTO que contiene los datos específicos del usuario para este juego.
+     * @return ResponseEntity con un {@link UserGameResponseDTO} que representa la entrada de la biblioteca actualizada o creada y el código HTTP 200 OK.
+     */
     // Endpoint para añadir o actualizar un juego en la biblioteca del usuario autenticado
     @PostMapping("/users/me/library/games/{igdbId}")
     @Operation(summary = "Añadir o actualizar un juego en la biblioteca del usuario autenticado",
@@ -77,6 +99,14 @@ public class UserGameLibraryController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Obtiene la biblioteca completa de juegos del usuario autenticado.
+     * Recupera todas las entradas de juegos, incluyendo estado, puntuación, plataforma y otros datos específicos del usuario.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link UserGameResponseDTO} representando la biblioteca del usuario y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     // Endpoint para obtener toda la biblioteca del usuario autenticado
     @GetMapping("/users/me/library/games")
     @Operation(summary = "Obtener la biblioteca completa de juegos del usuario autenticado",
@@ -105,6 +135,13 @@ public class UserGameLibraryController {
         return ResponseEntity.ok(library);
     }
 
+    /**
+     * Obtiene los detalles de un juego específico de la biblioteca del usuario autenticado.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param igdbId El ID de IGDB del juego a obtener de la biblioteca.
+     * @return ResponseEntity con un {@link UserGameResponseDTO} con los datos del juego en la biblioteca del usuario y el código HTTP 200 OK.
+     */
     // Endpoint para obtener un juego específico de la biblioteca del usuario autenticado
     @GetMapping("/users/me/library/games/{igdbId}")
     @Operation(summary = "Obtener un juego específico de la biblioteca del usuario autenticado",
@@ -133,18 +170,22 @@ public class UserGameLibraryController {
                     description = "ID de IGDB del juego a obtener de la biblioteca del usuario.",
                     required = true,
                     in = ParameterIn.PATH,
-                    example = "1020", // Ejemplo de IGDB ID
+                    example = "1020",
                     schema = @Schema(type = "integer", format = "int64"))
             @PathVariable Long igdbId) {
         UserGameResponseDTO gameFromLibrary = userGameLibraryService.getUserGameFromLibrary(currentUser.getEmail(), igdbId);
         return ResponseEntity.ok(gameFromLibrary);
     }
 
-    // Endpoint para la vista detallada de un juego (puede ser público o específico de usuario)
-    // Este es el endpoint que mencionaste para la vista detallada.
-    // Lo pongo en GameController porque lógicamente es sobre "un juego", pero lo puede llamar UserGameLibraryService.
-    // O puede estar aquí si prefieres mantener todo lo que toque UserGameData junto.
-    // Por ahora, lo mantenemos aquí para ilustrar, pero podría moverse.
+    /**
+     * Obtiene detalles completos de un juego, combinando información general, datos del usuario y comentarios públicos.
+     * Este endpoint es público. Si se proporciona un token JWT de autenticación válido, la respuesta incluirá
+     * adicionalmente los datos específicos del usuario para ese juego (si existen en su biblioteca).
+     *
+     * @param igdbId El ID de IGDB del juego para el cual se solicitan los detalles.
+     * @param authentication Objeto de autenticación de Spring Security, puede ser nulo si el acceso es anónimo.
+     * @return ResponseEntity con un {@link GameDetailDTO} conteniendo los detalles completos del juego y el código HTTP 200 OK.
+     */
     @GetMapping("/games/{igdbId}/details")
     @Operation(summary = "Obtener detalles completos de un juego",
             description = "Recupera información detallada sobre un juego específico, identificado por su IGDB ID. " +
@@ -152,10 +193,6 @@ public class UserGameLibraryController {
                     "adicionalmente los datos específicos del usuario para ese juego (si existen en su biblioteca), como su estado, puntuación, etc. " +
                     "Si no se proporciona autenticación o el token es inválido, solo se devolverá la información pública del juego y los comentarios públicos.",
             operationId = "getGameDetails"
-            // No se añade @SecurityRequirement global aquí porque el endpoint base es público.
-            // La naturaleza opcional de la autenticación se explica en la descripción.
-            // Si se quisiera ser más explícito sobre la seguridad opcional, se podría hacer con schemes vacíos o configuraciones avanzadas,
-            // pero la descripción suele ser suficiente.
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Detalles del juego recuperados exitosamente.",
@@ -167,8 +204,6 @@ public class UserGameLibraryController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor. Podría ocurrir si hay problemas al contactar IGDB.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-            // No se documenta 401 explícitamente como error principal porque el endpoint es público.
-            // Si un token inválido es enviado, el filtro de seguridad podría devolver 401 antes de llegar aquí.
     })
     public ResponseEntity<GameDetailDTO> getGameDetails(
             @Parameter(name = "igdbId",
@@ -178,9 +213,7 @@ public class UserGameLibraryController {
                     example = "1020",
                     schema = @Schema(type = "integer", format = "int64"))
             @PathVariable Long igdbId,
-            // Authentication es opcional y no se documenta como un @Parameter de API estándar.
-            // Su presencia y uso se describen en la descripción general del endpoint.
-            Authentication authentication) { // Authentication puede ser null si el endpoint es parcialmente público
+            Authentication authentication) {
 
         String userEmail = null;
         if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetailsImpl) {
@@ -193,6 +226,13 @@ public class UserGameLibraryController {
     }
 
 
+    /**
+     * Elimina un juego de la biblioteca personal del usuario autenticado.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param igdbId El ID de IGDB del juego a eliminar de la biblioteca.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     // Endpoint para eliminar un juego de la biblioteca del usuario autenticado
     @DeleteMapping("/users/me/library/games/{igdbId}")
     @Operation(summary = "Eliminar un juego de la biblioteca del usuario autenticado",
@@ -202,7 +242,6 @@ public class UserGameLibraryController {
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Juego eliminado de la biblioteca exitosamente. No hay contenido en la respuesta."),
-            // No se especifica 'content' para 204
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
@@ -219,10 +258,10 @@ public class UserGameLibraryController {
                     description = "ID de IGDB del juego a eliminar de la biblioteca del usuario.",
                     required = true,
                     in = ParameterIn.PATH,
-                    example = "1020", // Ejemplo de IGDB ID
+                    example = "1020",
                     schema = @Schema(type = "integer", format = "int64"))
             @PathVariable Long igdbId) {
         userGameLibraryService.removeGameFromLibrary(currentUser.getEmail(), igdbId);
-        return ResponseEntity.noContent().build(); // HTTP 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }

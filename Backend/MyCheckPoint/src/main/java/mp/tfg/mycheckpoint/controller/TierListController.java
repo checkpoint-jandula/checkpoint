@@ -25,6 +25,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Controlador API para la gestión de Tier Lists de juegos.
+ * Permite a los usuarios crear y administrar Tier Lists tanto generales de su perfil
+ * como aquellas asociadas a GameLists específicas. Incluye operaciones para
+ * la creación, obtención (pública y privada), actualización y eliminación de Tier Lists,
+ * así como la gestión de sus secciones (tiers) e ítems (juegos) clasificados.
+ */
 @Tag(name = "TierList Controller", description = "API para la gestión de Tier Lists de juegos")
 @RestController
 @RequestMapping("/api/v1") // Usamos el base path general
@@ -32,13 +39,27 @@ public class TierListController {
 
     private final TierListService tierListService;
 
+    /**
+     * Constructor para {@code TierListController}.
+     * Inyecta el servicio necesario para la lógica de negocio de las Tier Lists.
+     *
+     * @param tierListService El servicio para gestionar las operaciones de Tier Lists.
+     */
     @Autowired
     public TierListController(TierListService tierListService) {
         this.tierListService = tierListService;
     }
 
+    /**
+     * Crea una nueva Tier List de perfil (tipo PROFILE_GLOBAL) para el usuario autenticado.
+     * Se requiere un nombre para la lista y, opcionalmente, una descripción y si es pública.
+     * Se crearán secciones por defecto (S, A, B, C, D y 'Juegos por Clasificar').
+     *
+     * @param currentUser El principal del usuario autenticado que crea la Tier List.
+     * @param createRequestDTO DTO con los datos para la creación de la Tier List (nombre, descripción, visibilidad).
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List creada y el código HTTP 201 Created.
+     */
     // --- Endpoints para TierLists de Perfil (Generales) ---
-
     @PostMapping("/users/me/tierlists")
     @Operation(summary = "Crear una nueva Tier List de perfil para el usuario autenticado",
             description = "Permite al usuario autenticado crear una nueva Tier List de tipo 'PROFILE_GLOBAL'. " +
@@ -70,6 +91,14 @@ public class TierListController {
         return new ResponseEntity<>(createdTierList, HttpStatus.CREATED);
     }
 
+    /**
+     * Obtiene todas las Tier Lists de tipo perfil (PROFILE_GLOBAL) creadas por el usuario autenticado.
+     * Cada Tier List devuelta incluye sus secciones y los ítems clasificados.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @return ResponseEntity con una lista de {@link TierListResponseDTO} y el código HTTP 200 OK.
+     * La lista puede estar vacía si el usuario no ha creado ninguna Tier List de perfil.
+     */
     @GetMapping("/users/me/tierlists")
     @Operation(summary = "Obtener todas las Tier Lists de perfil del usuario autenticado",
             description = "Recupera una lista de todas las Tier Lists de tipo 'PROFILE_GLOBAL' creadas por el usuario actualmente autenticado. " +
@@ -97,8 +126,17 @@ public class TierListController {
         return ResponseEntity.ok(tierLists);
     }
 
+    /**
+     * Obtiene o crea la Tier List asociada a una GameList específica.
+     * Si no existe, se crea una nueva automáticamente con secciones por defecto y se sincroniza con los juegos de la GameList.
+     * El acceso es público si la GameList y la TierList resultante son públicas.
+     * Si la GameList es privada, se requiere autenticación y ser el propietario.
+     *
+     * @param currentUser El principal del usuario autenticado (puede ser nulo para acceso anónimo).
+     * @param gameListPublicId El ID público (UUID) de la GameList.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List recuperada o creada y el código HTTP 200 OK.
+     */
     // --- Endpoints para TierLists asociadas a GameLists ---
-
     @GetMapping("/gamelists/{gameListPublicId}/tierlist")
     @Operation(summary = "Obtener o crear la Tier List asociada a una GameList específica",
             description = "Recupera la Tier List de tipo 'FROM_GAMELIST' asociada a la GameList especificada por su ID público. " +
@@ -108,9 +146,6 @@ public class TierListController {
                     "Si la GameList es privada, se requiere autenticación y ser el propietario para acceder o crear la TierList asociada. " +
                     "Si se proporciona un token JWT válido, la respuesta puede incluir información adicional si el usuario es el propietario.",
             operationId = "getOrCreateTierListForGameList"
-            // La seguridad es opcional. Si se provee, se usa para validación de acceso a GameLists/TierLists privadas.
-            // Se define un securityRequirement opcional, los esquemas de seguridad deben estar definidos globalmente.
-            // security = { @SecurityRequirement(name = "bearerAuth", scopes = {}) } // O simplemente omitir para 'opcional' y explicar en la descripción
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tier List recuperada o creada y sincronizada exitosamente.",
@@ -130,8 +165,6 @@ public class TierListController {
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
     })
     public ResponseEntity<TierListResponseDTO> getOrCreateTierListForGameList(
-            // @AuthenticationPrincipal es resuelto por Spring si hay un token válido, si no, es null.
-            // No se documenta como un @Parameter de API estándar.
             @AuthenticationPrincipal UserDetailsImpl currentUser,
             @Parameter(name = "gameListPublicId",
                     description = "ID público (UUID) de la GameList para la cual se obtendrá o creará la Tier List.",
@@ -145,8 +178,15 @@ public class TierListController {
         return ResponseEntity.ok(tierList);
     }
 
+    /**
+     * Obtiene todas las Tier Lists que han sido marcadas como públicas.
+     * Las listas se devuelven ordenadas por la fecha de última actualización.
+     * Este endpoint es público y no requiere autenticación.
+     *
+     * @return ResponseEntity con una lista de {@link TierListResponseDTO} de las Tier Lists públicas y el código HTTP 200 OK.
+     * La lista puede estar vacía.
+     */
     // --- Endpoints Generales para TierLists (aplican a ambos tipos, con validación de permisos) ---
-
     @GetMapping("/tierlists/public")
     @Operation(summary = "Obtener todas las Tier Lists públicas",
             description = "Recupera una lista de todas las Tier Lists que han sido marcadas como públicas por sus creadores. " +
@@ -161,13 +201,20 @@ public class TierListController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
-            // No se documentan 401, 403, 404 como errores primarios ya que el endpoint es público y simplemente devuelve lo que hay o un 500 si falla internamente.
     })
     public ResponseEntity<List<TierListResponseDTO>> getAllPublicTierLists() {
         List<TierListResponseDTO> publicTierLists = tierListService.getAllPublicTierLists();
         return ResponseEntity.ok(publicTierLists);
     }
 
+    /**
+     * Obtiene una Tier List específica por su ID público (UUID).
+     * Si la Tier List es pública, cualquiera puede acceder. Si es privada, solo el propietario autenticado.
+     *
+     * @param tierListPublicId El ID público (UUID) de la Tier List a obtener.
+     * @param authentication Objeto de autenticación de Spring Security (puede ser nulo para acceso anónimo).
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List encontrada y el código HTTP 200 OK.
+     */
     @GetMapping("/tierlists/{tierListPublicId}")
     @Operation(summary = "Obtener una Tier List específica por su ID público",
             description = "Recupera los detalles completos de una Tier List (incluyendo secciones e ítems) utilizando su ID público (UUID). " +
@@ -175,8 +222,6 @@ public class TierListController {
                     "Si la Tier List es privada, solo el propietario autenticado puede acceder. " +
                     "La autenticación (JWT) es opcional; si se proporciona un token válido y la lista es privada, se verificará la propiedad.",
             operationId = "getTierListByPublicId"
-            // No se añade @SecurityRequirement aquí para indicar que el endpoint en sí es públicamente accesible,
-            // la lógica de negocio interna maneja la autorización para listas privadas.
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tier List recuperada exitosamente.",
@@ -213,6 +258,15 @@ public class TierListController {
         return ResponseEntity.ok(tierList);
     }
 
+    /**
+     * Actualiza los metadatos de una Tier List existente (nombre, descripción, visibilidad).
+     * Solo el propietario autenticado de la Tier List puede realizar esta operación.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List a actualizar.
+     * @param updateRequestDTO DTO con los nuevos metadatos. Solo los campos proporcionados serán actualizados.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     @PutMapping("/tierlists/{tierListPublicId}")
     @Operation(summary = "Actualizar los metadatos de una Tier List existente",
             description = "Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). " +
@@ -253,6 +307,15 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Elimina una Tier List existente.
+     * Solo el propietario autenticado de la Tier List puede realizar esta operación.
+     * Esto también eliminará todas las secciones y los ítems contenidos en ella.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List a eliminar.
+     * @return ResponseEntity con código HTTP 204 No Content si la operación es exitosa.
+     */
     @DeleteMapping("/tierlists/{tierListPublicId}")
     @Operation(summary = "Eliminar una Tier List existente",
             description = "Permite al propietario autenticado de una Tier List eliminarla permanentemente. " +
@@ -261,13 +324,12 @@ public class TierListController {
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Tier List eliminada exitosamente. No hay contenido en la respuesta."),
-            // No se especifica 'content' para 204
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
             @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el propietario de la Tier List que intenta eliminar.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Asumiendo que UnauthorizedOperationException se mapea a un ErrorResponse
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "404", description = "No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -288,8 +350,17 @@ public class TierListController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Añade una nueva sección (tier) personalizada a una Tier List existente.
+     * Solo el propietario autenticado puede añadir secciones. Existe un límite en la cantidad de secciones personalizables.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List a la que se añadirá la sección.
+     * @param sectionRequestDTO DTO que contiene el nombre para la nueva sección.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     * Un código 201 Created también podría ser apropiado.
+     */
     // --- Endpoints para Secciones (Tiers) dentro de una TierList ---
-
     @PostMapping("/tierlists/{tierListPublicId}/sections")
     @Operation(summary = "Añadir una nueva sección (tier) a una Tier List existente",
             description = "Permite al propietario autenticado de una Tier List añadir una nueva sección personalizada. " +
@@ -301,7 +372,6 @@ public class TierListController {
             @ApiResponse(responseCode = "200", description = "Sección añadida exitosamente. Devuelve la Tier List completa y actualizada con la nueva sección.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = TierListResponseDTO.class))),
-            // Un 201 Created también sería válido si el foco es la creación de la sección.
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos (ej. nombre de sección vacío o demasiado largo) o se ha alcanzado el límite máximo de secciones personalizables.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -310,7 +380,7 @@ public class TierListController {
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
             @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el propietario de la Tier List a la que intenta añadir una sección.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Asumiendo que UnauthorizedOperationException se mapea a ErrorResponse
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "404", description = "No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -332,6 +402,16 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Actualiza el nombre de una sección (tier) específica en una Tier List.
+     * Solo el propietario autenticado puede realizar esta operación. No se puede modificar la sección "Juegos por Clasificar".
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List que contiene la sección.
+     * @param sectionInternalId El ID interno de la sección (tier) a actualizar.
+     * @param sectionRequestDTO DTO que contiene el nuevo nombre para la sección.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     @PutMapping("/tierlists/{tierListPublicId}/sections/{sectionInternalId}")
     @Operation(summary = "Actualizar el nombre de una sección (tier) específica en una Tier List",
             description = "Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. " +
@@ -380,6 +460,16 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Elimina una sección (tier) personalizada de una Tier List.
+     * La sección por defecto "Juegos por Clasificar" no puede ser eliminada. Debe quedar al menos una sección personalizable.
+     * Los ítems de la sección eliminada se mueven a "Juegos por Clasificar". Solo el propietario puede eliminar secciones.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List de la que se eliminará la sección.
+     * @param sectionInternalId El ID interno de la sección (tier) a eliminar.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     @DeleteMapping("/tierlists/{tierListPublicId}/sections/{sectionInternalId}")
     @Operation(summary = "Eliminar una sección (tier) de una Tier List",
             description = "Permite al propietario autenticado de una Tier List eliminar una de sus secciones personalizadas. " +
@@ -393,16 +483,15 @@ public class TierListController {
             @ApiResponse(responseCode = "200", description = "Sección eliminada exitosamente (e ítems reubicados si aplicable). Devuelve la Tier List completa y actualizada.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = TierListResponseDTO.class))),
-            // Un 204 No Content sería también una opción si no se devolviera el cuerpo
             @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. No se puede eliminar la sección por defecto 'Juegos por Clasificar' o se intenta eliminar la última sección personalizable.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Para InvalidOperationException
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
             @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el propietario de la Tier List.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Asumiendo que UnauthorizedOperationException se mapea aquí
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "404", description = "No encontrado. La Tier List o la sección especificada no fueron encontradas para el usuario actual, o el usuario no pudo ser verificado.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
@@ -430,9 +519,18 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Añade o mueve un ítem (juego) a una sección específica de una Tier List de perfil (PROFILE_GLOBAL).
+     * No se puede usar para Tier Lists de tipo FROM_GAMELIST ni para añadir a la sección "Juegos por Clasificar".
+     * Si el juego ya está en otra sección, se moverá. Se puede especificar el orden.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List.
+     * @param sectionInternalId El ID interno de la sección (tier) destino.
+     * @param itemAddRequestDTO DTO con el ID del UserGame a añadir/mover y el orden opcional.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     // --- Endpoints para Items (Juegos) dentro de las Secciones de una TierList ---
-
-    // Añadir a una sección específica (principalmente para PROFILE_GLOBAL TierLists)
     @PostMapping("/tierlists/{tierListPublicId}/sections/{sectionInternalId}/items")
     @Operation(summary = "Añadir o mover un ítem (juego) a una sección específica de una Tier List de perfil",
             description = "Permite al propietario autenticado añadir un juego de su biblioteca (UserGame) a una sección específica de una Tier List de tipo 'PROFILE_GLOBAL'. " +
@@ -447,7 +545,7 @@ public class TierListController {
                             schema = @Schema(implementation = TierListResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. El `user_game_id` es nulo, la Tier List es de tipo 'FROM_GAMELIST', o se intenta añadir a la sección 'Sin Clasificar' usando este endpoint.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))), // Para @Valid
+                            schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))),
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
@@ -478,6 +576,16 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Añade o mueve un ítem (juego) a la sección "Sin Clasificar" de una Tier List de perfil (PROFILE_GLOBAL).
+     * No se puede usar para Tier Lists de tipo FROM_GAMELIST.
+     * Si el juego ya está en otra sección, se moverá. Se puede especificar el orden.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List.
+     * @param itemAddRequestDTO DTO con el ID del UserGame a añadir/mover y el orden opcional.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     // Añadir a la sección "Sin Clasificar" (para PROFILE_GLOBAL TierLists)
     @PostMapping("/tierlists/{tierListPublicId}/items/unclassified")
     @Operation(summary = "Añadir o mover un ítem (juego) a la sección 'Sin Clasificar' de una Tier List de perfil",
@@ -519,6 +627,16 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Mueve un ítem (juego) existente dentro de una Tier List a una nueva sección y/o posición.
+     * Aplica a TierLists de perfil y también para reordenar en TierLists de GameList (con validación).
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List que contiene el ítem.
+     * @param tierListItemInternalId El ID interno del TierListItem a mover.
+     * @param itemMoveRequestDTO DTO con el ID de la sección destino y el nuevo orden.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     */
     // Mover un item dentro de una TierList (cambiar sección y/o orden)
     // Aplica a PROFILE_GLOBAL y también para reordenar en FROM_GAMELIST TierLists
     @PutMapping("/tierlists/{tierListPublicId}/items/{tierListItemInternalId}/move")
@@ -566,6 +684,17 @@ public class TierListController {
         return ResponseEntity.ok(updatedTierList);
     }
 
+    /**
+     * Elimina un ítem (juego) de una Tier List de perfil (PROFILE_GLOBAL).
+     * Esto no elimina el juego de la biblioteca general del usuario.
+     * No se puede usar para Tier Lists de tipo FROM_GAMELIST.
+     *
+     * @param currentUser El principal del usuario autenticado.
+     * @param tierListPublicId El ID público (UUID) de la Tier List de la que se eliminará el ítem.
+     * @param tierListItemInternalId El ID interno del TierListItem a eliminar.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     * Un código 204 No Content también sería una alternativa si no se devuelve el cuerpo.
+     */
     // Quitar un item de una TierList (SOLO para PROFILE_GLOBAL TierLists)
     @DeleteMapping("/tierlists/{tierListPublicId}/items/{tierListItemInternalId}")
     @Operation(summary = "Eliminar un ítem (juego) de una Tier List de perfil",
@@ -578,10 +707,9 @@ public class TierListController {
             @ApiResponse(responseCode = "200", description = "Ítem eliminado exitosamente de la Tier List. Devuelve la Tier List completa y actualizada.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = TierListResponseDTO.class))),
-            // Un 204 No Content sería una alternativa si no se devolviera el cuerpo de la TierList actualizada.
             @ApiResponse(responseCode = "400", description = "Solicitud incorrecta. No se pueden eliminar ítems de una Tier List de tipo 'FROM_GAMELIST' a través de este endpoint.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))), // Para InvalidOperationException
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),

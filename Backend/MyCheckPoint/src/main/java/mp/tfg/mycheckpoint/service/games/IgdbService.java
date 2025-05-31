@@ -14,12 +14,24 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Servicio para interactuar con la API de IGDB (Internet Game Database).
+ * Este servicio utiliza un {@link WebClient} configurado para realizar solicitudes HTTP
+ * a la API de IGDB y obtener información sobre videojuegos. Proporciona métodos
+ * para buscar juegos por nombre, obtener detalles de un juego por su ID de IGDB,
+ * y filtrar juegos por múltiples criterios.
+ */
 @Service
 public class IgdbService {
 
     private static final Logger logger = LoggerFactory.getLogger(IgdbService.class);
     private final WebClient igdbWebClient;
 
+    /**
+     * Cadena de consulta de campos por defecto utilizada para solicitar información detallada
+     * de un juego a la API de IGDB. Incluye una amplia gama de atributos del juego
+     * y sus relaciones (carátula, artworks, géneros, plataformas, etc.).
+     */
     private static final String DEFAULT_GAME_FIELDS = """
             fields
                 id, name, slug, summary, storyline, first_release_date, total_rating, total_rating_count, game_type,
@@ -48,15 +60,30 @@ public class IgdbService {
                 game_status.id;
             """;
 
+    /**
+     * Constructor para IgdbService.
+     *
+     * @param igdbWebClient El {@link WebClient} preconfigurado (inyectado por Spring)
+     * para realizar las llamadas a la API de IGDB.
+     */
     @Autowired
     public IgdbService(WebClient igdbWebClient) {
         this.igdbWebClient = igdbWebClient;
     }
 
+    /**
+     * Busca juegos en la API de IGDB utilizando un término de búsqueda para el nombre.
+     * Solicita un conjunto limitado de campos para optimizar la respuesta (nombre, calificación, carátula, etc.).
+     * Limita los resultados a un máximo de 15 juegos.
+     *
+     * @param gameName El nombre o término de búsqueda del juego. Las comillas dobles en el nombre serán escapadas.
+     * @return Un {@link Flux} que emite objetos {@link GameDto} con la información resumida de los juegos encontrados.
+     * En caso de error en la llamada a la API o deserialización, el Flux emitirá un error.
+     */
     public Flux<GameDto> findGamesByName(String gameName) {
         String fields = "fields name, total_rating, cover.url, first_release_date,game_type,summary, id;";
-        String queryBody = fields + "search \"" + gameName + "\"; limit 5;"; // Ya usa search
-        logger.info("Querying IGDB with body: {}", queryBody);
+        String queryBody = fields + "search \"" + gameName.replace("\"", "\\\"") + "\"; limit 15;";
+        logger.info("Querying IGDB (findGamesByName) with body: {}", queryBody);
         return igdbWebClient.post()
                 .uri("/games")
                 .contentType(MediaType.TEXT_PLAIN)
@@ -65,36 +92,54 @@ public class IgdbService {
                 .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
                                 .flatMap(errorBody -> {
-                                    logger.error("Error from IGDB API: {}, Body: {}", clientResponse.statusCode(), errorBody);
-                                    return Mono.error(new RuntimeException("IGDB API Error: " + clientResponse.statusCode() + " - " + errorBody));
+                                    logger.error("Error from IGDB API (findGamesByName): Status {}, Body: {}", clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new RuntimeException("IGDB API Error (findGamesByName): " + clientResponse.statusCode() + " - " + errorBody));
                                 }))
                 .bodyToFlux(GameDto.class)
-                .doOnError(error -> logger.error("Error during IGDB call or deserialization: {}", error.getMessage(), error));
-    }
-
-    public Mono<GameDto> findGameByIgdbId(Long igdbId) {
-        String queryBody = DEFAULT_GAME_FIELDS + "where id = " + igdbId + ";";
-        logger.info("Querying IGDB with body: {}", queryBody);
-        return igdbWebClient.post()
-                .uri("/games")
-                .contentType(MediaType.TEXT_PLAIN)
-                .bodyValue(queryBody)
-                .retrieve()
-                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                        clientResponse -> clientResponse.bodyToMono(String.class)
-                                .flatMap(errorBody -> {
-                                    logger.error("Error from IGDB API: {}, Body: {}", clientResponse.statusCode(), errorBody);
-                                    return Mono.error(new RuntimeException("IGDB API Error: " + clientResponse.statusCode() + " - " + errorBody));
-                                }))
-                .bodyToFlux(GameDto.class)
-                .next()
-                .doOnError(error -> logger.error("Error during IGDB call or deserialization for ID {}: {}", igdbId, error.getMessage(), error));
+                .doOnError(error -> logger.error("Error during IGDB call or deserialization (findGamesByName) for query [{}]: {}", gameName, error.getMessage(), error));
     }
 
     /**
-     * Busca juegos en IGDB aplicando filtros dinámicos.
-     * Los timestamps de fecha deben ser en formato Unix (segundos).
-     * Ejemplo: 1420070400 (1 de enero de 2015) & 1451606399 (31 de diciembre de 2015)
+     * Busca un juego específico en la API de IGDB por su ID único de IGDB.
+     * Utiliza la constante {@code DEFAULT_GAME_FIELDS} para solicitar un conjunto completo de datos del juego.
+     *
+     * @param igdbId El ID de IGDB del juego a buscar.
+     * @return Un {@link Mono} que emite un objeto {@link GameDto} con la información detallada del juego.
+     * Si el juego no se encuentra, el Mono se completará vacío.
+     * En caso de error en la llamada a la API o deserialización, el Mono emitirá un error.
+     */
+    public Mono<GameDto> findGameByIgdbId(Long igdbId) {
+        String queryBody = DEFAULT_GAME_FIELDS + "where id = " + igdbId + ";";
+        logger.info("Querying IGDB (findGameByIgdbId) for ID {}: {}", igdbId, queryBody);
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    logger.error("Error from IGDB API (findGameByIgdbId) for ID {}: Status {}, Body: {}", igdbId, clientResponse.statusCode(), errorBody);
+                                    return Mono.error(new RuntimeException("IGDB API Error (findGameByIgdbId): " + clientResponse.statusCode() + " - " + errorBody));
+                                }))
+                .bodyToFlux(GameDto.class) // IGDB devuelve un array, incluso para un solo resultado por ID.
+                .next() // Se toma el primer (y único esperado) elemento.
+                .doOnError(error -> logger.error("Error during IGDB call or deserialization (findGameByIgdbId) for ID {}: {}", igdbId, error.getMessage(), error));
+    }
+
+    /**
+     * Busca juegos en la API de IGDB aplicando un conjunto de filtros personalizables,
+     * como rango de fechas de lanzamiento, ID de género, ID de tema, ID de modo de juego y un límite de resultados.
+     * Solicita un conjunto específico de campos para los juegos resultantes (nombre, calificación, carátula, etc.).
+     *
+     * @param releaseDateStart Timestamp Unix (en segundos) para la fecha de inicio del rango de lanzamiento. Opcional.
+     * @param releaseDateEnd Timestamp Unix (en segundos) para la fecha de fin del rango de lanzamiento. Opcional.
+     * @param genreId ID del género según IGDB para filtrar. Opcional.
+     * @param themeId ID del tema según IGDB para filtrar. Opcional.
+     * @param gameModeId ID del modo de juego según IGDB para filtrar. Opcional.
+     * @param limit Número máximo de resultados a devolver. Opcional (defecto 10, máximo 500).
+     * @return Un {@link Flux} que emite objetos {@link GameDto} para cada juego que coincida con los filtros.
+     * En caso de error en la llamada a la API o deserialización, el Flux emitirá un error.
      */
     public Flux<GameDto> findGamesByCustomFilter(
             Long releaseDateStart, Long releaseDateEnd,
@@ -110,7 +155,7 @@ public class IgdbService {
             whereClauses.add("first_release_date < " + releaseDateEnd);
         }
         if (genreId != null) {
-            whereClauses.add("genres = (" + genreId + ")"); // IGDB usa paréntesis para "any of" aunque sea uno solo
+            whereClauses.add("genres = (" + genreId + ")");
         }
         if (themeId != null) {
             whereClauses.add("themes = (" + themeId + ")");
@@ -119,13 +164,15 @@ public class IgdbService {
             whereClauses.add("game_modes = (" + gameModeId + ")");
         }
 
-        String fields = "fields name, total_rating, cover.url, first_release_date, genres.name, themes.name, game_modes.name, id;"; // Añadimos slug y id para consistencia con GameDto
+        String fields = "fields name, total_rating, cover.url, first_release_date, genres.name, themes.name, game_modes.name, id, slug;";
         String whereCondition = whereClauses.isEmpty() ? "" : "where " + String.join(" & ", whereClauses) + ";";
-        String limitCondition = (limit != null && limit > 0) ? "limit " + limit + ";" : "limit 10;"; // Límite por defecto
+
+        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 10;
+        String limitCondition = "limit " + effectiveLimit + ";";
 
         String queryBody = fields + " " + whereCondition + " " + limitCondition;
 
-        logger.info("Querying IGDB with custom filter body: {}", queryBody);
+        logger.info("Querying IGDB (findGamesByCustomFilter) with body: {}", queryBody);
 
         return igdbWebClient.post()
                 .uri("/games")
@@ -135,14 +182,12 @@ public class IgdbService {
                 .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
                                 .flatMap(errorBody -> {
-                                    logger.error("Error from IGDB API (custom filter): {}, Body: {}", clientResponse.statusCode(), errorBody);
+                                    logger.error("Error from IGDB API (custom filter): Status {}, Body: {}", clientResponse.statusCode(), errorBody);
                                     return Mono.error(new RuntimeException("IGDB API Error (custom filter): " + clientResponse.statusCode() + " - " + errorBody));
                                 }))
-                .bodyToFlux(GameDto.class) // Asumimos que la respuesta puede mapearse a GameDto (o un subconjunto de él)
+                .bodyToFlux(GameDto.class)
                 .map(gameDto -> {
-                    // Si los campos son un subconjunto estricto y quieres marcarlo, aquí podrías hacerlo.
-                    // gameDto.setFullDetails(false); // Por ejemplo, si estos filtros siempre devuelven datos parciales.
-                    // Sin embargo, GameDto ya tiene campos para cover, name, total_rating, etc.
+
                     return gameDto;
                 })
                 .doOnError(error -> logger.error("Error during IGDB custom filter call or deserialization: {}", error.getMessage(), error));

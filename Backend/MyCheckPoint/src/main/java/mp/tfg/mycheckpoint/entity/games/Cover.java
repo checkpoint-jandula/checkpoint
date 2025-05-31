@@ -7,16 +7,28 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-@Embeddable // Indica que esta clase será parte de otra entidad
+/**
+ * Clase embebible que representa la información de la carátula (cover) de un juego.
+ * Contiene el ID de la carátula de una fuente externa y su URL.
+ * Esta clase se integra directamente en la tabla de la entidad {@link Game}.
+ */
+@Embeddable // esta clase será parte de otra entidad
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cover {
 
-    @Column(name = "cover_igdb_id") // Para evitar colisión con Game.igdbId en la tabla game
+    /**
+     * ID de la carátula proveniente de una fuente externa (ej. IGDB).
+     * Se utiliza para identificar de forma única la carátula.
+     */
+    @Column(name = "cover_igdb_id") // evitar colisión con Game.igdbId en la tabla game
     private Long igdbId;
 
+    /**
+     * URL donde se puede acceder a la imagen de la carátula.
+     */
     @Column(name = "cover_url")
     private String url;
 }

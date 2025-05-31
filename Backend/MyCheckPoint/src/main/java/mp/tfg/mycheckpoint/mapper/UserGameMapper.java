@@ -10,19 +10,37 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * Mapper para la conversión entre la entidad {@link UserGame} y sus DTOs relacionados.
+ * Se encarga de mapear los datos específicos del usuario para un juego.
+ */
 @Mapper(componentModel = "spring")
 public interface UserGameMapper {
 
+    /**
+     * Instancia del mapper para uso estático si no se inyecta.
+     */
     UserGameMapper INSTANCE = Mappers.getMapper(UserGameMapper.class);
 
+    /**
+     * Convierte una entidad {@link UserGame} a un {@link UserGameResponseDTO}.
+     * Mapea el ID de IGDB del juego asociado.
+     *
+     * @param userGame La entidad UserGame a convertir.
+     * @return El UserGameResponseDTO resultante.
+     */
     @Mapping(source = "game.igdbId", target = "gameIgdbId")
-        // @Mapping(source = "internalId", target = "libraryEntryId") // Si decides incluirlo
     UserGameResponseDTO toResponseDto(UserGame userGame);
 
-    // No necesitamos un toEntity desde UserGameDataDTO directamente porque
-    // la entidad UserGame se crea/actualiza en el servicio con User y Game ya obtenidos.
-    // En su lugar, usaremos un método para actualizar una entidad existente.
-
+    /**
+     * Actualiza una entidad {@link UserGame} existente con los datos de un {@link UserGameDataDTO}.
+     * Ignora propiedades nulas del DTO durante la actualización.
+     * Campos como IDs, usuario, juego y timestamps son ignorados ya que se gestionan por separado
+     * o automáticamente.
+     *
+     * @param dto El DTO con los datos de actualización.
+     * @param entity La entidad UserGame a actualizar (anotada con {@link MappingTarget}).
+     */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "internalId", ignore = true)
     @Mapping(target = "user", ignore = true)

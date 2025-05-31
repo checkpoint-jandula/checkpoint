@@ -17,6 +17,13 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para la gestión de la información de los videojuegos en la base de datos local.
+ * Se encarga de la lógica de negocio para crear, actualizar y recuperar entidades {@link Game}
+ * y sus relaciones asociadas (géneros, plataformas, compañías, etc.).
+ * Este servicio es crucial para mantener la consistencia y la integridad de los datos
+ * de los juegos, especialmente al sincronizar información de fuentes externas como IGDB.
+ */
 @Service
 public class GameService {
 
@@ -52,6 +59,37 @@ public class GameService {
     private final WebsiteMapper websiteMapper;
 
 
+    /**
+     * Constructor para {@code GameService}.
+     * Inyecta todos los repositorios y mappers necesarios para la gestión de entidades de juegos.
+     *
+     * @param gameRepository Repositorio para la entidad {@link Game}.
+     * @param gameModeRepository Repositorio para la entidad {@link GameMode}.
+     * @param genreRepository Repositorio para la entidad {@link Genre}.
+     * @param franchiseRepository Repositorio para la entidad {@link Franchise}.
+     * @param gameEngineRepository Repositorio para la entidad {@link GameEngine}.
+     * @param keywordRepository Repositorio para la entidad {@link Keyword}.
+     * @param platformRepository Repositorio para la entidad {@link Platform}.
+     * @param themeRepository Repositorio para la entidad {@link Theme}.
+     * @param companyRepository Repositorio para la entidad {@link Company}.
+     * @param gameCompanyInvolvementRepository Repositorio para la entidad {@link GameCompanyInvolvement}.
+     * @param gameMapper Mapper para {@link Game} y {@link GameDto}.
+     * @param gameModeMapper Mapper para {@link GameMode} y {@link GameModeDto}.
+     * @param genreMapper Mapper para {@link Genre} y {@link GenreDto}.
+     * @param franchiseMapper Mapper para {@link Franchise} y {@link FranchiseDto}.
+     * @param gameEngineMapper Mapper para {@link GameEngine} y {@link GameEngineDto}.
+     * @param keywordMapper Mapper para {@link Keyword} y {@link KeywordDto}.
+     * @param platformMapper Mapper para {@link Platform} y {@link PlatformDto}.
+     * @param platformLogoMapper Mapper para {@link PlatformLogo} y {@link PlatformLogoDto}.
+     * @param themeMapper Mapper para {@link Theme} y {@link ThemeDto}.
+     * @param companyMapper Mapper para {@link Company} y {@link CompanyInfoDto}.
+     * @param involvedCompanyMapper Mapper para {@link GameCompanyInvolvement} y {@link InvolvedCompanyDto}.
+     * @param coverMapper Mapper para {@link Cover} y {@link CoverDto}.
+     * @param artworkMapper Mapper para {@link Artwork} y {@link ArtworkDto}.
+     * @param screenshotMapper Mapper para {@link Screenshot} y {@link ScreenshotDto}.
+     * @param videoMapper Mapper para {@link Video} y {@link VideoDto}.
+     * @param websiteMapper Mapper para {@link Website} y {@link WebsiteDto}.
+     */
     @Autowired
     public GameService(GameRepository gameRepository, GameModeRepository gameModeRepository,
                        GenreRepository genreRepository, FranchiseRepository franchiseRepository,
@@ -92,16 +130,21 @@ public class GameService {
         this.websiteMapper = websiteMapper;
     }
 
+    /**
+     * Guarda o actualiza una lista de juegos en la base de datos local.
+     * Itera sobre la lista de {@link GameDto} proporcionada y procesa cada uno
+     * utilizando {@link #processSingleGameDto(GameDto, Game)}.
+     *
+     * @param gameDtos La lista de DTOs de juegos a procesar.
+     * @return Una lista de entidades {@link Game} que han sido persistidas o actualizadas.
+     * La lista puede estar vacía si la entrada es nula o no contiene DTOs válidos.
+     */
     @Transactional
     public List<Game> saveGames(List<GameDto> gameDtos) {
         List<Game> processedGames = new ArrayList<>();
         if (gameDtos == null) return processedGames;
         for (GameDto gameDto : gameDtos) {
             if (gameDto != null && gameDto.getIgdbId() != null) {
-                // Si gameDto.isFullDetails() no está seteado explícitamente antes de llamar a saveGames,
-                // y este es un punto de entrada genérico para guardar, es razonable asumir
-                // que el DTO pretende ser completo. GameDto ya se inicializa con isFullDetails = true.
-                // gameDto.setFullDetails(true); // Ya no es necesario aquí si el DTO lo tiene por defecto.
                 Game processedGameEntity = processSingleGameDto(gameDto, null);
                 if (processedGameEntity != null) {
                     processedGames.add(processedGameEntity);
@@ -117,6 +160,19 @@ public class GameService {
         return processedGames;
     }
 
+    /**
+     * Procesa un único {@link GameDto} para crear o actualizar una entidad {@link Game} y sus relaciones.
+     * Este método orquesta la lógica de encontrar o crear la entidad base del juego,
+     * procesar sus relaciones jerárquicas (padre, versión), sus colecciones ManyToMany
+     * (géneros, plataformas, etc.), compañías involucradas y listas de juegos relacionados
+     * (DLCs, expansiones, remakes, etc.).
+     *
+     * @param gameDto El DTO del juego a procesar.
+     * @param prospectiveParentGameEntity La entidad del juego padre prospectivo, si aplica (por ejemplo, al procesar un DLC).
+     * Puede ser {@code null}.
+     * @return La entidad {@link Game} persistida y completamente procesada, o {@code null} si el {@code gameDto} es inválido.
+     * @throws RuntimeException Si ocurre un error durante el proceso de guardado en la base de datos.
+     */
     private Game processSingleGameDto(GameDto gameDto, Game prospectiveParentGameEntity) {
         if (gameDto == null || gameDto.getIgdbId() == null) {
             logger.warn("processSingleGameDto: GameDto nulo o sin IgdbId. Saltando.");
@@ -127,29 +183,22 @@ public class GameService {
                 gameDto.getIgdbId(), gameDto.getName(), gameDto.isFullDetails(),
                 (prospectiveParentGameEntity != null ? prospectiveParentGameEntity.getIgdbId() : "null"));
 
-        // 1. Encontrar o crear la entidad base del juego y guardarla inicialmente
         Game currentGameEntity = findOrCreateAndUpdateBaseGame(gameDto, prospectiveParentGameEntity);
-        if (currentGameEntity == null) { // No debería ocurrir si gameDto e igdbId no son nulos
+        if (currentGameEntity == null) {
             logger.error("Error: findOrCreateBaseGame devolvió null para GameDto IGDB ID: {}", gameDto.getIgdbId());
             return null;
         }
 
-        // Guardamos aquí para asegurar que la entidad está gestionada y tiene un ID interno
-        // antes de procesar relaciones más complejas que podrían depender de ello.
         try {
             currentGameEntity = gameRepository.save(currentGameEntity);
         } catch (Exception e) {
             logger.error("Error guardando la entidad base del juego (IGDB ID: {}) : {}", gameDto.getIgdbId(), e.getMessage(), e);
-            throw e; // Relanzar para que la transacción haga rollback si es necesario
+            throw e;
         }
-        final Game managedGameEntity = currentGameEntity; // Ahora está gestionada
+        final Game managedGameEntity = currentGameEntity;
 
-        // 2. Procesar relaciones jerárquicas (juego padre, versión padre)
-        // Estas relaciones pueden implicar llamadas recursivas a processSingleGameDto,
-        // por lo que es bueno tener la entidad actual ya guardada y gestionada.
         processParentAndVersionRelationships(gameDto, managedGameEntity);
 
-        // 3. Si el DTO tiene todos los detalles, procesar colecciones y compañías involucradas
         if (gameDto.isFullDetails()) {
             logger.debug("DTO completo (ID: {}), procesando colecciones detalladas.", managedGameEntity.getIgdbId());
             processAssociatedManyToManyCollections(gameDto, managedGameEntity);
@@ -158,8 +207,6 @@ public class GameService {
             logger.debug("DTO parcial (ID: {}), se omite procesamiento de colecciones detalladas.", managedGameEntity.getIgdbId());
         }
 
-        // 4. Guardar la entidad principal después de establecer relaciones ManyToMany y OneToMany (como InvolvedCompanies)
-        // Esto asegura que los cambios en las colecciones se persistan.
         Game savedMainGameEntity;
         try {
             savedMainGameEntity = gameRepository.save(managedGameEntity);
@@ -168,13 +215,9 @@ public class GameService {
             throw e;
         }
 
-        // 5. Procesar listas de juegos hijos (DLCs, expansiones, bundles) y relacionados (remakes, remasters, similares)
-        // Estas operaciones pueden implicar más llamadas a processSingleGameDto para esas entidades relacionadas
-        // y luego establecer la relación con 'savedMainGameEntity'.
         processChildGameLists(gameDto, savedMainGameEntity);
         processRelatedGameLists(gameDto, savedMainGameEntity); // Incluye remakes, remasters, similar_games
 
-        // 6. Guardado final para persistir cualquier cambio en las relaciones de listas (como similarGames, childGames etc.)
         Game finalSavedEntity;
         try {
             finalSavedEntity = gameRepository.save(savedMainGameEntity);
@@ -185,7 +228,6 @@ public class GameService {
             throw e;
         }
 
-        // 7. Inicializar colecciones LAZY antes de devolver la entidad (si es necesario para el llamador)
         if (finalSavedEntity != null) {
             initializeLazyCollections(finalSavedEntity);
         }
@@ -194,45 +236,41 @@ public class GameService {
         return finalSavedEntity;
     }
 
+    /**
+     * Encuentra una entidad {@link Game} existente por su IGDB ID o crea una nueva si no existe.
+     * Luego, actualiza los campos base de la entidad (existente o nueva) con la información del {@link GameDto}.
+     * Maneja la lógica de actualización basada en si el DTO entrante se considera "completo"
+     * ({@code gameDto.isFullDetails()}) o parcial.
+     *
+     * @param gameDto El DTO que contiene la información del juego.
+     * @param prospectiveParentGameEntity El juego padre prospectivo, si este juego es un DLC/expansión. Puede ser {@code null}.
+     * @return La entidad {@link Game} (existente actualizada o nueva creada) lista para procesamiento adicional de relaciones.
+     */
     private Game findOrCreateAndUpdateBaseGame(GameDto gameDto, Game prospectiveParentGameEntity) {
-        // Buscar si el juego ya existe en la base de datos por su IGDB ID.
         Optional<Game> existingGameOptional = gameRepository.findByIgdbId(gameDto.getIgdbId());
 
         Game gameToProcess; // Esta será la entidad que se devolverá, ya sea existente o nueva.
 
         if (existingGameOptional.isPresent()) {
-            // El juego ya existe, así que lo vamos a actualizar.
             Game existingGame = existingGameOptional.get();
             logger.debug("Juego existente IGDB ID: {}. Actualizando. isFullDetails DTO: {}, isFullDetails Entidad: {}",
                     gameDto.getIgdbId(), gameDto.isFullDetails(), existingGame.isFullDetails());
 
             if (gameDto.isFullDetails()) {
-                // El DTO entrante se considera completo, por lo que aplicamos una actualización completa
-                // de los campos básicos y las listas de elementos embebidos usando el mapper.
                 logger.debug("GameDto (ID: {}) es completo. Actualización completa.", gameDto.getIgdbId());
                 gameMapper.updateFromDto(gameDto, existingGame); // MapStruct actualiza 'existingGame' en el sitio.
 
                 // Si la entidad existente no estaba marcada como completa, y el DTO sí lo está,
                 // actualizamos la marca en la entidad.
                 if (!existingGame.isFullDetails()) {
-                    // Asumiendo que tu entidad Game tiene un campo boolean isFullDetails y su setter
-                     existingGame.setFullDetails(true); // DESCOMENTA SI TIENES ESTE CAMPO Y SETTER EN LA ENTIDAD GAME
-                    logger.debug("Entidad Game (ID: {}) marcada como isFullDetails = true (si el campo existe).", existingGame.getIgdbId());
+                    existingGame.setFullDetails(true);
+                    logger.debug("Entidad Game (ID: {}) marcada como isFullDetails = true.", existingGame.getIgdbId());
                 }
             } else {
-                // El DTO entrante es parcial (isFullDetails = false), así que solo actualizamos
-                // los campos básicos definidos en updateSelectiveFields.
-                // No cambiamos el estado de existingGame.isFullDetails basado en un DTO parcial.
                 logger.debug("GameDto (ID: {}) es parcial. Actualización selectiva.", gameDto.getIgdbId());
                 updateSelectiveFields(gameDto, existingGame);
             }
-
-            // Establecer el estado de lanzamiento (ReleaseStatus) basado en el DTO.
             setFirstReleaseStatusFromDto(gameDto, existingGame);
-
-            // Asignar el 'prospectiveParentGameEntity' si es necesario:
-            // - Si se proporcionó un 'prospectiveParentGameEntity'.
-            // - Y el juego existente no tiene un padre O su padre actual es diferente al prospectivo.
             if (prospectiveParentGameEntity != null &&
                     (existingGame.getParentGame() == null ||
                             !existingGame.getParentGame().getIgdbId().equals(prospectiveParentGameEntity.getIgdbId()))) {
@@ -241,9 +279,7 @@ public class GameService {
                         prospectiveParentGameEntity.getIgdbId(), existingGame.getIgdbId());
             }
             gameToProcess = existingGame;
-
         } else {
-            // El juego no existe en la base de datos, así que creamos uno nuevo.
             logger.debug("Creando nuevo juego para IGDB ID: {}", gameDto.getIgdbId());
             Game newGame = gameMapper.toEntity(gameDto); // Mapea los campos básicos del DTO a una nueva entidad.
 
@@ -256,8 +292,6 @@ public class GameService {
 
             // Establecer el estado de lanzamiento (ReleaseStatus) para el nuevo juego.
             setFirstReleaseStatusFromDto(gameDto, newGame);
-
-            // Si se proporcionó un 'prospectiveParentGameEntity', asignarlo al nuevo juego.
             if (prospectiveParentGameEntity != null) {
                 newGame.setParentGame(prospectiveParentGameEntity);
                 logger.debug("Asignado prospectiveParentGameEntity (ID: {}) al nuevo juego (ID: {}).",
@@ -269,14 +303,22 @@ public class GameService {
         return gameToProcess; // Devolver la entidad (existente actualizada o nueva).
     }
 
+    /**
+     * Procesa y establece las relaciones jerárquicas de un juego, como su juego padre
+     * (si es un DLC o expansión) y su juego versión padre (si es una edición diferente del mismo juego base).
+     * Llama recursivamente a {@link #processSingleGameDto(GameDto, Game)} para asegurar que las entidades
+     * padre/versión existan en la base de datos antes de establecer la relación.
+     *
+     * @param gameDto El DTO del juego actual, que puede contener información sobre sus padres.
+     * @param managedGameEntity La entidad {@link Game} gestionada para el juego actual.
+     */
     private void processParentAndVersionRelationships(GameDto gameDto, Game managedGameEntity) {
-        // Procesar Parent Game (si no se asignó como 'prospectiveParentGameEntity')
         if (gameDto.getParentGameInfo() != null && managedGameEntity.getParentGame() == null) {
             DlcInfoDto parentDto = gameDto.getParentGameInfo();
             if (parentDto.getIgdbId() != null && !parentDto.getIgdbId().equals(managedGameEntity.getIgdbId())) {
                 GameDto parentAsGameDto = convertDlcInfoToGameDto(parentDto);
                 if (parentAsGameDto != null) {
-                    Game parentEntity = processSingleGameDto(parentAsGameDto, null); // El padre no tiene un padre prospectivo en este contexto
+                    Game parentEntity = processSingleGameDto(parentAsGameDto, null);
                     if (parentEntity != null) {
                         managedGameEntity.setParentGame(parentEntity);
                     }
@@ -284,7 +326,6 @@ public class GameService {
             }
         }
 
-        // Procesar Version Parent
         if (gameDto.getVersionParent() != null && managedGameEntity.getVersionParentGame() == null) {
             DlcInfoDto vpDto = gameDto.getVersionParent();
             if (vpDto.getIgdbId() != null && !vpDto.getIgdbId().equals(managedGameEntity.getIgdbId())) {
@@ -299,14 +340,27 @@ public class GameService {
         }
     }
 
+    /**
+     * Procesa las listas de juegos hijos (DLCs, expansiones, bundles) especificadas en el {@link GameDto}.
+     * Para cada juego hijo, lo procesa (crea o actualiza) y establece la relación con el juego padre.
+     *
+     * @param gameDto El DTO del juego padre.
+     * @param parentGame La entidad {@link Game} del juego padre.
+     */
     private void processChildGameLists(GameDto gameDto, Game parentGame) {
         processChildGameList(gameDto.getDlcs(), parentGame, "DLCs");
         processChildGameList(gameDto.getExpansions(), parentGame, "Expansions");
         processChildGameList(gameDto.getBundles(), parentGame, "Bundles");
     }
 
+    /**
+     * Procesa las listas de juegos relacionados (remakes, remasters, juegos similares) especificadas en el {@link GameDto}.
+     * Para cada juego relacionado, lo procesa (crea o actualiza) y establece la relación ManyToMany con el juego principal.
+     *
+     * @param gameDto El DTO del juego principal.
+     * @param mainGame La entidad {@link Game} del juego principal.
+     */
     private void processRelatedGameLists(GameDto gameDto, Game mainGame) {
-        // Remakes
         if (gameDto.getRemakes() != null) {
             updateRelatedGameCollection(
                     gameDto.getRemakes().stream()
@@ -318,8 +372,6 @@ public class GameService {
                     "Remakes"
             );
         }
-
-        // Remasters
         if (gameDto.getRemasters() != null) {
             updateRelatedGameCollection(
                     gameDto.getRemasters().stream()
@@ -331,12 +383,10 @@ public class GameService {
                     "Remasters"
             );
         }
-
-        // Similar Games
         if (gameDto.getSimilarGames() != null) {
             updateRelatedGameCollection(
                     gameDto.getSimilarGames().stream()
-                            .map(this::convertSimilarGameInfoToGameDto) // Usa el conversor adecuado
+                            .map(this::convertSimilarGameInfoToGameDto)
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList()),
                     mainGame,
@@ -346,6 +396,16 @@ public class GameService {
         }
     }
 
+    /**
+     * Método de utilidad para actualizar una colección de juegos relacionados (ej. remakes, remasters, juegos similares).
+     * Compara la colección existente en la entidad con la nueva colección derivada del DTO y aplica los cambios
+     * necesarios (añadir, eliminar) para sincronizarlas.
+     *
+     * @param relatedGameDtos Lista de DTOs de los juegos relacionados.
+     * @param mainGame La entidad {@link Game} principal.
+     * @param existingRelatedCollection La colección {@link Set} existente de juegos relacionados en la entidad principal.
+     * @param relationName Nombre descriptivo de la relación (para logging).
+     */
     // Método helper para actualizar colecciones de juegos relacionados (remakes, remasters, similar)
     private void updateRelatedGameCollection(List<GameDto> relatedGameDtos, Game mainGame, Set<Game> existingRelatedCollection, String relationName) {
         logger.debug("Procesando lista de {} para el juego principal ID: {}", relationName, mainGame.getIgdbId());
@@ -353,16 +413,12 @@ public class GameService {
 
         for (GameDto relatedDto : relatedGameDtos) {
             if (relatedDto.getIgdbId() != null && !relatedDto.getIgdbId().equals(mainGame.getIgdbId())) {
-                Game relatedEntity = processSingleGameDto(relatedDto, null); // Procesar como juego independiente
+                Game relatedEntity = processSingleGameDto(relatedDto, null);
                 if (relatedEntity != null) {
                     newRelatedEntities.add(relatedEntity);
                 }
             }
         }
-
-        // Compara y actualiza la colección solo si hay cambios
-        // Esto es importante para evitar operaciones innecesarias de base de datos
-        // y para que Hibernate maneje correctamente las relaciones ManyToMany.
         if (!existingRelatedCollection.equals(newRelatedEntities)) {
             logger.debug("Colección de '{}' para el juego {} ha cambiado. Actualizando.", relationName, mainGame.getIgdbId());
             existingRelatedCollection.clear();
@@ -370,7 +426,13 @@ public class GameService {
         }
     }
 
-
+    /**
+     * Inicializa explícitamente las colecciones cargadas de forma perezosa (LAZY) de una entidad {@link Game}.
+     * Esto es útil para asegurar que todas las colecciones necesarias estén disponibles
+     * después de que la entidad se haya desvinculado de la sesión de Hibernate (por ejemplo, antes de devolverla desde el servicio).
+     *
+     * @param game La entidad {@link Game} cuyas colecciones se inicializarán. Si es {@code null}, el método no hace nada.
+     */
     private void initializeLazyCollections(Game game) {
         if (game == null) return;
         logger.debug("Inicializando colecciones LAZY para Game ID: {} antes de devolver.", game.getIgdbId());
@@ -393,6 +455,16 @@ public class GameService {
         if (game.getVideos() != null) Hibernate.initialize(game.getVideos());
     }
 
+    /**
+     * Actualiza selectivamente los campos de una entidad {@link Game} con la información de un {@link GameDto}.
+     * Este método se utiliza cuando el DTO entrante es parcial ({@code gameDto.isFullDetails() == false}),
+     * actualizando solo los campos básicos y las colecciones de elementos embebidos directos
+     * (artworks, screenshots, videos, websites) si el DTO los proporciona y no están vacíos.
+     * No modifica relaciones ManyToMany complejas ni el estado {@code isFullDetails} de la entidad.
+     *
+     * @param dto El {@link GameDto} con los datos de actualización.
+     * @param entity La entidad {@link Game} a actualizar.
+     */
     private void updateSelectiveFields(GameDto dto, Game entity) {
         if (dto.getName() != null) entity.setName(dto.getName());
         if (dto.getSlug() != null) entity.setSlug(dto.getSlug());
@@ -433,6 +505,15 @@ public class GameService {
         }
     }
 
+    /**
+     * Establece el campo {@code firstReleaseStatus} de una entidad {@link Game}
+     * basándose en el {@code gameStatus.id} del {@link GameDto}.
+     * Si el DTO no proporciona un estado o si el DTO es completo pero no tiene estado,
+     * se establece como {@link ReleaseStatus#UNKNOWN}.
+     *
+     * @param gameDto El DTO del juego.
+     * @param gameEntity La entidad del juego a modificar.
+     */
     private void setFirstReleaseStatusFromDto(GameDto gameDto, Game gameEntity) {
         if (gameDto.getGameStatus() != null && gameDto.getGameStatus().getId() != null) {
             Integer statusId = gameDto.getGameStatus().getId();
@@ -441,7 +522,7 @@ public class GameService {
                 gameEntity.setFirstReleaseStatus(statusEnum);
                 logger.debug("Establecido firstReleaseStatus: {} (IGDB game_status.id: {}) para IGDB ID {}", statusEnum, statusId, gameDto.getIgdbId());
             }
-            gameDto.setFirstReleaseStatus(statusEnum);
+            gameDto.setFirstReleaseStatus(statusEnum); // Asegura que el DTO también refleje el enum
         } else if (gameEntity.getFirstReleaseStatus() == null || (gameDto.isFullDetails() && gameDto.getGameStatus() == null)) {
             if (gameEntity.getFirstReleaseStatus() != ReleaseStatus.UNKNOWN) {
                 gameEntity.setFirstReleaseStatus(ReleaseStatus.UNKNOWN);
@@ -451,6 +532,15 @@ public class GameService {
         }
     }
 
+    /**
+     * Procesa una lista de DTOs de juegos hijos (como DLCs, expansiones) y los asocia
+     * con una entidad de juego padre.
+     * Llama recursivamente a {@link #processSingleGameDto(GameDto, Game)} para cada hijo.
+     *
+     * @param dlcInfoList Lista de {@link DlcInfoDto} representando los juegos hijos.
+     * @param parentGame La entidad {@link Game} del juego padre.
+     * @param listType Nombre descriptivo del tipo de lista de hijos (para logging).
+     */
     private void processChildGameList(List<DlcInfoDto> dlcInfoList, Game parentGame, String listType) {
         if (dlcInfoList != null && parentGame != null) {
             logger.debug("Procesando lista de {} para el juego padre ID: {}", listType, parentGame.getIgdbId());
@@ -458,7 +548,7 @@ public class GameService {
                 if (dlcInfo != null && dlcInfo.getIgdbId() != null && !dlcInfo.getIgdbId().equals(parentGame.getIgdbId())) {
                     GameDto childGameDto = convertDlcInfoToGameDto(dlcInfo);
                     if (childGameDto != null) {
-                        processSingleGameDto(childGameDto, parentGame);
+                        processSingleGameDto(childGameDto, parentGame); // Pasa el juego padre prospectivo
                     }
                 }
             });
@@ -492,6 +582,15 @@ public class GameService {
         }
     }
 
+    /**
+     * Convierte un {@link DlcInfoDto} (información resumida de un juego relacionado)
+     * a un {@link GameDto} más completo, marcándolo como parcial ({@code isFullDetails = false}).
+     * Inicializa las colecciones vacías en el {@code GameDto}.
+     *
+     * @param dlcInfo El {@link DlcInfoDto} a convertir.
+     * @return Un {@link GameDto} o {@code null} si el {@code dlcInfo} es inválido.
+     */
+
     private GameDto convertDlcInfoToGameDto(DlcInfoDto dlcInfo) {
         if (dlcInfo == null || dlcInfo.getIgdbId() == null) return null;
         GameDto gameDto = new GameDto();
@@ -502,10 +601,19 @@ public class GameService {
         gameDto.setGameType(dlcInfo.getGameType());
         gameDto.setSlug(dlcInfo.getSlug());
         initializeEmptyCollections(gameDto);
-        gameDto.setFullDetails(false);
+        gameDto.setFullDetails(false); // Marcar como parcial ya que viene de un DTO resumido
         return gameDto;
     }
 
+    /**
+     * Convierte un {@link SimilarGameInfoDto} (información resumida de un juego similar)
+     * a un {@link GameDto} más completo, marcándolo como parcial ({@code isFullDetails = false})
+     * y estableciendo el tipo de juego por defecto a {@link GameType#GAME}.
+     * Inicializa las colecciones vacías en el {@code GameDto}.
+     *
+     * @param similarInfo El {@link SimilarGameInfoDto} a convertir.
+     * @return Un {@link GameDto} o {@code null} si el {@code similarInfo} es inválido.
+     */
     private GameDto convertSimilarGameInfoToGameDto(SimilarGameInfoDto similarInfo) {
         if (similarInfo == null || similarInfo.getIgdbId() == null) return null;
         GameDto gameDto = new GameDto();
@@ -515,14 +623,19 @@ public class GameService {
         gameDto.setSummary(similarInfo.getSummary());
         gameDto.setCover(similarInfo.getCover());
         gameDto.setTotalRating(similarInfo.getTotalRating());
-        gameDto.setGameType(GameType.GAME);
+        gameDto.setGameType(GameType.GAME); // Asumir que los juegos similares son juegos base
         initializeEmptyCollections(gameDto);
-        gameDto.setFullDetails(false);
+        gameDto.setFullDetails(false); // Marcar como parcial
         return gameDto;
     }
 
+    /**
+     * Inicializa todas las colecciones en un {@link GameDto} a listas vacías si son {@code null}.
+     * Esto previene {@link NullPointerException} al intentar añadir elementos a colecciones no inicializadas.
+     *
+     * @param gameDto El {@link GameDto} cuyas colecciones se inicializarán. Si es {@code null}, el método no hace nada.
+     */
     private void initializeEmptyCollections(GameDto gameDto) {
-        // ... (sin cambios)
         if (gameDto == null) return;
         if (gameDto.getGameModes() == null) gameDto.setGameModes(new ArrayList<>());
         if (gameDto.getGenres() == null) gameDto.setGenres(new ArrayList<>());
@@ -545,8 +658,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad GameMode existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link GameMode} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link GameModeDto} con la información del modo de juego.
+     * @return La entidad {@link GameMode} persistida, o {@code null} si el DTO es inválido.
      */
     private GameMode getOrCreateGameMode(GameModeDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -556,7 +673,7 @@ public class GameService {
                 .map(existingEntity -> {
                     if (!Objects.equals(dto.getName(), existingEntity.getName())) {
                         existingEntity.setName(dto.getName());
-                        return gameModeRepository.save(existingEntity); // Guardar si hay cambios
+                        return gameModeRepository.save(existingEntity);
                     }
                     return existingEntity;
                 })
@@ -564,8 +681,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad Genre existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link Genre} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link GenreDto} con la información del género.
+     * @return La entidad {@link Genre} persistida, o {@code null} si el DTO es inválido.
      */
     private Genre getOrCreateGenre(GenreDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -583,8 +704,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad Franchise existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link Franchise} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link FranchiseDto} con la información de la franquicia.
+     * @return La entidad {@link Franchise} persistida, o {@code null} si el DTO es inválido.
      */
     private Franchise getOrCreateFranchise(FranchiseDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -602,8 +727,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad GameEngine existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link GameEngine} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link GameEngineDto} con la información del motor de juego.
+     * @return La entidad {@link GameEngine} persistida, o {@code null} si el DTO es inválido.
      */
     private GameEngine getOrCreateGameEngine(GameEngineDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -621,8 +750,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad Keyword existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link Keyword} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link KeywordDto} con la información de la palabra clave.
+     * @return La entidad {@link Keyword} persistida, o {@code null} si el DTO es inválido.
      */
     private Keyword getOrCreateKeyword(KeywordDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -640,8 +773,12 @@ public class GameService {
     }
 
     /**
-     * Obtiene una entidad Platform existente por igdbId o crea una nueva si no existe.
-     * Actualiza campos relevantes si son diferentes.
+     * Obtiene o crea una entidad {@link Platform} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza los campos relevantes (nombre, nombre alternativo, logo) si son diferentes en el DTO.
+     *
+     * @param dto El {@link PlatformDto} con la información de la plataforma.
+     * @return La entidad {@link Platform} persistida, o {@code null} si el DTO es inválido.
      */
     private Platform getOrCreatePlatform(PlatformDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -658,13 +795,10 @@ public class GameService {
                         existingEntity.setAlternativeName(dto.getAlternativeName());
                         changed = true;
                     }
-
                     PlatformLogoDto logoDto = dto.getPlatformLogo();
                     PlatformLogo currentLogoEntity = existingEntity.getPlatformLogo();
-
                     if (logoDto != null) {
-                        // Usa la instancia inyectada de PlatformLogoMapper
-                        PlatformLogo newLogoEntity = platformLogoMapper.toEntity(logoDto); // <--- CORREGIDO AQUÍ
+                        PlatformLogo newLogoEntity = platformLogoMapper.toEntity(logoDto);
                         if (currentLogoEntity == null || !currentLogoEntity.equals(newLogoEntity)) {
                             existingEntity.setPlatformLogo(newLogoEntity);
                             changed = true;
@@ -673,38 +807,43 @@ public class GameService {
                         existingEntity.setPlatformLogo(null);
                         changed = true;
                     }
-
                     return changed ? platformRepository.save(existingEntity) : existingEntity;
                 })
                 .orElseGet(() -> {
-                    // Usa la instancia inyectada de PlatformMapper
-                    Platform newPlatform = platformMapper.toEntity(dto); // <--- CORREGIDO AQUÍ (usa la instancia de clase)
+                    Platform newPlatform = platformMapper.toEntity(dto);
                     return platformRepository.save(newPlatform);
                 });
     }
 
+    /**
+     * Procesa las colecciones ManyToMany asociadas a una entidad {@link Game}
+     * (modos de juego, géneros, franquicias, motores, palabras clave, plataformas, temas).
+     * Para cada colección en el {@link GameDto}, obtiene o crea las entidades relacionadas
+     * y actualiza la colección correspondiente en la entidad {@link Game} si ha habido cambios.
+     * Si el DTO no proporciona una colección (es {@code null}), se limpia la colección existente en la entidad.
+     *
+     * @param gameDto El DTO del juego con las colecciones a procesar.
+     * @param gameEntity La entidad {@link Game} cuyas colecciones se actualizarán.
+     */
     private void processAssociatedManyToManyCollections(GameDto gameDto, Game gameEntity) {
         logger.debug("Procesando colecciones ManyToMany para el juego completo {}", gameEntity.getIgdbId());
 
-        // GameModes
         if (gameDto.getGameModes() != null) {
             Set<GameMode> gameModesFromDto = gameDto.getGameModes().stream()
-                    .map(this::getOrCreateGameMode) // Usa el helper
+                    .map(this::getOrCreateGameMode)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getGameModes().equals(gameModesFromDto)) {
                 gameEntity.setGameModes(gameModesFromDto);
             }
-        } else { // Si el DTO viene con la colección nula, podría interpretarse como "eliminar todas"
+        } else {
             if (!gameEntity.getGameModes().isEmpty()) {
                 gameEntity.getGameModes().clear();
             }
         }
-
-        // Genres
         if (gameDto.getGenres() != null) {
             Set<Genre> genresFromDto = gameDto.getGenres().stream()
-                    .map(this::getOrCreateGenre) // Usa el helper
+                    .map(this::getOrCreateGenre)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getGenres().equals(genresFromDto)) {
@@ -715,11 +854,9 @@ public class GameService {
                 gameEntity.getGenres().clear();
             }
         }
-
-        // Franchises
         if (gameDto.getFranchises() != null) {
             Set<Franchise> franchisesFromDto = gameDto.getFranchises().stream()
-                    .map(this::getOrCreateFranchise) // Usa el helper
+                    .map(this::getOrCreateFranchise)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getFranchises().equals(franchisesFromDto)) {
@@ -730,11 +867,9 @@ public class GameService {
                 gameEntity.getFranchises().clear();
             }
         }
-
-        // GameEngines
         if (gameDto.getGameEngines() != null) {
             Set<GameEngine> gameEnginesFromDto = gameDto.getGameEngines().stream()
-                    .map(this::getOrCreateGameEngine) // Usa el helper
+                    .map(this::getOrCreateGameEngine)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getGameEngines().equals(gameEnginesFromDto)) {
@@ -745,11 +880,9 @@ public class GameService {
                 gameEntity.getGameEngines().clear();
             }
         }
-
-        // Keywords
         if (gameDto.getKeywords() != null) {
             Set<Keyword> keywordsFromDto = gameDto.getKeywords().stream()
-                    .map(this::getOrCreateKeyword) // Usa el helper
+                    .map(this::getOrCreateKeyword)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getKeywords().equals(keywordsFromDto)) {
@@ -760,11 +893,9 @@ public class GameService {
                 gameEntity.getKeywords().clear();
             }
         }
-
-        // Platforms
         if (gameDto.getPlatforms() != null) {
             Set<Platform> platformsFromDto = gameDto.getPlatforms().stream()
-                    .map(this::getOrCreatePlatform) // Usa el helper
+                    .map(this::getOrCreatePlatform)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getPlatforms().equals(platformsFromDto)) {
@@ -775,11 +906,9 @@ public class GameService {
                 gameEntity.getPlatforms().clear();
             }
         }
-
-        // Themes
         if (gameDto.getThemes() != null) {
             Set<Theme> themesFromDto = gameDto.getThemes().stream()
-                    .map(this::getOrCreateTheme) // Usa el helper
+                    .map(this::getOrCreateTheme)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toSet());
             if (!gameEntity.getThemes().equals(themesFromDto)) {
@@ -792,10 +921,13 @@ public class GameService {
         }
     }
 
-
     /**
-     * Obtiene una entidad Theme existente por igdbId o crea una nueva si no existe.
-     * Actualiza el nombre si es diferente.
+     * Obtiene o crea una entidad {@link Theme} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve. Si no, la crea, la guarda y la devuelve.
+     * Actualiza el nombre si es diferente en el DTO.
+     *
+     * @param dto El {@link ThemeDto} con la información del tema.
+     * @return La entidad {@link Theme} persistida, o {@code null} si el DTO es inválido.
      */
     private Theme getOrCreateTheme(ThemeDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
@@ -812,50 +944,61 @@ public class GameService {
                 .orElseGet(() -> themeRepository.save(themeMapper.toEntity(dto)));
     }
 
+    /**
+     * Obtiene o crea una entidad {@link Company} persistida.
+     * Si la entidad ya existe (por IGDB ID), la devuelve, actualizando su nombre si es necesario.
+     * Si no existe, la crea, la guarda y la devuelve.
+     *
+     * @param dto El {@link CompanyInfoDto} con la información de la compañía.
+     * @return La entidad {@link Company} persistida, o {@code null} si el DTO es inválido.
+     */
     private Company getOrCreateCompany(CompanyInfoDto dto) {
         if (dto == null || dto.getIgdbId() == null) {
             logger.warn("CompanyInfoDto nulo o sin IgdbId. No se puede procesar la compañía.");
             return null;
         }
-
         Optional<Company> existingCompanyOpt = companyRepository.findByIgdbId(dto.getIgdbId());
         Company companyEntity;
-
         if (existingCompanyOpt.isPresent()) {
             companyEntity = existingCompanyOpt.get();
             if (!Objects.equals(companyEntity.getName(), dto.getName())) {
                 logger.debug("Actualizando nombre de Company existente IGDB ID: {} de '{}' a '{}'",
                         dto.getIgdbId(), companyEntity.getName(), dto.getName());
                 companyEntity.setName(dto.getName());
-                return companyRepository.save(companyEntity); // Guardar si hay cambios
+                return companyRepository.save(companyEntity);
             }
         } else {
             logger.debug("Creando nueva Company para IGDB ID: {}", dto.getIgdbId());
             companyEntity = companyMapper.toEntity(dto);
-            return companyRepository.save(companyEntity); // Guardar nueva entidad
+            return companyRepository.save(companyEntity);
         }
         return companyEntity;
     }
 
-    // Helper para GameCompanyInvolvement (ya lo tenías definido o lo definimos ahora)
+    /**
+     * Obtiene o crea una entidad {@link GameCompanyInvolvement} persistida.
+     * Esta entidad representa la relación entre un juego y una compañía, incluyendo su rol.
+     * Si la relación ya existe (por {@code involvementIgdbId}), la actualiza si es necesario.
+     * Si no existe, la crea, la guarda y la devuelve.
+     *
+     * @param invDto El {@link InvolvedCompanyDto} con la información de la relación.
+     * @param gameEntity La entidad {@link Game} a la que se asocia la compañía.
+     * @param companyEntity La entidad {@link Company} involucrada.
+     * @return La entidad {@link GameCompanyInvolvement} persistida, o {@code null} si los datos de entrada son insuficientes.
+     */
     private GameCompanyInvolvement getOrCreateGameCompanyInvolvement(InvolvedCompanyDto invDto, Game gameEntity, Company companyEntity) {
         if (invDto == null || invDto.getInvolvementIgdbId() == null || companyEntity == null || gameEntity == null) {
             logger.warn("Datos insuficientes para crear o actualizar GameCompanyInvolvement. invDto: {}, gameEntity: {}, companyEntity: {}",
                     invDto, gameEntity != null ? gameEntity.getIgdbId() : "null", companyEntity != null ? companyEntity.getIgdbId() : "null");
             return null;
         }
-
         Optional<GameCompanyInvolvement> existingInvolvementOpt = gameCompanyInvolvementRepository.findByInvolvementIgdbId(invDto.getInvolvementIgdbId());
         GameCompanyInvolvement involvementEntity;
 
         if (existingInvolvementOpt.isPresent()) {
             involvementEntity = existingInvolvementOpt.get();
             logger.debug("Actualizando GameCompanyInvolvement existente IGDB ID: {}", invDto.getInvolvementIgdbId());
-
             boolean changed = false;
-            // Es importante asegurarse de que la relación 'game' sea la correcta,
-            // aunque si se busca por involvementIgdbId, el juego asociado debería ser consistente.
-            // No obstante, una comprobación no está de más si la fuente de datos pudiera ser inconsistente.
             if (!involvementEntity.getGame().getIgdbId().equals(gameEntity.getIgdbId())) {
                 logger.warn("GameCompanyInvolvement IGDB ID {} estaba asociado al juego {} pero se está procesando para el juego {}. Re-asociando.",
                         invDto.getInvolvementIgdbId(), involvementEntity.getGame().getIgdbId(), gameEntity.getIgdbId());
@@ -882,7 +1025,6 @@ public class GameService {
                 involvementEntity.setSupporting(invDto.isSupporting());
                 changed = true;
             }
-
             if (changed) {
                 return gameCompanyInvolvementRepository.save(involvementEntity);
             }
@@ -901,55 +1043,50 @@ public class GameService {
         return involvementEntity;
     }
 
+    /**
+     * Procesa la colección de compañías involucradas ({@code involved_companies}) de un {@link GameDto}.
+     * Para cada compañía en el DTO, obtiene o crea la entidad {@link Company} y luego
+     * obtiene o crea la entidad de relación {@link GameCompanyInvolvement}, asociándola al juego principal.
+     * Sincroniza la colección {@code involvedCompanies} de la entidad {@link Game} con el conjunto procesado.
+     * Si el DTO no contiene información de compañías o está vacía, se limpian las asociaciones existentes en la entidad.
+     *
+     * @param gameDto El DTO del juego.
+     * @param gameEntity La entidad {@link Game} a actualizar.
+     */
     private void processInvolvedCompanies(GameDto gameDto, Game gameEntity) {
         logger.debug("Procesando InvolvedCompanies para el juego {} (IGDB ID: {})", gameEntity.getName(), gameEntity.getIgdbId());
-
-        // Si el DTO no trae información de compañías, y la entidad sí tiene,
-        // se interpretará como que deben eliminarse todas las asociaciones existentes.
         if (gameDto.getInvolvedCompanies() == null || gameDto.getInvolvedCompanies().isEmpty()) {
             if (!gameEntity.getInvolvedCompanies().isEmpty()) {
                 logger.debug("DTO no contiene 'involved_companies' o está vacía. Limpiando {} asociaciones existentes para el juego {}.",
                         gameEntity.getInvolvedCompanies().size(), gameEntity.getIgdbId());
-                gameEntity.getInvolvedCompanies().clear(); // orphanRemoval=true en Game#involvedCompanies se encargará de borrar de la BD.
+                gameEntity.getInvolvedCompanies().clear();
             }
-            return; // No hay nada más que procesar
+            return;
         }
-
         Set<GameCompanyInvolvement> processedInvolvements = new HashSet<>();
         List<InvolvedCompanyDto> involvedCompanyDtos = gameDto.getInvolvedCompanies();
-
         for (InvolvedCompanyDto invDto : involvedCompanyDtos) {
             if (invDto == null || invDto.getInvolvementIgdbId() == null) {
                 logger.warn("Se encontró un InvolvedCompanyDto nulo o sin ID de involucramiento. Saltando.");
                 continue;
             }
-
             CompanyInfoDto companyInfoDto = invDto.getCompany();
             if (companyInfoDto == null || companyInfoDto.getIgdbId() == null) {
                 logger.warn("InvolvedCompany (ID de involucramiento: {}) tiene CompanyInfo nula o CompanyInfo.igdbId nulo. Saltando.",
                         invDto.getInvolvementIgdbId());
                 continue;
             }
-
-            // 1. Obtener o crear la entidad Company
             Company companyEntity = getOrCreateCompany(companyInfoDto);
             if (companyEntity == null) {
                 logger.warn("No se pudo obtener o crear la entidad Company para CompanyInfoDto con IGDB ID: {}. Saltando este InvolvedCompany.",
                         companyInfoDto.getIgdbId());
                 continue;
             }
-
-            // 2. Obtener o crear la entidad GameCompanyInvolvement
             GameCompanyInvolvement involvementEntity = getOrCreateGameCompanyInvolvement(invDto, gameEntity, companyEntity);
             if (involvementEntity != null) {
                 processedInvolvements.add(involvementEntity);
             }
         }
-
-        // 3. Sincronizar la colección de la entidad principal con el conjunto procesado
-        // Esto asegura que solo las asociaciones deseadas permanezcan.
-        // Hibernate, gracias a equals/hashCode en GameCompanyInvolvement y orphanRemoval=true en Game,
-        // manejará eficientemente las adiciones, actualizaciones (si 'changed' fue true en el helper) y eliminaciones.
         if (!gameEntity.getInvolvedCompanies().equals(processedInvolvements)) {
             logger.debug("Actualizando la colección 'involvedCompanies' del juego {}. Antes: {}, Después: {}.",
                     gameEntity.getIgdbId(), gameEntity.getInvolvedCompanies().size(), processedInvolvements.size());
@@ -960,20 +1097,32 @@ public class GameService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Este método es para obtener las entidades {@link Game} directamente.
+     * Incluye la inicialización de varias colecciones cargadas de forma perezosa (LAZY)
+     * para asegurar que las entidades devueltas estén razonablemente pobladas para su uso posterior,
+     * por ejemplo, al mapearlas a DTOs.
+     */
     public List<Game> getAllGamesOriginal() {
         List<Game> games = gameRepository.findAll();
-        // Inicializar colecciones necesarias para el DTO si se van a mapear fuera de la sesión
         for (Game game : games) {
             Hibernate.initialize(game.getChildGames());
             Hibernate.initialize(game.getSimilarGames());
             Hibernate.initialize(game.getRemakeVersions());
             Hibernate.initialize(game.getRemasterVersions());
             Hibernate.initialize(game.getInvolvedCompanies());
-            // ... y otras colecciones que tu GameMapper necesite para el listado general
         }
         return games;
     }
 
+    /**
+     * {@inheritDoc}
+     * Este método es para obtener la entidad {@link Game} directamente.
+     * Incluye la inicialización de todas las colecciones cargadas de forma perezosa (LAZY)
+     * usando {@code Hibernate.initialize()} para asegurar que la entidad devuelta esté
+     * completamente poblada y lista para ser utilizada, por ejemplo, al mapear a un DTO detallado.
+     */
     public Game getGameByIgdbIdOriginal(Long igdbId) {
         return gameRepository.findByIgdbId(igdbId)
                 .map(game -> {
