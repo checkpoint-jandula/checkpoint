@@ -376,20 +376,20 @@ _(Ejemplo: Casos de uso como "Registrar Usuario", "Gestionar Biblioteca", "Crear
 **Diagrama de Secuencia (Llamada a API IGDB para Búsqueda):**
 
 El siguiente diagrama ilustra el flujo para buscar un juego, donde el backend de MyCheckPoint actúa como cliente de la API de IGDB.
+```mermaid
 sequenceDiagram
-    participant Usuario as Usuario (Frontend)
-    participant Frontend as MyCheckPoint Frontend
-    participant Backend as MyCheckPoint Backend
-    participant IGDB as API de IGDB
-
-    Usuario->>Frontend: Introduce término de búsqueda (ej. "Cyberpunk 2077") y envía
-    Frontend->>Backend: Petición API (GET /api/juegos/igdb/buscar?nombre="Cyberpunk 2077")
-    Backend->>IGDB: Prepara consulta con Client-ID y Access Token (configurados en backend)
-    Backend->>IGDB: Solicita datos del juego (POST /games con query: search "Cyberpunk 2077"; fields ...; limit ...;)
-    IGDB-->>Backend: Devuelve lista de juegos coincidentes en formato JSON
-    Backend->>Backend: Procesa y mapea datos de IGDB a GameDto
-    Backend-->>Frontend: Devuelve lista de GameDto
-    Frontend-->>Usuario: Muestra resultados de la búsqueda
+participant Usuario as Usuario (Frontend)
+participant Frontend as MyCheckPoint Frontend
+participant Backend as MyCheckPoint Backend
+participant IGDB as API de IGDB
+Usuario->>Frontend: Introduce término de búsqueda (ej. "Cyberpunk 2077") y envía
+Frontend->>Backend: Petición API (GET /api/juegos/igdb/buscar?nombre="Cyberpunk 2077")
+Backend->>IGDB: Prepara consulta con Client-ID y Access Token (configurados en backend)
+Backend->>IGDB: Solicita datos del juego (POST /games con query: search "Cyberpunk 2077"; fields ...; limit ...;)
+IGDB-->>Backend: Devuelve lista de juegos coincidentes en formato JSON
+Backend->>Backend: Procesa y mapea datos de IGDB a GameDto
+Backend-->>Frontend: Devuelve lista de GameDto
+Frontend-->>Usuario: Muestra resultados de la búsqueda
 
 
 **Estructura del Proyecto (Capas):**
