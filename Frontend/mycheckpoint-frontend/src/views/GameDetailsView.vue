@@ -275,29 +275,45 @@
         <div v-show="activeTab === 'community'" class="tab-pane">
           <section 
             class="user-game-data-section section-block" 
-            v-if="authStore.isAuthenticated && gameDetail.user_game_data"
+            v-if="authStore.isAuthenticated"
           >
-            <h2>Mis Datos del Juego</h2>
-            <div class="user-data-grid">
-                <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{ formatUserGameStatus(gameDetail.user_game_data.status) }}</div>
-                <div v-if="gameDetail.user_game_data.score !== null && gameDetail.user_game_data.score !== undefined" class="data-item"><strong>Puntuación:</strong> {{ gameDetail.user_game_data.score }}/10</div>
-                <div v-if="gameDetail.user_game_data.personal_platform" class="data-item"><strong>Plataforma:</strong> {{ formatPersonalPlatform(gameDetail.user_game_data.personal_platform) }}</div>
-                <div v-if="gameDetail.user_game_data.has_possession !== null && gameDetail.user_game_data.has_possession !== undefined " class="data-item"><strong>Lo Tengo:</strong> {{ gameDetail.user_game_data.has_possession ? 'Sí' : 'No' }}</div>
-                <div v-if="gameDetail.user_game_data.start_date" class="data-item"><strong>Empezado:</strong> {{ formatDateSimple(gameDetail.user_game_data.start_date) }}</div>
-                <div v-if="gameDetail.user_game_data.end_date" class="data-item"><strong>Terminado:</strong> {{ formatDateSimple(gameDetail.user_game_data.end_date) }}</div>
-                <div v-if="gameDetail.user_game_data.story_duration_hours" class="data-item"><strong>Horas (Historia):</strong> {{ gameDetail.user_game_data.story_duration_hours }}h</div>
-                <div v-if="gameDetail.user_game_data.story_secondary_duration_hours" class="data-item"><strong>Horas (Main+Sides):</strong> {{ gameDetail.user_game_data.story_secondary_duration_hours }}h</div>
-                <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
-                <div v-if="gameDetail.user_game_data.comment" class="data-item full-width"><strong>Comentario Público:</strong><p class="user-comment">{{ gameDetail.user_game_data.comment }}</p></div>
-                <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario Privado:</strong><p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p></div>
+            <div v-if="gameDetail.user_game_data">
+              <h2>Mis Datos del Juego</h2>
+              <div class="user-data-grid">
+                  <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{ formatUserGameStatus(gameDetail.user_game_data.status) }}</div>
+                  <div v-if="gameDetail.user_game_data.score !== null && gameDetail.user_game_data.score !== undefined" class="data-item"><strong>Puntuación:</strong> {{ gameDetail.user_game_data.score }}/10</div>
+                  <div v-if="gameDetail.user_game_data.personal_platform" class="data-item"><strong>Plataforma:</strong> {{ formatPersonalPlatform(gameDetail.user_game_data.personal_platform) }}</div>
+                  <div v-if="gameDetail.user_game_data.has_possession !== null && gameDetail.user_game_data.has_possession !== undefined " class="data-item"><strong>Lo Tengo:</strong> {{ gameDetail.user_game_data.has_possession ? 'Sí' : 'No' }}</div>
+                  <div v-if="gameDetail.user_game_data.start_date" class="data-item"><strong>Empezado:</strong> {{ formatDateSimple(gameDetail.user_game_data.start_date) }}</div>
+                  <div v-if="gameDetail.user_game_data.end_date" class="data-item"><strong>Terminado:</strong> {{ formatDateSimple(gameDetail.user_game_data.end_date) }}</div>
+                  <div v-if="gameDetail.user_game_data.story_duration_hours" class="data-item"><strong>Horas (Historia):</strong> {{ gameDetail.user_game_data.story_duration_hours }}h</div>
+                  <div v-if="gameDetail.user_game_data.story_secondary_duration_hours" class="data-item"><strong>Horas (Main+Sides):</strong> {{ gameDetail.user_game_data.story_secondary_duration_hours }}h</div>
+                  <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
+                  <div v-if="gameDetail.user_game_data.comment" class="data-item full-width"><strong>Comentario Público:</strong><p class="user-comment">{{ gameDetail.user_game_data.comment }}</p></div>
+                  <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario Privado:</strong><p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p></div>
+              </div>
             </div>
+            <div v-else-if="!showLibraryForm" class="add-to-library-prompt"> <p>Este juego no está en tu biblioteca.</p>
+            </div>
+
             <div class="library-actions">
-                <p><em>(TODO: Botones para editar/eliminar de la biblioteca)</em></p>
+              <button 
+                v-if="!showLibraryForm" 
+                @click="toggleLibraryForm(true, !gameDetail.user_game_data)" 
+                class="action-button primary"
+              >
+                {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
+              </button>
+              <button 
+                v-if="!showLibraryForm && gameDetail.user_game_data" 
+                @click="handleRemoveFromLibrary" 
+                :disabled="isLoadingLibraryAction" 
+                class="action-button danger"
+              >
+                {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
+              </button>
             </div>
-          </section>
-          <div v-else-if="authStore.isAuthenticated && !gameDetail.user_game_data" class="section-block">
-            <p>Aún no tienes este juego en tu biblioteca.</p>
-            </div>
+            </section>
 
           <section class="public-comments-section section-block" v-if="gameDetail.public_comments && gameDetail.public_comments.length">
             <h2>Comentarios de la Comunidad</h2>
@@ -316,7 +332,83 @@
         </div>
       </div>
 
+    </div> <div v-if="showLibraryForm" class="modal-overlay" @click.self="toggleLibraryForm(false, false)"> <div class="modal-panel">
+        <form @submit.prevent="handleSaveToLibrary" class="library-form-modal">
+          <div class="modal-header">
+            <h3>{{ isAddingNewLibraryEntry ? 'Añadir a' : 'Editar en' }} Mi Biblioteca: {{ gameDetail?.game_info?.name }}</h3>
+            <button type="button" @click="toggleLibraryForm(false, false)" class="modal-close-button" aria-label="Cerrar">&times;</button>
+          </div>
+          
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="lib-status">Estado:</label>
+                <select id="lib-status" v-model="libraryForm.status">
+                  <option :value="null">-- Sin especificar --</option>
+                  <option v-for="opt in gameStatusOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="lib-score">Puntuación (0-10):</label>
+                <input type="number" id="lib-score" v-model.number="libraryForm.score" min="0" max="10" step="0.5" />
+              </div>
+              <div class="form-group">
+                <label for="lib-platform">Plataforma Personal:</label>
+                <select id="lib-platform" v-model="libraryForm.personal_platform">
+                  <option :value="null">-- Sin especificar --</option>
+                  <option v-for="opt in personalPlatformOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+                </select>
+              </div>
+              <div class="form-group checkbox-group">
+                <input type="checkbox" id="lib-possession" v-model="libraryForm.has_possession" />
+                <label for="lib-possession">¿Lo tengo?</label>
+              </div>
+              <div class="form-group">
+                <label for="lib-start-date">Fecha de Inicio:</label>
+                <input type="date" id="lib-start-date" v-model="libraryForm.start_date" />
+              </div>
+              <div class="form-group">
+                <label for="lib-end-date">Fecha de Fin:</label>
+                <input type="date" id="lib-end-date" v-model="libraryForm.end_date" />
+              </div>
+              <div class="form-group">
+                <label for="lib-hours-story">Horas (Historia):</label>
+                <input type="number" id="lib-hours-story" v-model.number="libraryForm.story_duration_hours" min="0" />
+              </div>
+              <div class="form-group">
+                <label for="lib-hours-sides">Horas (Main+Sides):</label>
+                <input type="number" id="lib-hours-sides" v-model.number="libraryForm.story_secondary_duration_hours" min="0" />
+              </div>
+              <div class="form-group">
+                <label for="lib-hours-completionist">Horas (Completista):</label>
+                <input type="number" id="lib-hours-completionist" v-model.number="libraryForm.completionist_duration_hours" min="0" />
+              </div>
+            </div>
+            <div class="form-group full-width-form-group">
+              <label for="lib-public-comment">Comentario Público:</label>
+              <textarea id="lib-public-comment" v-model="libraryForm.comment" rows="3"></textarea>
+            </div>
+            <div class="form-group full-width-form-group">
+              <label for="lib-private-comment">Comentario Privado:</label>
+              <textarea id="lib-private-comment" v-model="libraryForm.private_comment" rows="3"></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <div v-if="libraryActionMessage" :class="libraryActionError ? 'error-message' : 'success-message'" class="action-message modal-action-message">
+              {{ libraryActionMessage }}
+            </div>
+            <button type="button" @click="toggleLibraryForm(false, false)" class="action-button secondary" :disabled="isLoadingLibraryAction">
+              Cancelar
+            </button>
+            <button type="submit" :disabled="isLoadingLibraryAction" class="action-button primary">
+              {{ isLoadingLibraryAction ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
+    
     <div v-if="!isLoading && !gameDetail && !errorMessage" class="no-results-message">
       No se pudieron cargar los detalles del juego.
     </div>
@@ -324,10 +416,9 @@
 </template>
 
 <script setup>
-// ... (el script setup existente, incluyendo getCoverUrl, onImageError, formatTimestampToDate)
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
-import { fetchGameDetailsByIgdbId } from '@/services/apiInstances';
+import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary  } from '@/services/apiInstances';
 import { useAuthStore } from '@/stores/authStore';
 import defaultGameCoverLarge from '@/assets/default-game-cover-large.png'; // Placeholder para portada principal
 import defaultRelatedCover from '@/assets/default-related-cover.png'; // Placeholder para portadas pequeñas
@@ -611,6 +702,162 @@ const formatDateSimple = (dateString) => {
   return dateString; 
 };
 
+// --- NUEVO ESTADO para el formulario de la biblioteca ---
+const showLibraryForm = ref(false);
+const libraryForm = reactive({
+  status: null, //
+  personal_platform: null, //
+  has_possession: false, //
+  score: null, //
+  comment: '', //
+  private_comment: '', //
+  start_date: '', // (YYYY-MM-DD)
+  end_date: '', // (YYYY-MM-DD)
+  story_duration_hours: null, //
+  story_secondary_duration_hours: null, //
+  completionist_duration_hours: null, //
+});
+const isLoadingLibraryAction = ref(false);
+const libraryActionMessage = ref('');
+const libraryActionError = ref(false);
+
+// Opciones para los selectores del formulario (basadas en tus enums/DTOs)
+const gameStatusOptions = [ //
+  { value: 'PLAYING', text: 'Jugando' },
+  { value: 'PLAYING_PAUSED', text: 'Jugando (En Pausa)' },
+  { value: 'PLAYING_ENDLESS', text: 'Jugando (Sin Fin)' },
+  { value: 'COMPLETED_MAIN_STORY', text: 'Historia Principal Completada' },
+  { value: 'COMPLETED_MAIN_AND_SIDES', text: 'Principal + Secundarias Completado' },
+  { value: 'COMPLETED_100_PERCENT', text: 'Completado al 100%' },
+  { value: 'WISHLIST', text: 'En Lista de Deseos' },
+  { value: 'ARCHIVED_ABANDONED', text: 'Archivado (Abandonado)' },
+  { value: 'ARCHIVED_NOT_PLAYING', text: 'Archivado (Sin Jugar)' },
+  { value: 'ARCHIVED', text: 'Archivado (Otro)' },
+];
+const personalPlatformOptions = [ //
+  { value: 'STEAM', text: 'Steam' },
+  { value: 'EPIC_GAMES', text: 'Epic Games Store' },
+  { value: 'GOG_GALAXY', text: 'GOG Galaxy' },
+  { value: 'XBOX', text: 'Xbox' },
+  { value: 'PLAYSTATION', text: 'PlayStation' },
+  { value: 'NINTENDO', text: 'Nintendo' },
+  { value: 'BATTLE_NET', text: 'Battle.net' },
+  { value: 'EA_APP', text: 'EA App' },
+  { value: 'UBISOFT_CONNECT', text: 'Ubisoft Connect' },
+  { value: 'OTHER', text: 'Otra' },
+];
+
+
+
+// --- Lógica para Formulario de Biblioteca ---
+const toggleLibraryForm = (show, isNew = false) => {
+  showLibraryForm.value = show;
+  isAddingNewLibraryEntry.value = isNew;
+  libraryActionMessage.value = '';
+  libraryActionError.value = false;
+
+  if (show) {
+    if (!isNew && gameDetail.value?.user_game_data) {
+      const data = gameDetail.value.user_game_data;
+      Object.keys(libraryForm).forEach(key => {
+        libraryForm[key] = data[key] !== undefined && data[key] !== null ? data[key] : (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
+      });
+      libraryForm.has_possession = !!data.has_possession; // Asegurar booleano
+    } else {
+      Object.keys(libraryForm).forEach(key => {
+        libraryForm[key] = (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
+      });
+      libraryForm.has_possession = false;
+    }
+  }
+};
+
+const handleSaveToLibrary = async () => {
+  if (!igdbId.value) return;
+  isLoadingLibraryAction.value = true;
+  libraryActionMessage.value = '';
+  libraryActionError.value = false;
+
+  const dto = { ...libraryForm };
+  // Limpieza y conversión de tipos
+  ['score', 'story_duration_hours', 'story_secondary_duration_hours', 'completionist_duration_hours'].forEach(key => {
+    if (dto[key] === '' || dto[key] === null || dto[key] === undefined) dto[key] = null;
+    else dto[key] = Number(dto[key]);
+    if (isNaN(dto[key])) dto[key] = null; // Si la conversión falla, poner a null
+  });
+  if (dto.start_date === '') dto.start_date = null;
+  if (dto.end_date === '') dto.end_date = null;
+  
+  // Crear un objeto DTO limpio solo con los campos que tienen valor o son booleanos
+  const cleanDto = {};
+  let hasDataToSend = false;
+  for (const key in dto) {
+    if (dto[key] !== null && dto[key] !== undefined && dto[key] !== '') { // No enviar strings vacíos como valor, solo si el backend los espera
+      cleanDto[key] = dto[key];
+      hasDataToSend = true;
+    } else if (typeof dto[key] === 'boolean') { // Enviar booleanos siempre
+      cleanDto[key] = dto[key];
+      // hasDataToSend = true; // Un booleano por sí solo puede no ser un "cambio" si es el default
+    } else if (dto[key] === null && gameDetail.value?.user_game_data?.[key] !== undefined) {
+      // Si el campo existía y ahora es null, enviamos null para borrarlo en el backend si así se desea.
+      cleanDto[key] = null; 
+      hasDataToSend = true;
+    }
+  }
+  // Asegurar que has_possession se envíe si es el único campo
+   if (Object.keys(cleanDto).length === 0 && typeof dto.has_possession === 'boolean'){
+       cleanDto.has_possession = dto.has_possession;
+       // No marcamos hasDataToSend = true aquí necesariamente,
+       // el backend debe poder manejar un DTO solo con has_possession.
+       // O, podríamos necesitar al menos un status para crear una nueva entrada.
+   }
+    // Si es una nueva entrada y no se ha especificado nada, ¿qué enviar?
+    // Por ahora, si cleanDto está vacío, podríamos no enviar nada o enviar un DTO por defecto.
+    // Tu UserGameDataDTO tiene todos los campos como opcionales.
+
+  try {
+    console.log("Enviando a la biblioteca (add/update):", cleanDto, "para igdbId:", igdbId.value);
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), cleanDto);
+    if (gameDetail.value) {
+        gameDetail.value.user_game_data = response.data;
+    }
+    libraryActionMessage.value = '¡Juego guardado en tu biblioteca!';
+    libraryActionError.value = false;
+    showLibraryForm.value = false;
+  } catch (error) {
+    libraryActionError.value = true;
+    if (error.response) {
+      libraryActionMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo guardar el juego.'}`;
+    } else { libraryActionMessage.value = 'Error de red al guardar en la biblioteca.'; }
+  } finally {
+    isLoadingLibraryAction.value = false;
+  }
+};
+
+const handleRemoveFromLibrary = async () => {
+  if (!igdbId.value || !gameDetail.value?.user_game_data) {
+    libraryActionMessage.value = "No hay juego que eliminar."; libraryActionError.value = true; return;
+  }
+  if (!window.confirm("¿Seguro que quieres eliminar este juego de tu biblioteca?")) return;
+
+  isLoadingLibraryAction.value = true;
+  libraryActionMessage.value = ''; libraryActionError.value = false;
+  try {
+    await removeGameFromUserLibrary(Number(igdbId.value));
+    if (gameDetail.value) gameDetail.value.user_game_data = null;
+    libraryActionMessage.value = 'Juego eliminado de tu biblioteca.';
+    showLibraryForm.value = false;
+    isAddingNewLibraryEntry.value = true; // Si se elimina, el siguiente clic al botón será para "añadir"
+  } catch (error) {
+    libraryActionError.value = true;
+    if (error.response) {
+      libraryActionMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo eliminar.'}`;
+    } else { libraryActionMessage.value = 'Error de red.'; }
+  } finally {
+    isLoadingLibraryAction.value = false;
+  }
+};
+
 </script>
 
 <style scoped>
@@ -647,16 +894,22 @@ const formatDateSimple = (dateString) => {
   border-radius: 8px;
 }
 
+/* Estilo general para cada bloque de sección */
 .section-block {
   padding: 1.5rem;
-  margin-bottom: 1.5rem; /* Espacio entre bloques de la misma pestaña */
+  margin-bottom: 1.5rem; 
   background-color: var(--color-background-soft);
   border-radius: 6px;
   border: 1px solid var(--color-border);
 }
-.section-block:last-child {
+.tab-pane > .section-block:last-child { /* El último bloque dentro de una pestaña no necesita margen inferior */
   margin-bottom: 0;
 }
+/* Si un section-block es el único contenido directo de un tab-pane, no necesita margen superior tampoco */
+.tab-pane > .section-block:first-child:last-child {
+    margin-top: 0; /* O ajusta el padding del .tab-pane en su lugar */
+}
+
 
 .section-block h2 {
   font-size: 1.6rem;
@@ -666,7 +919,7 @@ const formatDateSimple = (dateString) => {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-border-hover);
 }
-.section-block h3 {
+.section-block h3 { 
   font-size: 1.3rem;
   color: var(--color-heading);
   margin-top: 0;
@@ -675,7 +928,7 @@ const formatDateSimple = (dateString) => {
 .section-block p {
   line-height: 1.7;
   color: var(--color-text);
-  white-space: pre-wrap;
+  white-space: pre-wrap; 
 }
 
 /* Cabecera Principal del Juego */
@@ -685,11 +938,14 @@ const formatDateSimple = (dateString) => {
   gap: 1.5rem;
   align-items: center; 
   text-align: center; 
-  border-bottom: 2px solid var(--color-border-hover); /* Separador más fuerte antes de pestañas */
+  border-bottom: 2px solid var(--color-border-hover); 
   padding-bottom: 1.5rem;
+  margin-bottom: 0; /* La navegación de pestañas irá justo debajo */
+  border-bottom-left-radius: 0; /* Para que se una bien con las pestañas */
+  border-bottom-right-radius: 0;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) { 
   .game-main-header {
     flex-direction: row;
     align-items: flex-start;
@@ -720,7 +976,7 @@ const formatDateSimple = (dateString) => {
 .game-title-meta h1 { font-size: 2.2rem; margin-bottom: 0.75rem; line-height: 1.2; }
 .meta-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Ajustado para más espacio */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 0.5rem 1rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
@@ -749,51 +1005,81 @@ const formatDateSimple = (dateString) => {
 /* Estilos para Pestañas */
 .tabs-navigation {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem; /* Espacio entre nav de pestañas y contenido */
-  border-bottom: 2px solid var(--color-border-hover);
-  padding: 0 1.5rem; /* Alinear con el padding de section-block */
+  gap: 0.2rem; /* Espacio pequeño entre botones de pestaña */
+  margin-bottom: 0; /* Quitar margen si el tab-content tiene su propio padding/borde superior */
+  background-color: var(--color-background-soft); /* Fondo para la barra de pestañas */
+  padding: 0.5rem 1.5rem 0 1.5rem; /* Padding para alinear con section-blocks */
+  border-bottom: 1px solid var(--color-border-hover);
+  /* Si game-main-header tiene border-radius, ajusta esto para que no se vea raro */
+  /* border-top-left-radius: 0; 
+     border-top-right-radius: 0; */
 }
 .tabs-navigation button {
   padding: 0.8rem 1.2rem;
-  font-size: 1rem;
+  font-size: 0.95rem; /* Ligeramente más pequeño */
   font-weight: 500;
   border: none;
   background-color: transparent;
   color: var(--color-text-light-2);
   cursor: pointer;
-  border-bottom: 3px solid transparent; /* Para el indicador activo */
+  border-bottom: 3px solid transparent;
   transition: color 0.2s, border-color 0.2s;
+  border-top-left-radius: 4px; /* Esquinas superiores redondeadas para los botones */
+  border-top-right-radius: 4px;
 }
 .tabs-navigation button:hover {
   color: var(--color-text);
+  background-color: var(--color-background-mute);
 }
 .tabs-navigation button.active-tab {
-  color: hsla(160, 100%, 37%, 1); /* Color activo */
+  color: hsla(160, 100%, 37%, 1);
   border-bottom-color: hsla(160, 100%, 37%, 1);
+  background-color: var(--color-background); /* Para que parezca conectada al contenido */
 }
 
-.tab-content .tab-pane {
-  /* El padding ya está en .section-block que se usa dentro de los tab-pane */
+.tab-content {
+    /* El padding y borde se manejan por los .section-block internos */
 }
-.tab-content .tab-pane > .section-block:first-child {
-    /* Podrías querer quitar el borde superior del primer section-block de una pestaña */
-    /* border-top: none; 
-       padding-top: 0; */
+.tab-pane {
+  /* Si los section-block dentro de tab-pane no deben tener su propio fondo/borde,
+     o si el tab-pane debe tener un padding general.
+     Por ahora, los section-block manejan su propio estilo. */
+}
+.tab-pane > .section-block:first-child {
+    /* border-top-left-radius: 0;
+    border-top-right-radius: 0; */
 }
 
 
 /* Sección de Datos del Usuario */
-.user-game-data-section .user-data-grid { /* (Estilos ya provistos, pueden requerir ajustes menores) */ }
-.user-game-data-section .data-item { /* ... */ }
-.user-game-data-section .data-item.full-width { /* ... */ }
-.user-game-data-section .user-comment { /* ... */ }
-.library-actions { /* ... */ }
+.user-game-data-section .user-data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.8rem 1.2rem;
+  background-color: var(--color-background); 
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+}
+.user-game-data-section .data-item { font-size: 0.95rem; }
+.user-game-data-section .data-item.full-width { grid-column: 1 / -1; }
+.user-game-data-section .user-comment {
+  margin-top: 0.2rem; padding: 0.6rem; background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border); border-radius: 4px; white-space: pre-wrap; font-size: 0.9rem;
+}
+.library-actions { text-align: center; margin-top: 1rem; margin-bottom: 0.5rem; } /* Ajustado margen inferior */
+.user-game-data-section .add-to-library-prompt { text-align: center; padding: 1rem; color: var(--color-text-light-2); }
+
 
 /* Sección de Metadatos Adicionales */
-.metadata-lists .metadata-group { margin-bottom: 1rem; }
+.metadata-lists .metadata-group { margin-bottom: 1.5rem; }
 .metadata-lists .metadata-group:last-child { margin-bottom: 0; }
-.metadata-lists h3 { font-size: 1.1rem; color: var(--color-text-light-2); margin-bottom: 0.5rem; }
+.metadata-lists h3 { 
+  font-size: 1.1rem; color: var(--color-text); 
+  margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+  padding-bottom: 0.3rem; border-bottom: 1px dashed var(--color-border);
+}
+
 
 /* Compañías Involucradas */
 .companies-list { list-style-type: none; padding-left: 0; }
@@ -801,6 +1087,7 @@ const formatDateSimple = (dateString) => {
 .company-item:last-child { border-bottom: none; }
 .company-name { font-weight: 500; }
 .company-roles { font-size: 0.85em; color: var(--color-text-light-2); margin-left: 0.5em; }
+
 
 /* Galerías (Artworks, Screenshots) */
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
@@ -811,20 +1098,31 @@ const formatDateSimple = (dateString) => {
 
 /* Vídeos */
 .videos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
-.video-item { padding: 0; }
+.video-item { /* No necesita padding si el section-block lo tiene */ }
 .video-name { font-size: 1rem; margin-bottom: 0.5rem; font-weight: 500; }
 .video-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; background: #000; }
 .video-embed-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
 /* Listas de Juegos Relacionados */
-.related-content-section .related-list { margin-bottom: 1.5rem; }
+.related-content-section .related-list { margin-bottom: 2rem; }
 .related-content-section .related-list:last-child { margin-bottom: 0; }
+.related-content-section .related-list h3 {
+  font-size: 1.2rem; color: var(--color-text);
+  margin-bottom: 0.75rem; padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
 .related-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
-.related-game-card { background-color: var(--color-background); border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.2s ease-in-out; border: 1px solid var(--color-border); }
+.related-games-grid.single-item-grid { grid-template-columns: minmax(140px, 200px); justify-content: flex-start; }
+.related-game-card {
+  background-color: var(--color-background); border-radius: 6px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.2s ease-in-out;
+  border: 1px solid var(--color-border);
+}
 .related-game-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
 .related-game-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%;}
 .related-game-cover { width: 100%; aspect-ratio: 3/4; object-fit: cover; background-color: var(--color-background-mute); }
 .related-game-name { font-size: 0.85rem; padding: 0.6rem 0.5rem; color: var(--color-text); text-align: center; flex-grow: 1; line-height: 1.3; }
+
 
 /* Sitios Web */
 .websites-list { list-style-type: none; padding-left: 0; }
@@ -832,17 +1130,83 @@ const formatDateSimple = (dateString) => {
 .website-link { color: hsla(160, 100%, 37%, 1); text-decoration: none; font-weight: 500; }
 .website-link:hover { text-decoration: underline; color: hsla(160, 100%, 30%, 1); }
 
-/* Comentarios públicos (básico) */
+/* Comentarios públicos */
 .public-comments-section .comments-list { list-style: none; padding: 0; }
 .public-comments-section .comment-item {
   background-color: var(--color-background);
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+  padding: 1rem; border-radius: 4px; margin-bottom: 1rem;
   border: 1px solid var(--color-border);
 }
 .public-comments-section .comment-author { font-weight: bold; }
 .public-comments-section .comment-date { font-size: 0.8em; color: var(--color-text-light-2); margin-left: 0.5em;}
 .public-comments-section .comment-text { margin-top: 0.5rem; white-space: pre-wrap; }
+
+/* Estilos para el Modal del formulario de biblioteca (copiados de UserSettingsView y adaptados) */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); display: flex;
+  justify-content: center; align-items: center; z-index: 1000;
+}
+.modal-panel {
+  background-color: var(--color-background-soft); padding: 1.5rem 2rem;
+  border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 90%; max-width: 700px; /* Un poco más ancho para el formulario de biblioteca */
+  max-height: 90vh; display: flex; flex-direction: column;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem; margin-bottom: 1rem;
+}
+.modal-header h3 { margin: 0; font-size: 1.3rem; color: var(--color-heading); }
+.modal-close-button {
+  background: none; border: none; font-size: 1.8rem; line-height: 1;
+  color: var(--color-text-light-2); cursor: pointer;
+}
+.modal-close-button:hover { color: var(--color-text); }
+.modal-body { overflow-y: auto; flex-grow: 1; padding-right: 0.5rem; /* Espacio para scrollbar */ }
+
+.library-form-modal .form-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Reducido minmax */
+  gap: 0.8rem 1rem;
+}
+.library-form-modal .form-group { display: flex; flex-direction: column; }
+.library-form-modal .form-group label { margin-bottom: 0.3rem; font-size: 0.85rem; color: var(--color-text-light-2); }
+.library-form-modal .form-group input,
+.library-form-modal .form-group select,
+.library-form-modal .form-group textarea {
+  padding: 0.6rem; border: 1px solid var(--color-border); border-radius: 4px;
+  background-color: var(--color-background); color: var(--color-text); font-size: 0.9rem;
+}
+.library-form-modal .checkbox-group { flex-direction: row; align-items: center; }
+.library-form-modal .checkbox-group label { margin-bottom: 0; margin-left: 0.4rem; font-size: 0.9rem; }
+.library-form-modal .full-width-form-group { grid-column: 1 / -1; }
+
+.modal-footer {
+  margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border);
+  display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;
+}
+.modal-footer .action-message { margin: 0; padding: 0; flex-grow: 1; text-align: left; font-size: 0.9em; }
+.modal-footer .action-button { margin-left: 0.5rem; }
+
+.action-button {
+  padding: 0.6em 1.2em; font-size: 0.95rem; border-radius: 4px;
+  cursor: pointer; transition: background-color 0.2s, color 0.2s;
+  border: 1px solid transparent;
+}
+.action-button.primary {
+  background-color: hsla(160, 100%, 37%, 1); color: white;
+  border-color: hsla(160, 100%, 37%, 1);
+}
+.action-button.primary:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); }
+.action-button.secondary {
+  background-color: var(--color-background-mute); color: var(--color-text);
+  border-color: var(--color-border);
+}
+.action-button.secondary:hover:not(:disabled) { background-color: var(--color-border); }
+.action-button.danger {
+  background-color: #d9534f; color: white; border-color: #d43f3a;
+}
+.action-button.danger:hover:not(:disabled) { background-color: #c9302c; }
+.action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 </style>

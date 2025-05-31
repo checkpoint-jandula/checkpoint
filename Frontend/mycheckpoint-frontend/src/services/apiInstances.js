@@ -86,6 +86,14 @@ export const fetchGameDetailsByIgdbId = (igdbId) => {
   return userGameLibraryApi.getGameDetails(igdbId); //
 };
 
+export const addOrUpdateGameInUserLibrary = (igdbId, userGameDataDTO) => {
+  return userGameLibraryApi.addOrUpdateGameInMyLibrary(igdbId, userGameDataDTO); //
+};
+
+export const removeGameFromUserLibrary = (igdbId) => { // Usado en GameDetailsView
+    return userGameLibraryApi.removeGameFromMyLibrary(igdbId); //
+};
+
 // ... y así sucesivamente para los otros controladores y sus métodos.
 // Puedes optar por exportar las instancias completas si prefieres:
 // export { authApi, usersApi, gamesApi, /* ... */ };
