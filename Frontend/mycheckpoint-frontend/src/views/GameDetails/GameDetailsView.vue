@@ -418,8 +418,8 @@
 <script setup>
 import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
-import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary  } from '@/services/apiInstances';
-import { useAuthStore } from '@/stores/authStore';
+import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary  } from '@/services/apiInstances.js';
+import { useAuthStore } from '@/stores/authStore.js';
 import defaultGameCoverLarge from '@/assets/default-game-cover-large.png'; // Placeholder para portada principal
 import defaultRelatedCover from '@/assets/default-related-cover.png'; // Placeholder para portadas pequeñas
 

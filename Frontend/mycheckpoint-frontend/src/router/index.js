@@ -9,7 +9,7 @@ import FriendsPageView from '../views/FriendsPageView.vue';
 import RequestPasswordResetView from '../views/RequestPasswordResetView.vue';
 import ResetPasswordView from '../views/ResetPasswordView.vue';
 import SearchGamesView from '../views/SearchGamesView.vue';
-import GameDetailsView from '../views/GameDetailsView.vue';
+import GameDetailsView from '../views/GameDetails/GameDetailsView.vue';
 
 // Vistas para las listas/tiers públicos y búsqueda de usuarios
 import ViewPublicGameListsView from '../views/ViewPublicGameListsView.vue'; // Crear este placeholder
