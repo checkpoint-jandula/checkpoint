@@ -42,6 +42,14 @@ public interface UserService {
     Optional<UserDTO> getUserByPublicId(UUID publicId);
 
     /**
+     * Obtiene un usuario por su ID público (UUID) como un DTO de resultado de búsqueda.
+     *
+     * @param publicId El ID público del usuario.
+     * @return Un {@link Optional} que contiene el {@link UserSearchResultDTO} si se encuentra, o vacío si no.
+     */
+    Optional<UserSearchResultDTO> getUserByPublicIdAsSearchResult(UUID publicId);
+
+    /**
      * Obtiene un usuario por su dirección de correo electrónico.
      *
      * @param email El email del usuario.
