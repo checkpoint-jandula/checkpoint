@@ -1,0 +1,326 @@
+@startuml
+!theme sketchy-outline
+
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Fira Code
+skinparam roundcorner 20
+hide emptymembers
+
+package "mp.tfg.mycheckpoint.entity" {
+
+  class User {
+    - Long id
+    - UUID publicId
+    - String nombreUsuario
+    - String email
+    - String contraseña
+    - boolean emailVerified
+    - OffsetDateTime fechaRegistro
+    - TemaEnum tema
+    - String fotoPerfil
+    - Boolean notificaciones
+    - VisibilidadEnum visibilidadPerfil
+    - OffsetDateTime fechaCreacion
+    - OffsetDateTime fechaModificacion
+    - OffsetDateTime fechaEliminacion
+  }
+
+  class Friendship {
+    - Long internalId
+    - FriendshipStatus status
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    --
+    + User requester
+    + User receiver
+  }
+
+  class GameList {
+    - Long internalId
+    - UUID publicId
+    - String name
+    - String description
+    - boolean isPublic
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    --
+    + User owner
+    + Set<UserGame> userGames
+  }
+
+  class PasswordResetToken {
+    - Long id
+    - String token
+    - OffsetDateTime expiryDate
+    - boolean used
+    --
+    + User user
+  }
+
+  class VerificationToken {
+    - Long id
+    - String token
+    - OffsetDateTime expiryDate
+    - boolean used
+    --
+    + User user
+  }
+
+  class UserGame {
+    - Long internalId
+    - UserGameStatus status
+    - UserGamePersonalPlatform personalPlatform
+    - Boolean hasPossession
+    - Float score
+    - String comment
+    - String privateComment
+    - LocalDate startDate
+    - LocalDate endDate
+    - Float storyDurationHours
+    - Float storySecondaryDurationHours
+    - Float completionistDurationHours
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    - OffsetDateTime deletedAt
+    --
+    + User user
+    + Game game
+  }
+
+  class TierList {
+    - Long internalId
+    - UUID publicId
+    - String name
+    - String description
+    - TierListType type
+    - boolean isPublic
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    --
+    + User owner
+    + GameList sourceGameList
+    + List<TierSection> sections
+  }
+
+  class TierSection {
+    - Long internalId
+    - String name
+    - int sectionOrder
+    - boolean isDefaultUnclassified
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    --
+    + TierList tierList
+    + List<TierListItem> items
+  }
+
+  class TierListItem {
+    - Long internalId
+    - int itemOrder
+    - OffsetDateTime createdAt
+    - OffsetDateTime updatedAt
+    --
+    + TierSection tierSection
+    + UserGame userGame
+  }
+}
+
+package "mp.tfg.mycheckpoint.entity.games" {
+
+  class Game {
+    - Long internalId
+    - Long igdbId
+    - String name
+    - String slug
+    - Double totalRating
+    - Integer totalRatingCount
+    - String summary (TEXT)
+    - String storyline (TEXT)
+    - boolean isFullDetails
+    - GameType gameType
+    - Instant firstReleaseDate
+    - ReleaseStatus firstReleaseStatus
+    --
+    + Cover cover (Embedded)
+    + Game parentGame
+    + Set<Game> childGames
+    + Game versionParentGame
+    + Set<Game> remakeVersions
+    + Set<Game> remasterVersions
+    + List<Artwork> artworks (ElementCollection)
+    + List<Screenshot> screenshots (ElementCollection)
+    + List<Website> websites (ElementCollection)
+    + List<Video> videos (ElementCollection)
+    + Set<GameMode> gameModes
+    + Set<Genre> genres
+    + Set<Franchise> franchises
+    + Set<GameEngine> gameEngines
+    + Set<Keyword> keywords
+    + Set<Platform> platforms
+    + Set<Theme> themes
+    + Set<Game> similarGames
+    + Set<GameCompanyInvolvement> involvedCompanies
+  }
+
+  class Company {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<GameCompanyInvolvement> involvements
+  }
+
+  class GameCompanyInvolvement {
+    - Long internalId
+    - Long involvementIgdbId
+    - boolean developer
+    - boolean porting
+    - boolean publisher
+    - boolean supporting
+    --
+    + Game game
+    + Company company
+  }
+
+  class Franchise {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  class GameEngine {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  class GameMode {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  class Genre {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  class Keyword {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  class Platform {
+    - Long internalId
+    - Long igdbId
+    - String alternativeName
+    - String name
+    --
+    + PlatformLogo platformLogo (Embedded)
+    + Set<Game> games
+  }
+
+  class Theme {
+    - Long internalId
+    - Long igdbId
+    - String name
+    --
+    + Set<Game> games
+  }
+
+  'Embeddable classes (represented as distinct classes for diagram clarity)
+  class Cover <<Embeddable>> {
+    - Long igdbId
+    - String url
+  }
+
+  class Artwork <<Embeddable>> {
+    - Long igdbId
+    - String url
+  }
+
+  class Screenshot <<Embeddable>> {
+    - Long igdbId
+    - String url
+  }
+
+  class Website <<Embeddable>> {
+    - Long igdbId
+    - String url
+  }
+
+  class Video <<Embeddable>> {
+    - Long igdbId
+    - String name
+    - String videoId
+  }
+
+  class PlatformLogo <<Embeddable>> {
+    - Long igdbId
+    - String url
+  }
+}
+
+' --- Relationships for non-game entities ---
+User "1" -- "0..*" Friendship : "requester"
+User "1" -- "0..*" Friendship : "receiver"
+User "1" -- "0..*" GameList : "owner"
+User "1" -- "0..1" PasswordResetToken : "user"
+User "1" -- "0..1" VerificationToken : "user"
+User "1" -- "0..*" UserGame : "user"
+User "1" -- "0..*" TierList : "owner"
+
+GameList "1" -- "0..*" UserGame : "userGames (ManyToMany)"
+
+TierList "1" -- "0..*" TierSection : "sections"
+TierList "0..1" -- "1" GameList : "sourceGameList (nullable)"
+
+TierSection "1" -- "0..*" TierListItem : "items"
+TierSection "1" -- "1" TierList : "tierList"
+
+TierListItem "1" -- "1" TierSection : "tierSection"
+TierListItem "1" -- "1" UserGame : "userGame"
+
+
+' --- Relationships for game entities ---
+Game "1" -- "0..*" UserGame : "game"
+
+Game "1" --o Cover : "cover (Embedded)"
+Game "1" --o Artwork : "artworks (ElementCollection)"
+Game "1" --o Screenshot : "screenshots (ElementCollection)"
+Game "1" --o Website : "websites (ElementCollection)"
+Game "1" --o Video : "videos (ElementCollection)"
+
+Game "0..1" -- "0..*" Game : "parentGame <> childGames (OneToMany)"
+Game "0..1" -- "0..*" Game : "versionParentGame <> (not explicitly mapped)"
+Game "0..*" -- "0..*" Game : "remakeVersions (ManyToMany)"
+Game "0..*" -- "0..*" Game : "remasterVersions (ManyToMany)"
+Game "0..*" -- "0..*" Game : "similarGames (ManyToMany)"
+
+
+Game "0..*" -- "0..*" GameMode : "gameModes (ManyToMany)"
+Game "0..*" -- "0..*" Genre : "genres (ManyToMany)"
+Game "0..*" -- "0..*" Franchise : "franchises (ManyToMany)"
+Game "0..*" -- "0..*" GameEngine : "gameEngines (ManyToMany)"
+Game "0..*" -- "0..*" Keyword : "keywords (ManyToMany)"
+Game "0..*" -- "0..*" Platform : "platforms (ManyToMany)"
+Game "0..*" -- "0..*" Theme : "themes (ManyToMany)"
+
+Game "1" -- "0..*" GameCompanyInvolvement : "game"
+Company "1" -- "0..*" GameCompanyInvolvement : "company"
+
+Platform "1" --o PlatformLogo : "platformLogo (Embedded)"
+
+@enduml
