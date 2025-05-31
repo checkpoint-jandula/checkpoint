@@ -89,6 +89,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").permitAll() // Registro de usuario
                         .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/public/**").permitAll() // Perfiles públicos de usuario
+                        .requestMatchers(HttpMethod.GET, "/api/v1/usuarios/public/summary/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll() // Documentación Swagger/OpenAPI
                         .requestMatchers(HttpMethod.GET,"/api/v1/auth/confirm-account").permitAll() // Confirmación de cuenta
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll() // Olvido de contraseña

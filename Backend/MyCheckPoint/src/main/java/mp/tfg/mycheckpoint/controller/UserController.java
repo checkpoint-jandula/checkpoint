@@ -151,6 +151,43 @@ public class UserController {
     }
 
     /**
+     * Obtiene un usuario por su ID público (UUID) como un DTO de resultado de búsqueda.
+     * Este endpoint es público y no requiere autenticación.
+     *
+     * @param publicId El ID público (UUID) del usuario a obtener.
+     * @return ResponseEntity con un {@link UserSearchResultDTO} si se encuentra el usuario y el código HTTP 200 OK.
+     * @throws ResourceNotFoundException si no se encuentra un usuario con el ID público proporcionado.
+     */
+
+    @GetMapping("/public/summary/{publicId}")
+    @Operation(summary = "Obtener un resumen de usuario por su ID público",
+            description = "Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.",
+            operationId = "getUsuarioSummaryByPublicId")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Resumen de usuario encontrado y devuelto exitosamente.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserSearchResultDTO.class))),
+            @ApiResponse(responseCode = "404", description = "No encontrado. No existe ningún usuario con el ID público proporcionado.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<UserSearchResultDTO> getUsuarioSummaryByPublicId(
+            @Parameter(name = "publicId",
+                    description = "ID público (UUID) del usuario a obtener.",
+                    required = true,
+                    in = ParameterIn.PATH,
+                    example = "123e4567-e89b-12d3-a456-426614174000",
+                    schema = @Schema(type = "string", format = "uuid"))
+            @PathVariable UUID publicId) {
+        return userService.getUserByPublicIdAsSearchResult(publicId)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario (resumen) no encontrado con Public ID: " + publicId));
+    }
+
+    /**
      * Obtiene los datos del perfil del usuario actualmente autenticado.
      * Requiere un token JWT válido en la cabecera de autorización.
      *

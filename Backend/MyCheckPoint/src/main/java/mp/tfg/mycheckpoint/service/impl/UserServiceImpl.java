@@ -168,6 +168,19 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Obtiene un usuario por su ID público (UUID) y lo mapea a un {@link UserSearchResultDTO}.
+
+     * @param publicId El ID público (UUID) del usuario que se desea obtener.
+     * @return Un {@link Optional} que contiene el {@link UserSearchResultDTO} si el usuario
+     * fue encontrado y mapeado exitosamente; de lo contrario, un {@link Optional} vacío.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserSearchResultDTO> getUserByPublicIdAsSearchResult(UUID publicId) {
+        return userRepository.findByPublicId(publicId).map(userMapper::toSearchResultDto);
+    }
+
+    /**
      * Obtiene un usuario por su dirección de correo electrónico.
      *
      * @param email El correo electrónico del usuario a buscar.
