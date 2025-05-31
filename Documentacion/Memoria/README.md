@@ -390,7 +390,7 @@ IGDB-->>Backend: Devuelve lista de juegos coincidentes en formato JSON
 Backend->>Backend: Procesa y mapea datos de IGDB a GameDto
 Backend-->>Frontend: Devuelve lista de GameDto
 Frontend-->>Usuario: Muestra resultados de la búsqueda
-
+````
 
 **Estructura del Proyecto (Capas):**
 
