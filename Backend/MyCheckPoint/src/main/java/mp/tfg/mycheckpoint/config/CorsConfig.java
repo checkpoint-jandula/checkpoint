@@ -23,20 +23,15 @@ public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
-            /**
-             * Configura los mapeos CORS específicos en el registro proporcionado.
-             *
-             * @param registry El {@link CorsRegistry} donde se añaden las configuraciones CORS.
-             */
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/v1/**") // Aplica a todos tus endpoints bajo /api/v1
+                registry.addMapping("/api/v1/") // Aplica a todos tus endpoints bajo /api/v1
                         .allowedOrigins("http://localhost:5173") // URL de tu frontend Vite
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
                         .allowedHeaders("*") // Cabeceras permitidas
                         .allowCredentials(true); // Si usas cookies o autenticación basada en sesión
 
-                registry.addMapping("/api/juegos/")
+                registry.addMapping("/api/juegos/") // <--- AÑADIR ESTO
                         .allowedOrigins("http://localhost:5173")
                         .allowedMethods("GET", "OPTIONS") // Para la búsqueda solo necesitarías GET y OPTIONS
                         .allowedHeaders("*")
