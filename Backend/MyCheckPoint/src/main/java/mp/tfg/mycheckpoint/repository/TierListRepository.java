@@ -81,4 +81,6 @@ public interface TierListRepository extends JpaRepository<TierList, Long> {
      */
     @Query("SELECT DISTINCT tl FROM TierList tl LEFT JOIN FETCH tl.sections s WHERE tl.isPublic = true ORDER BY tl.updatedAt DESC, s.sectionOrder ASC")
     List<TierList> findAllByIsPublicTrueAndFetchSections();
+
+    List<TierList> findByOwnerAndType(User user, TierListType tierListType);
 }
