@@ -1,23 +1,27 @@
 package mp.tfg.mycheckpoint.service.impl;
 
 import mp.tfg.mycheckpoint.dto.comment.PublicGameCommentDTO; // IMPORTACIÓN ACTUALIZADA
+import mp.tfg.mycheckpoint.dto.enums.TierListType;
 import mp.tfg.mycheckpoint.dto.enums.VisibilidadEnum;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
 import mp.tfg.mycheckpoint.dto.usergame.GameDetailDTO;
 import mp.tfg.mycheckpoint.dto.usergame.UserGameDataDTO;
 import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO;
-import mp.tfg.mycheckpoint.entity.User;
-import mp.tfg.mycheckpoint.entity.UserGame;
+import mp.tfg.mycheckpoint.entity.*;
 import mp.tfg.mycheckpoint.entity.games.Game;
+import mp.tfg.mycheckpoint.exception.InvalidOperationException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
+import mp.tfg.mycheckpoint.exception.UnauthorizedOperationException;
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
 import mp.tfg.mycheckpoint.mapper.UserGameMapper;
-import mp.tfg.mycheckpoint.repository.UserRepository;
-import mp.tfg.mycheckpoint.repository.UserGameRepository;
+import mp.tfg.mycheckpoint.repository.*;
 import mp.tfg.mycheckpoint.repository.games.GameRepository;
+import mp.tfg.mycheckpoint.service.GameListService;
+import mp.tfg.mycheckpoint.service.TierListService;
 import mp.tfg.mycheckpoint.service.UserGameLibraryService;
 import mp.tfg.mycheckpoint.service.games.GameService;
 import mp.tfg.mycheckpoint.service.games.IgdbService;
+import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +61,12 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     private final GameService gameService; // Servicio para la lógica de guardado/actualización de Games
     private final IgdbService igdbService; // Servicio para interactuar con la API de IGDB
 
+    private final GameListService gameListService;
+    private final TierListService tierListService;
+    private final GameListRepository gameListRepository;
+    private final TierListRepository tierListRepository;
+    private final TierListItemRepository tierListItemRepository;
+
     /**
      * Constructor para UserGameLibraryServiceImpl.
      * Inyecta todas las dependencias necesarias para la gestión de la biblioteca de juegos del usuario.
@@ -78,7 +86,12 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                                       UserGameMapper userGameMapper,
                                       GameMapper gameGeneralMapper,
                                       GameService gameService,
-                                      IgdbService igdbService) {
+                                      IgdbService igdbService,
+                                      GameListService gameListService,
+                                      TierListService tierListService,
+                                      GameListRepository gameListRepository,
+                                      TierListRepository tierListRepository,
+                                      TierListItemRepository tierListItemRepository) {
         this.userRepository = userRepository;
         this.gameRepository = gameRepository;
         this.userGameRepository = userGameRepository;
@@ -86,6 +99,11 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
         this.gameGeneralMapper = gameGeneralMapper;
         this.gameService = gameService;
         this.igdbService = igdbService;
+        this.gameListService = gameListService;
+        this.tierListService = tierListService;
+        this.gameListRepository = gameListRepository;
+        this.tierListRepository = tierListRepository;
+        this.tierListItemRepository = tierListItemRepository;
     }
 
     /**
@@ -326,6 +344,28 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                 .build();
     }
 
+    private void initializeTierListDetails(TierList tierList) {
+        if (tierList == null) return;
+        Hibernate.initialize(tierList.getSections());
+        if (tierList.getSections() != null) {
+            for (TierSection section : tierList.getSections()) {
+                Hibernate.initialize(section.getItems());
+                if (section.getItems() != null) {
+                    for (TierListItem item : section.getItems()) {
+                        if (item.getUserGame() != null) {
+                            Hibernate.initialize(item.getUserGame());
+                            if (item.getUserGame().getGame() != null) {
+                                Hibernate.initialize(item.getUserGame().getGame());
+                                if (item.getUserGame().getGame().getCover() != null) {
+                                    Hibernate.initialize(item.getUserGame().getGame().getCover());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     /**
      * Elimina un juego de la biblioteca personal del usuario.
      *
@@ -339,11 +379,120 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     @Transactional
     public void removeGameFromLibrary(String userEmail, Long igdbId) {
         User user = getUserByEmail(userEmail);
-        // Verifica si la entrada existe antes de intentar borrarla para dar un mensaje de error más específico.
-        if (!userGameRepository.existsByUserAndGame_IgdbId(user, igdbId)) {
-            throw new ResourceNotFoundException("Juego con IGDB ID " + igdbId + " no encontrado en la biblioteca del usuario " + userEmail + " para eliminar.");
+
+        Game game = gameRepository.findByIgdbId(igdbId)
+                .orElseThrow(() -> new ResourceNotFoundException("Juego con IGDB ID " + igdbId + " no encontrado en el sistema. No se puede eliminar de la biblioteca."));
+
+        UserGame userGameToRemove = userGameRepository.findByUserAndGame(user, game)
+                .orElseThrow(() -> new ResourceNotFoundException("Juego con IGDB ID " + igdbId + " no encontrado en la biblioteca del usuario " + userEmail + " para eliminar."));
+
+        Long userGameInternalId = userGameToRemove.getInternalId();
+        logger.info("INICIO PROCESO DE ELIMINACIÓN COMPLETA: UserGame ID: {} (Juego IGDB ID: {}) para el usuario: {}", userGameInternalId, igdbId, userEmail);
+
+        // PASO 1: Eliminar de todas las GameLists del usuario.
+        // Esto DEBE desencadenar la sincronización de las TierLists tipo FROM_GAMELIST asociadas
+        // a través de la lógica en GameListServiceImpl.removeGameFromCustomList -> TierListService.
+        logger.info("[PASO 1/3] Procesando eliminación de UserGame ID {} de las GameLists del usuario {}...", userGameInternalId, userEmail);
+        // Utiliza un método de repositorio que haga JOIN FETCH de userGames para evitar N+1 o LazyInitializationException
+        // Ejemplo: List<GameList> userOwnedGameLists = gameListRepository.findAllByOwnerWithUserGames(user);
+        // Si no, carga individualmente o usa Hibernate.initialize. Por simplicidad, aquí obtengo todas y filtro:
+        List<GameList> allUserOwnedGameLists = gameListRepository.findByOwnerOrderByUpdatedAtDesc(user); // Podría no cargar los userGames
+        int gameListsProcessedCount = 0;
+        for (GameList gl : allUserOwnedGameLists) {
+            // Cargar explícitamente userGames si no se hizo con fetch en la query del repositorio
+            Hibernate.initialize(gl.getUserGames());
+            boolean isInThisList = gl.getUserGames().stream()
+                    .anyMatch(ug -> ug.getInternalId().equals(userGameInternalId));
+
+            if (isInThisList) {
+                gameListsProcessedCount++;
+                logger.debug("UserGame ID {} encontrado en GameList '{}' (Public ID: {}). Procediendo a eliminar y sincronizar TierList asociada (si es FROM_GAMELIST).",
+                        userGameInternalId, gl.getName(), gl.getPublicId());
+                try {
+                    // Esta llamada es crítica. gameListService.removeGameFromCustomList DEBE
+                    // asegurar que si hay una TierList FROM_GAMELIST asociada, se sincronice
+                    // y el TierListItem correspondiente al userGameToRemove sea eliminado.
+                    gameListService.removeGameFromCustomList(userEmail, gl.getPublicId(), userGameInternalId);
+                } catch (Exception e) {
+                    logger.error("Error al procesar la eliminación/sincronización para UserGame ID {} en GameList ID {}: {}. El proceso continuará.",
+                            userGameInternalId, gl.getPublicId(), e.getMessage(), e);
+                    // Decide si un error aquí debería detener todo. Si la sincronización es vital,
+                    // propagar la excepción podría ser mejor para asegurar la consistencia.
+                }
+            }
         }
-        userGameRepository.deleteByUserAndGame_IgdbId(user, igdbId);
-        logger.info("Usuario {} eliminó el juego con IGDB ID {} de su biblioteca.", userEmail, igdbId);
+        logger.info("[PASO 1/3 COMPLETADO] UserGame ID {} procesado para {} GameList(s).", userGameInternalId, gameListsProcessedCount);
+
+        // PASO 2: Eliminar de todas las TierLists de tipo PROFILE_GLOBAL del usuario.
+        // Las de tipo FROM_GAMELIST deberían haberse manejado en el PASO 1.
+        logger.info("[PASO 2/3] Procesando eliminación de UserGame ID {} de TierLists tipo PROFILE_GLOBAL del usuario {}...", userGameInternalId, userEmail);
+        List<TierList> userProfileTierLists = tierListRepository.findByOwnerAndType(user, TierListType.PROFILE_GLOBAL);
+        int profileTierListsProcessedCount = 0;
+
+        for (TierList tl : userProfileTierLists) {
+            initializeTierListDetails(tl); // Carga secciones e ítems para esta TierList
+
+            List<TierListItem> itemsToDeleteInThisTierList = new ArrayList<>();
+            for (TierSection section : tl.getSections()) {
+                for (TierListItem item : section.getItems()) {
+                    if (item.getUserGame() != null && Objects.equals(item.getUserGame().getInternalId(), userGameInternalId)) {
+                        itemsToDeleteInThisTierList.add(item);
+                    }
+                }
+            }
+
+            if (!itemsToDeleteInThisTierList.isEmpty()) {
+                profileTierListsProcessedCount++;
+                logger.debug("UserGame ID {} encontrado en {} TierListItem(s) dentro de TierList PROFILE_GLOBAL '{}' (ID: {}). Procediendo a eliminar.",
+                        userGameInternalId, itemsToDeleteInThisTierList.size(), tl.getName(), tl.getPublicId());
+                for (TierListItem itemToRemove : itemsToDeleteInThisTierList) {
+                    try {
+                        tierListService.removeItemFromTierList(userEmail, tl.getPublicId(), itemToRemove.getInternalId());
+                    } catch (Exception e) {
+                        logger.error("Error al eliminar TierListItem ID {} de TierList PROFILE_GLOBAL ID {}: {}. El proceso continuará.",
+                                itemToRemove.getInternalId(), tl.getPublicId(), e.getMessage(), e);
+                    }
+                }
+            }
+        }
+        logger.info("[PASO 2/3 COMPLETADO] UserGame ID {} procesado para {} TierList(s) PROFILE_GLOBAL.", userGameInternalId, profileTierListsProcessedCount);
+
+        // PASO 3: Verificación final y eliminación del UserGame de la biblioteca.
+        logger.info("[PASO 3/3 - Verificación] Comprobando referencias restantes a UserGame ID {} antes de la eliminación final de la biblioteca...", userGameInternalId);
+        long remainingReferencesInTierListItems = tierListItemRepository.countByUserGame(userGameToRemove);
+
+        if (remainingReferencesInTierListItems > 0) {
+            logger.error("ERROR CRÍTICO DE INTEGRIDAD DE DATOS: Después de todos los intentos de limpieza, todavía hay {} TierListItem(s) referenciando UserGame ID {}.",
+                    remainingReferencesInTierListItems, userGameInternalId);
+
+            // Log detallado de los ítems restantes
+            List<TierListItem> remainingItems = tierListItemRepository.findByUserGame(userGameToRemove);
+            for (TierListItem item : remainingItems) {
+                TierSection section = item.getTierSection();
+                TierList tierList = (section != null) ? section.getTierList() : null;
+                // Cargar explícitamente para evitar LazyInitializationException en los logs
+                if (section != null) Hibernate.initialize(section); // Carga la sección si es proxy
+                if (tierList != null) Hibernate.initialize(tierList); // Carga la TierList si es proxy
+
+                logger.error("TierListItem RESTANTE: ID={}, Order={}, SectionID={}, SectionName='{}', TierListPublicID={}, TierListName='{}', TierListType={}",
+                        item.getInternalId(),
+                        item.getItemOrder(),
+                        section != null ? section.getInternalId() : "null",
+                        section != null ? section.getName() : "null",
+                        tierList != null ? tierList.getPublicId() : "null",
+                        tierList != null ? tierList.getName() : "null",
+                        tierList != null ? tierList.getType() : "null" // Esto te dirá si el problema persiste con FROM_GAMELIST
+                );
+            }
+            // Importante: No eliminar el UserGame si aún hay referencias para evitar el error de FK
+            // y poder diagnosticar el fallo en la lógica de limpieza previa.
+            throw new IllegalStateException("FALLO DE LIMPIEZA PREVIA: UserGame ID " + userGameInternalId +
+                    " todavía está referenciado por " + remainingReferencesInTierListItems +
+                    " TierListItem(s). La eliminación de la biblioteca se aborta para prevenir error de FK y permitir diagnóstico.");
+        } else {
+            logger.info("[PASO 3/3 - Verificación COMPLETADA] No quedan TierListItems referenciando UserGame ID {}. Procediendo a eliminar de la biblioteca.", userGameInternalId);
+            userGameRepository.delete(userGameToRemove);
+            logger.info("ÉXITO FINAL: Usuario {} eliminó el juego con IGDB ID {} (UserGame ID: {}) de su biblioteca y todas sus referencias asociadas.", userEmail, igdbId, userGameInternalId);
+        }
     }
 }

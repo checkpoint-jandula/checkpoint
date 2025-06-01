@@ -121,4 +121,8 @@ public interface TierListItemRepository extends JpaRepository<TierListItem, Long
     @Modifying
     @Query("UPDATE TierListItem tli SET tli.itemOrder = tli.itemOrder + 1 WHERE tli.tierSection = :tierSection AND tli.itemOrder >= :itemOrder")
     void incrementOrderOfSubsequentItemsForInsert(@Param("tierSection") TierSection tierSection, @Param("itemOrder") int itemOrder);
+
+    long countByUserGame(UserGame userGameToRemove);
+
+    List<TierListItem> findByUserGame(UserGame userGameToRemove);
 }
