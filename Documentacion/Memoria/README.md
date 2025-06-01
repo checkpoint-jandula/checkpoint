@@ -2852,7 +2852,7 @@ Pasos necesarios para desplegar vuestro proyecto. Si no lo tenéis claro, lo vem
 ## Problemas encontrados y soluciones propuestas
 El desarrollo de un proyecto de la envergadura de MyCheckPoint, especialmente en un contexto académico y formativo, conlleva inevitablemente la aparición de desafíos y obstáculos. Esta sección describe los principales problemas encontrados durante el ciclo de vida del proyecto y las estrategias o soluciones adoptadas para abordarlos, reflejando el proceso de aprendizaje y adaptación del equipo.
 
-**4.6.1. Desafíos en la Gestión Inicial y Definición del Alcance del Proyecto**
+**Desafíos en la Gestión Inicial y Definición del Alcance del Proyecto**
 
 -   **Problema:** Se experimentaron demoras en las fases iniciales concernientes a la aprobación formal del anteproyecto y la asignación de un tutor responsable. Esta circunstancia, sumada a una falta de pautas detalladas o un guion orientativo inicial sobre las expectativas específicas para el Trabajo de Fin de Grado (TFG), generó una incertidumbre inicial que afectó la planificación temprana.
     
@@ -2865,7 +2865,7 @@ El desarrollo de un proyecto de la envergadura de MyCheckPoint, especialmente en
 
 
 
-**4.6.2. Curva de Aprendizaje en la Gestión de Proyectos y Desarrollo Técnico**
+**Curva de Aprendizaje en la Gestión de Proyectos y Desarrollo Técnico**
 
 -   **Problema:** La falta de experiencia previa del equipo en la gestión de proyectos de software de esta magnitud, combinada con la ambición de las funcionalidades propuestas, condujo a una subestimación del tiempo y esfuerzo requeridos para ciertas tareas. Esto se tradujo en periodos donde la organización del trabajo y la priorización de funcionalidades necesitaron ajustes constantes, resultando en una percepción de "tiempo perdido" y un ciclo de desarrollo más comprimido de lo deseado.
     
@@ -2892,7 +2892,7 @@ El desarrollo de un proyecto de la envergadura de MyCheckPoint, especialmente en
 -   **Aprendizaje:** Este desafío se convirtió en una valiosa lección sobre la importancia de la comunicación efectiva, la empatía y la colaboración en un entorno de desarrollo en equipo. Se aprendió a valorar la diversidad de perspectivas como una fortaleza y a gestionar los desacuerdos de manera productiva, fortaleciendo la cohesión del equipo y la capacidad para resolver problemas conjuntamente.
     
 
-**4.6.3. Desafíos Técnicos Específicos en la Integración y Persistencia de Datos de IGDB**
+**Desafíos Técnicos Específicos en la Integración y Persistencia de Datos de IGDB**
 
 -   **Problema:** La integración con la API de IGDB presentó varios desafíos:
     
@@ -2919,7 +2919,7 @@ El desarrollo de un proyecto de la envergadura de MyCheckPoint, especialmente en
 -   **Aprendizaje:** Se obtuvo una experiencia considerable en la integración con APIs de terceros, incluyendo la depuración de respuestas y la adaptación a documentación imperfecta. Se reforzó la importancia de las pruebas empíricas al interactuar con servicios externos. Además, se profundizó en el diseño de modelos de datos complejos, la normalización de información y la implementación de lógicas de sincronización y persistencia robustas con JPA/Hibernate. La necesidad de priorizar funcionalidades y campos de datos en función de las restricciones del proyecto fue una lección importante en la gestión del alcance.
     
 
-**4.6.4. Gestión de la Concurrencia y Transaccionalidad en Operaciones Complejas**
+**Gestión de la Concurrencia y Transaccionalidad en Operaciones Complejas**
 
 -   **Problema:** Operaciones como la modificación de Tier Lists (ej. mover un ítem entre secciones, eliminar una sección y reubicar sus ítems) implicaban múltiples actualizaciones en la base de datos que debían ser atómicas y manejar correctamente el estado de las colecciones en memoria y en la base de datos para evitar inconsistencias o errores de `orphanRemoval` no deseados.
     
@@ -2933,8 +2933,26 @@ El desarrollo de un proyecto de la envergadura de MyCheckPoint, especialmente en
         
 -   **Aprendizaje:** Se profundizó en la comprensión del funcionamiento interno de JPA/Hibernate, especialmente en lo referente al contexto de persistencia, el ciclo de vida de las entidades, la gestión de colecciones y el impacto de `orphanRemoval` en operaciones de reasignación de relaciones.
     
-
-_(Puedes añadir más subsecciones aquí si identificas otros grupos de problemas significativos y sus soluciones. Por ejemplo, podrías tener una subsección específica sobre "Optimización del Rendimiento de Consultas" si fue un desafío notable, o sobre "Despliegue y Configuración de Entornos" si eso presentó dificultades particulares)._
+-   **Problema:** Se identificó una `DataIntegrityViolationException` recurrente durante la operación de eliminación de una entidad `UserGame` de la biblioteca del usuario. El análisis de la traza de la excepción y los logs de Hibernate indicaron una violación de clave foránea (`ForeignKeyViolationException`) originada en la tabla `tier_list_items`. Esto significaba que, al momento de intentar la eliminación del `UserGame`, persistía al menos un registro en `tier_list_items` cuya columna `user_game_internal_id` todavía referenciaba dicho `UserGame`. Investigaciones adicionales, utilizando logging específico, revelaron que el `TierListItem` causante de la restricción pertenecía a una `TierList` de tipo `FROM_GAMELIST`. Este tipo de `TierList` se genera y sincroniza a partir de una `GameList` origen, lo que implicaba que la desvinculación del `UserGame` de su `GameList` no estaba propagando correctamente la eliminación del `TierListItem` correspondiente en la `TierList` derivada.
+    
+-   **Solución/Abordaje:** La resolución de esta incidencia requirió una revisión detallada y ajustes en la secuencia de operaciones y la lógica de sincronización entre los servicios implicados (`UserGameLibraryService`, `GameListService`, y `TierListService`):
+    
+    -   **Análisis del Flujo de Eliminación:** Se confirmó que el método `UserGameLibraryServiceImpl.removeGameFromLibrary` orquesta la eliminación completa. Su diseño invoca primero a `GameListServiceImpl.removeGameFromCustomList` para desvincular el `UserGame` de todas las `GameLists` a las que pertenece. Posteriormente, procesa las `TierLists` de tipo `PROFILE_GLOBAL` y, finalmente, intenta la eliminación de la entidad `UserGame`.
+    -   **Refuerzo de la Cascada Lógica en `GameListService`:** Se modificó `GameListServiceImpl.removeGameFromCustomList`. Tras eliminar el `UserGame` de la colección `userGames` de la entidad `GameList` y persistir este cambio (`gameListRepository.save(gameList)`), se implementó una llamada inmediata al `TierListService`. Esta llamada (específicamente a `tierListService.getOrCreateTierListForGameList()`, que internamente delega a `synchronizeTierListWithGameList()`) tiene el objetivo de forzar la resincronización de la `TierList` de tipo `FROM_GAMELIST` asociada a la `GameList` modificada.
+    -   **Optimización de `TierListServiceImpl.synchronizeTierListWithGameList`:** Se revisó este método para asegurar la correcta identificación y eliminación de `TierListItem`s cuyos `UserGame`s ya no estuvieran presentes en la `GameList` origen. Las mejoras incluyeron:
+        -   Uso de `Set<Long>` para los IDs de `UserGame` en la `GameList` para comparaciones eficientes.
+        -   Al eliminar un `TierListItem` de la colección `items` de su `TierSection` (usando `parentSection.getItems().removeIf(...)` basado en ID), se aseguró que también se llamara a `itemToRemove.setTierSection(null);` para facilitar la detección por parte del mecanismo `orphanRemoval=true` de JPA/Hibernate, configurado en la entidad `TierSection`.
+        -   Se mantuvo la llamada a `tierListRepository.saveAndFlush(tierList)` al final de la sincronización para forzar la escritura de los cambios en la base de datos, incluyendo los `DELETE` SQL de los `TierListItem`s huérfanos.
+    -   **Mecanismo de Verificación Preventiva en `UserGameLibraryServiceImpl`:** Antes de la instrucción `userGameRepository.delete(userGameToRemove)`, se introdujo una consulta de verificación (`tierListItemRepository.countByUserGame(userGameToRemove)`). Si este conteo resultaba mayor a cero, indicando referencias huérfanas persistentes:
+        -   Se registraba un error detallado con la información de los `TierListItem`(s) restantes (incluyendo ID, `TierList` a la que pertenecen y su tipo).
+        -   Se lanzaba una `IllegalStateException` para interrumpir la transacción y prevenir la `DataIntegrityViolationException`. Esto permite un diagnóstico preciso del fallo en la lógica de limpieza previa sin corromper el estado de la base de datos.
+-   **Aprendizaje:**
+    
+    -   Se evidenció la necesidad de manejar explícitamente las consecuencias de una operación de eliminación en entidades que dependen indirectamente (a través de una entidad intermedia o lógica de sincronización) de la entidad que se está borrando. Este fue el caso de la relación `UserGame` -> `GameList` (asociación) -> `TierList FROM_GAMELIST` (sincronización) -> `TierListItem`.
+    -   En arquitecturas donde el estado de una entidad (ej. `TierList FROM_GAMELIST`) se deriva de otra (ej. `GameList`), las operaciones de modificación en la entidad origen deben propagar los cambios a la entidad derivada de forma síncrona y dentro de la misma transacción si la consistencia inmediata es requerida para operaciones subsiguientes.
+    -   Aunque `orphanRemoval=true` es una herramienta potente de JPA/Hibernate, su efectividad depende de la correcta manipulación de las colecciones y las relaciones bidireccionales. En casos complejos, es crucial asegurar que las referencias inversas (ej. `item.setTierSection(null)`) se actualicen correctamente para que el mecanismo de `orphanRemoval` se active como es esperado.
+    -   La implementación de verificaciones previas y logging detallado en puntos críticos de operaciones complejas resulta invaluable para la detección temprana y el diagnóstico de problemas de integridad referencial o lógica de negocio incorrecta.
+    -   Se reforzó la comprensión de cómo `@Transactional` gestiona la atomicidad y cómo el uso de `saveAndFlush()` puede influir en el momento en que las operaciones SQL se envían a la base de datos, lo cual es crucial para el orden correcto de las eliminaciones que involucran claves foráneas.
 
 # Conclusiones
 
