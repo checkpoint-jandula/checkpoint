@@ -1,20 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
-import LoginView from '../views/LoginView.vue';
-import RegisterView from '../views/RegisterView.vue';
-import UserSettingsView from '../views/UserSettingsView.vue';
-import UserProfileView from '../views/UserProfileView.vue';
+import HomeView from '../views/HomeView/HomeView.vue';
+import LoginView from '../views/LoginView/LoginView.vue';
+import RegisterView from '../views/RegisterView/RegisterView.vue';
+import UserSettingsView from '../views/UserSettingsView/UserSettingsView.vue';
+import UserProfileView from '../views/UserProfileView/UserProfileView.vue';
 // MyLibraryView, MyGameListsView, MyTierListsView serán ahora parte de UserProfileView o cargados por él
-import FriendsPageView from '../views/FriendsPageView.vue';
-import RequestPasswordResetView from '../views/RequestPasswordResetView.vue';
-import ResetPasswordView from '../views/ResetPasswordView.vue';
-import SearchGamesView from '../views/SearchGamesView.vue';
+import FriendsPageView from '../views/FriendsPageView/FriendsPageView.vue';
+import RequestPasswordResetView from '../views/RequestPasswordResetView/RequestPasswordResetView.vue';
+import ResetPasswordView from '../views/ResetPasswordView/ResetPasswordView.vue';
+import SearchGamesView from '../views/SearchGamesView/SearchGamesView.vue';
 import GameDetailsView from '../views/GameDetails/GameDetailsView.vue';
 
 // Vistas para las listas/tiers públicos y búsqueda de usuarios
-import ViewPublicGameListsView from '../views/ViewPublicGameListsView.vue'; // Crear este placeholder
-import ViewPublicTierListsView from '../views/ViewPublicTierListsView.vue'; // Crear este placeholder
-import SearchUsersView from '../views/SearchUsersView.vue';         // Crear este placeholder
+import ViewPublicGameListsView from '../views/ViewPublicGameListsView/ViewPublicGameListsView.vue'; // Crear este placeholder
+import ViewPublicTierListsView from '../views/ViewPublicTierListsView/ViewPublicTierListsView.vue'; // Crear este placeholder
+import SearchUsersView from '../views/SearchUsersView/SearchUsersView.vue';         // Crear este placeholder
 
 
 import { useAuthStore } from '@/stores/authStore';

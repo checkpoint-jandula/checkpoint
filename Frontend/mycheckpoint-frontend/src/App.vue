@@ -1,7 +1,7 @@
 <template>
   <header>
     <div class="logo-container">
-      <img alt="MyCheckPoint Logo" class="logo" src="@/assets/CP-LOGOF.png" width="40" height="40" />
+      <img alt="MyCheckPoint Logo" class="logo" src="@/assets/img/CP-LOGOF.png" width="40" height="40" />
       <span class="app-title">MyCheckPoint</span>
     </div>
     <nav>

@@ -41,12 +41,12 @@ console.log('SearchGamesView.vue: Imports básicos cargados');
 import { useRoute, RouterLink } from 'vue-router';
 console.log('SearchGamesView.vue: Vue Router imports cargados');
 
-import { GameControllerApi } from '@/api-client'; //
-import apiClient from '@/services/apiService';
-import { Configuration } from '@/api-client/configuration'; //
+import { GameControllerApi } from '@/api-client/index.js'; //
+import apiClient from '@/services/apiService.js';
+import { Configuration } from '@/api-client/configuration.js'; //
 console.log('SearchGamesView.vue: API client imports cargados');
 
-import defaultGameCover from '@/assets/default-game-cover.png'; // Asegúrate que este archivo exista
+import defaultGameCover from '@/assets/img/default-game-cover.png'; // Asegúrate que este archivo exista
 console.log('SearchGamesView.vue: defaultGameCover importado');
 
 
@@ -183,84 +183,4 @@ const truncateText = (text, maxLength) => {
 
 </script>
 
-<style scoped>
-/* Tus estilos existentes para .search-results-view, .loading-message, etc. */
-.search-results-view {
-  padding: 1rem;
-}
-.search-results-view h1 {
-  margin-bottom: 1.5rem;
-}
-.loading-message, .error-message, .no-results-message {
-  text-align: center;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-.error-message {
-  color: red;
-  background-color: rgba(255,0,0,0.1);
-  border: 1px solid red;
-}
-.no-results-message {
-  color: var(--color-text);
-}
-
-.results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.game-card {
-  background-color: var(--color-background-soft); /* */
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease-in-out;
-}
-
-.game-card:hover {
-  transform: translateY(-5px);
-}
-
-.game-card a { 
-  text-decoration: none;
-  color: inherit;
-  display: flex; /* Cambiado a flex para mejor control interno */
-  flex-direction: column; /* Apilar imagen e info verticalmente */
-  height: 100%; /* Para que el enlace ocupe toda la tarjeta */
-}
-
-.game-cover {
-  width: 100%;
-  aspect-ratio: 3 / 4; /* Proporción común para portadas, ajusta si es necesario */
-  object-fit: cover; 
-  background-color: var(--color-background-mute); /* */
-}
-
-.game-info {
-  padding: 1rem;
-  flex-grow: 1; /* Para que ocupe el espacio restante si las tarjetas tienen alturas variables */
-  display: flex;
-  flex-direction: column;
-}
-
-.game-name {
-  font-size: 1rem; /* Ajustado */
-  font-weight: bold;
-  margin: 0 0 0.3rem 0; /* Ajustado */
-  color: var(--color-heading); /* */
-}
-
-.game-year {
-  font-size: 0.8rem; /* Ajustado */
-  color: var(--vt-c-text-light-2); /* */
-  margin-bottom: 0.4rem; /* Ajustado */
-}
-.game-summary {
-  font-size: 0.8rem; /* Ajustado */
-  color: var(--color-text); /* */
-  line-height: 1.3; /* Ajustado */
-  flex-grow: 1; /* Para que el resumen ocupe espacio si es corto */
-}
-</style>
+<style src="./SearchGamesView.css" scoped></style>
