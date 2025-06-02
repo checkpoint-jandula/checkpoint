@@ -81,6 +81,7 @@ export const getUserByPublicId = (publicId) => { //
 export const searchUsers = (username) => {
   return usersApi.searchUsersByUsername(username); //
 };
+
 //Bibliotecas / Buscar Juego
 export const fetchGameDetailsByIgdbId = (igdbId) => {
   return userGameLibraryApi.getGameDetails(igdbId); //
@@ -96,5 +97,15 @@ export const addOrUpdateGameInUserLibrary = (igdbId, userGameDataDTO) => {
 
 export const removeGameFromUserLibrary = (igdbId) => { // Usado en GameDetailsView
     return userGameLibraryApi.removeGameFromMyLibrary(igdbId); //
+};
+
+//Listas de Juegos
+export const fetchAllPublicGameLists = () => {
+  return gameListsApi.viewAllPublicGameLists(); //
+};
+
+//Tier Lists
+export const fetchAllPublicTierLists = () => {
+  return tierListsApi.getAllPublicTierLists(); //
 };
 
