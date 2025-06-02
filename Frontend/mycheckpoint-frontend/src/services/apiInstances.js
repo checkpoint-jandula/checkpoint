@@ -104,6 +104,38 @@ export const fetchAllPublicGameLists = () => {
   return gameListsApi.viewAllPublicGameLists(); //
 };
 
+export const getMyGameLists = () => {
+  return gameListsApi.getMyGameLists(); // OperationId: getMyGameLists
+};
+
+export const createMyGameList = (gameListRequestDTO) => {
+  return gameListsApi.createMyGameList(gameListRequestDTO); // OperationId: createMyGameList
+};
+
+export const deleteMyGameList = (listPublicId) => {
+  // gameListsApi es tu instancia de GameListControllerApi
+  // deleteMyGameList es el método generado que corresponde a DELETE /api/v1/users/me/gamelists/{listPublicId}
+  return gameListsApi.deleteMyGameList(listPublicId); //
+};
+
+export const getMySpecificGameListDetails = (listPublicId) => {
+  return gameListsApi.getMySpecificGameList(listPublicId); // OperationId: getMySpecificGameList
+};
+
+export const updateMyUserGameList = (listPublicId, gameListRequestDTO) => {
+  // gameListsApi es tu instancia de GameListControllerApi
+  // updateMyGameList es el método generado que corresponde a PUT /api/v1/users/me/gamelists/{listPublicId}
+  return gameListsApi.updateMyGameList(listPublicId, gameListRequestDTO); //
+};
+
+export const addGameToMyGameList = (listPublicId, addGameToCustomListRequestDTO) => {
+  return gameListsApi.addGameToMyCustomList(listPublicId, addGameToCustomListRequestDTO); //
+};
+
+export const removeGameFromMyGameList = (listPublicId, userGameInternalId) => {
+  return gameListsApi.removeGameFromMyCustomList(listPublicId, userGameInternalId); //
+};
+
 //Tier Lists
 export const fetchAllPublicTierLists = () => {
   return tierListsApi.getAllPublicTierLists(); //

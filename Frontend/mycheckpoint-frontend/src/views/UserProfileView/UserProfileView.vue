@@ -24,11 +24,16 @@
         </div>
       </header>
 
-      <nav class="tabs-navigation profile-tabs">
-        <button @click="setActiveTab('library')" :class="{ 'active-tab': activeTab === 'library' }" v-if="isOwnProfile || viewedUser.visibilidad_perfil === 'PUBLICO' || (viewedUser.visibilidad_perfil === 'SOLO_AMIGOS' /* && sonAmigosLogica */ )">
-          Biblioteca
-        </button>
-        </nav>
+    <nav class="tabs-navigation profile-tabs">
+      <button @click="setActiveTab('library')" :class="{ 'active-tab': activeTab === 'library' }" 
+              v-if="isOwnProfile || (viewedUser && (viewedUser.visibilidad_perfil === 'PUBLICO' || (viewedUser.visibilidad_perfil === 'SOLO_AMIGOS' /* && sonAmigosLogica */)))">
+        Biblioteca
+      </button>
+      <button @click="setActiveTab('my-gamelists')" :class="{ 'active-tab': activeTab === 'my-gamelists' }"
+              v-if="isOwnProfile">
+        Mis Listas de Juegos
+      </button>
+      </nav>
 
       <div class="tab-content">
         <div v-if="activeTab === 'library'">
@@ -45,9 +50,9 @@
           </template>
         </div>
 
-        <div v-if="activeTab === 'gamelists'" class="tab-pane">
-          <p>Listas de juegos de {{ viewedUser.nombre_usuario }} (Pendiente).</p>
-        </div>
+      <div v-if="activeTab === 'my-gamelists' && isOwnProfile" class="tab-pane">
+        <MyGameListsView />
+      </div>
 
         <div v-if="activeTab === 'tierlists'" class="tab-pane">
           <p>Tier Lists de {{ viewedUser.nombre_usuario }} (Pendiente).</p>
@@ -71,6 +76,7 @@ import defaultAvatar from '@/assets/img/default-avatar.png'; // Placeholder para
 
 // Importar el componente de la biblioteca del usuario
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue'; // Ajusta la ruta si es necesario
+import MyGameListsView from '../MyGameListsView/MyGameListsView.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();

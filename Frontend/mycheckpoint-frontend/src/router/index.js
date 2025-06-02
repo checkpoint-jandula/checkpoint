@@ -16,6 +16,7 @@ import ViewPublicGameListsView from "../views/ViewPublicGameListsView/ViewPublic
 import ViewSinglePublicGameListView from "../views/ViewSinglePublicGameListView/ViewSinglePublicGameListView.vue"; // Crear este placeholder
 import ViewPublicTierListsView from "../views/ViewPublicTierListsView/ViewPublicTierListsView.vue"; // Crear este placeholder
 import ViewSinglePublicTierListView from "../views/ViewSinglePublicTierListView/ViewSinglePublicTierListView.vue"; // Crear este placeholder
+import EditGameListView from "../views/EditGameListView/EditGameListView.vue"; // Crear este placeholder
 import SearchUsersView from "../views/SearchUsersView/SearchUsersView.vue"; // Crear este placeholder
 
 import { useAuthStore } from "@/stores/authStore";
@@ -87,6 +88,13 @@ const routes = [
     name: "view-public-gamelist",
     component: ViewSinglePublicGameListView, // Placeholder por ahora
     props: true,
+  },
+  {
+    path: "/my-gamelists/:listPublicId/edit", // Ruta para editar una lista específica
+    name: "edit-gamelist",
+    component: EditGameListView,
+    props: true, // Para pasar listPublicId como prop al componente
+    meta: { requiresAuth: true }, // Esta vista requiere autenticación
   },
   {
     path: "/public-tierlists",

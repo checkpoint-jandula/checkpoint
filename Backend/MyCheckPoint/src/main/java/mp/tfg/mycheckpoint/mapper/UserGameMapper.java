@@ -29,6 +29,7 @@ public interface UserGameMapper {
      * @param userGame La entidad UserGame a convertir.
      * @return El UserGameResponseDTO resultante.
      */
+    @Mapping(source = "internalId", target = "internalId")
     @Mapping(source = "game.igdbId", target = "gameIgdbId")
     @Mapping(source = "game.name", target = "gameName")
     @Mapping(source = "game.cover", target = "gameCover")

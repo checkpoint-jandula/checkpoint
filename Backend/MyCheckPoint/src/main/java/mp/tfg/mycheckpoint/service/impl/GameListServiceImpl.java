@@ -19,6 +19,7 @@ import mp.tfg.mycheckpoint.service.TierListService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -216,6 +217,7 @@ public class GameListServiceImpl implements GameListService {
      * Elimina una lista de juegos perteneciente al usuario especificado.
      * La eliminación de la lista desasocia los juegos de ella (se eliminan las entradas
      * de la tabla de unión), pero no elimina los juegos de la biblioteca general del usuario.
+     * Elimina tambien la tier list asociada de tipo FROM_GAMELIST si existe,
      *
      * @param userEmail    El email del usuario propietario de la lista.
      * @param listPublicId El ID público (UUID) de la lista de juegos a eliminar.
@@ -226,12 +228,39 @@ public class GameListServiceImpl implements GameListService {
     @Transactional
     public void deleteGameList(String userEmail, UUID listPublicId) {
         User owner = getUserByEmail(userEmail);
-        GameList gameList = gameListRepository.findByPublicIdAndOwner(listPublicId, owner)
+        GameList gameListToRemove = gameListRepository.findByPublicIdAndOwner(listPublicId, owner)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
+                        "GameList con Public ID " + listPublicId + " no encontrada para el usuario " + userEmail));
 
-        gameListRepository.delete(gameList);
-        logger.info("User {} deleted GameList '{}' (Public ID: {})", userEmail, gameList.getName(), listPublicId);
+        logger.info("Iniciando proceso de eliminación para GameList '{}' (Public ID: {}) por usuario {}",
+                gameListToRemove.getName(), listPublicId, userEmail);
+
+        Optional<TierList> dependentTierListOpt = tierListRepository.findBySourceGameListAndType(gameListToRemove, TierListType.FROM_GAMELIST); // Necesitas este método
+
+        if (dependentTierListOpt.isPresent()) {
+            TierList tierListToDelete = dependentTierListOpt.get();
+            logger.info("Se encontró 1 TierList de tipo FROM_GAMELIST (ID: {}) que depende de GameList {}. Procediendo a eliminarla.",
+                    tierListToDelete.getPublicId(), listPublicId);
+            try {
+                tierListService.deleteTierList(userEmail, tierListToDelete.getPublicId());
+                logger.info("TierList dependiente {} eliminada.", tierListToDelete.getPublicId());
+            } catch (Exception e) {
+                logger.error("Error al eliminar TierList dependiente {}: {}. La eliminación de GameList se abortará para mantener la integridad.",
+                        tierListToDelete.getPublicId(), e.getMessage(), e);
+                throw new RuntimeException("Fallo al eliminar la TierList asociada. No se pudo eliminar la GameList.", e);
+            }
+        } else {
+            logger.info("No se encontró ninguna TierList de tipo FROM_GAMELIST dependiente de GameList {}.", listPublicId);
+        }
+        try {
+            gameListRepository.delete(gameListToRemove);
+            logger.info("Usuario {} eliminó GameList '{}' (Public ID: {}) exitosamente.",
+                    userEmail, gameListToRemove.getName(), listPublicId);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("DataIntegrityViolationException al intentar eliminar GameList ID {}: {}. Esto podría indicar otras dependencias no manejadas o un fallo en la limpieza de TierList.",
+                    listPublicId, e.getMessage());
+            throw e;
+        }
     }
 
     /**

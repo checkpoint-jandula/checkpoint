@@ -26,7 +26,8 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class UserGameResponseDTO {
 
-
+    @JsonProperty("internal_id") // O el nombre que prefieras para el JSON
+    private Long internalId; // El ID de la entidad UserGame
     /**
      * ID de IGDB del juego al que se refiere esta entrada de la biblioteca.
      * Utilizado para identificar el juego globalmente.
