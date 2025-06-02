@@ -366,15 +366,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             }
         }
     }
-    /**
-     * Elimina un juego de la biblioteca personal del usuario.
-     *
-     * @param userEmail El email del usuario.
-     * @param igdbId El ID de IGDB del juego a eliminar de la biblioteca.
-     * @throws ResourceNotFoundException Si el usuario no se encuentra, o si el juego
-     * con el {@code igdbId} especificado no está en su biblioteca
-     * y, por lo tanto, no puede ser eliminado.
-     */
+
     @Override
     @Transactional
     public void removeGameFromLibrary(String userEmail, Long igdbId) {

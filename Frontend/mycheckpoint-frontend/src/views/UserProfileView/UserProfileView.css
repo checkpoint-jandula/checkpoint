@@ -1,0 +1,224 @@
+.user-profile-view {
+  max-width: 1100px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+.loading-message, .error-message, .no-results-message {
+  text-align: center; 
+  padding: 2rem; 
+  font-size: 1.2rem;
+  color: var(--color-text); /* */
+}
+
+.error-message { 
+  color: #d8000c; 
+  background-color: #ffbaba; 
+  border: 1px solid #d8000c; 
+  border-radius: 4px; 
+}
+
+.profile-content-wrapper { /* Renombrado desde profile-content para claridad */
+  /* Contenedor principal para el contenido del perfil debajo de mensajes de carga/error */
+}
+
+.section-block { /* Estilo base para todos los bloques de sección principales */
+  padding: 1.5rem;
+  margin-bottom: 1.5rem; 
+  background-color: var(--color-background-soft); /* */
+  border-radius: 8px; /* Bordes más redondeados para los bloques */
+  border: 1px solid var(--color-border); /* */
+}
+.tab-pane > .section-block:last-child { /* El último bloque dentro de una pestaña no necesita margen inferior */
+  margin-bottom: 0;
+}
+
+/* --- CABECERA DEL PERFIL --- */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem; /* Un poco más de espacio */
+  text-align: center;
+  /* Eliminamos el padding de aquí si .section-block ya lo tiene */
+}
+
+.profile-avatar {
+  width: 130px; /* Ligeramente más grande */
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--color-border-hover); /* Borde más prominente */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Sombra sutil */
+}
+
+.profile-info {
+  /* El gap del flex en profile-header maneja el espaciado si es necesario */
+}
+
+.profile-info h1 {
+  margin: 0 0 0.5rem 0; /* Ajustado margen inferior */
+  font-size: 2.2rem; /* Un poco más grande */
+  color: var(--color-heading); /* */
+  font-weight: 600;
+}
+
+.registration-date {
+  font-size: 0.85rem;
+  color: var(--color-text-light-2); /* */
+  margin-bottom: 1rem; /* Más espacio después de la fecha de registro */
+}
+
+.profile-meta-details { /* Contenedor para Tema, Notificaciones, Visibilidad */
+  display: flex;
+  flex-direction: column; /* Apilados por defecto */
+  gap: 0.5rem; /* Espacio entre los items meta */
+  align-items: center; /* Centrado en móvil */
+  margin-top: 0.5rem;
+  font-size: 0.95rem; /* Ligeramente más grande */
+  color: var(--color-text); /* */
+}
+
+.meta-detail {
+  display: inline-block; /* Para que el strong y span estén en línea */
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-background-mute); /* */
+  border-radius: 4px;
+  border: 1px solid var(--color-border); /* */
+}
+
+.meta-detail strong {
+  color: var(--color-text); /* */
+  margin-right: 0.4em;
+  font-weight: 500;
+}
+
+.profile-actions {
+  margin-top: 1rem;
+  width: 100%; 
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .profile-header {
+    flex-direction: row;
+    text-align: left;
+    align-items: center; 
+  }
+  .profile-avatar {
+    width: 160px; /* Más grande en escritorio */
+    height: 160px;
+  }
+  .profile-info {
+    margin-left: 2rem; /* Más margen */
+    flex-grow: 1; 
+  }
+  .profile-meta-details {
+    flex-direction: row; /* Lado a lado en escritorio */
+    justify-content: flex-start; 
+    gap: 1rem; /* Más espacio horizontal */
+  }
+  .profile-actions {
+    width: auto; 
+    margin-left: auto; 
+    margin-top: 0;
+    align-self: center; /* Alinear con el centro del .profile-info */
+  }
+}
+
+/* --- PESTAÑAS --- */
+.tabs-navigation.profile-tabs {
+  display: flex;
+  gap: 0; /* Sin gap, el borde del botón lo simulará */
+  margin-top: 2rem; 
+  margin-bottom: 1.5rem; 
+  border-bottom: 1px solid var(--color-border-hover); /* */
+  padding: 0 1.5rem; /* Coincidir con padding de section-block si se usa */
+  justify-content: flex-start;
+}
+
+.tabs-navigation.profile-tabs button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent; 
+  background-color: transparent;
+  color: var(--color-text-light-2); /* */
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+  margin-right: 0.2rem; /* Pequeño espacio si los bordes no se solapan */
+  border-top-left-radius: 5px; 
+  border-top-right-radius: 5px;
+}
+
+.tabs-navigation.profile-tabs button:hover {
+  color: var(--color-text); /* */
+  background-color: var(--color-background-mute); /* */
+}
+
+.tabs-navigation.profile-tabs button.active-tab {
+  color: var(--color-heading); /* */
+  border-bottom-color: hsla(160, 100%, 37%, 1); /* Verde para el indicador activo */
+  background-color: var(--color-background-soft); /* */
+}
+
+/* Enfatizar la pestaña "Biblioteca" cuando esté activa */
+.tabs-navigation.profile-tabs button[aria-label="Biblioteca"].active-tab, /* Si usas aria-label */
+.tabs-navigation.profile-tabs button.active-tab:nth-child(1) { /* Asumiendo que "Biblioteca" es el primer botón */
+  color: hsla(160, 100%, 37%, 1); /* Color de texto verde */
+  font-weight: bold; /* Hacerla un poco más prominente */
+}
+/* Si tienes un identificador más específico para el botón de biblioteca, úsalo. */
+/* Por ejemplo, si le añades una clase específica al botón de biblioteca: */
+/*
+.tabs-navigation.profile-tabs button.tab-library.active-tab {
+  color: hsla(160, 100%, 37%, 1);
+  font-weight: bold;
+}
+*/
+
+
+.tab-content {
+  padding-top: 1.5rem; /* Espacio entre la barra de pestañas y el contenido de la pestaña */
+}
+.tab-pane {
+  /* Estilos para el panel de pestaña activo */
+}
+.add-to-library-prompt p {
+    text-align: center;
+    font-style: italic;
+    color: var(--color-text-light-2); /* */
+    padding: 1rem;
+}
+
+/* Action button (consistente con UserSettingsView) */
+.action-button {
+  padding: 0.7em 1.4em; /* Ligeramente más padding */
+  font-size: 0.9rem; /* Un poco más pequeño */
+  border-radius: 5px;
+  cursor: pointer; 
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  border: 1px solid transparent; 
+  margin-left: 0.5rem;
+  text-decoration: none;
+  display: inline-block; 
+  font-weight: 500;
+}
+.action-button.primary {
+  background-color: hsla(160, 100%, 37%, 1); /* */
+  color: white;
+  border-color: hsla(160, 100%, 37%, 1); /* */
+}
+.action-button.primary:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); /* */ }
+.action-button.secondary {
+  background-color: var(--color-background-mute); /* */
+  color: var(--color-text); /* */
+  border-color: var(--color-border-hover); /* */
+}
+.action-button.secondary:hover:not(:disabled) { 
+  background-color: var(--color-border); /* */
+  border-color: var(--color-border-hover); /* */
+}
+.action-button:disabled { opacity: 0.6; cursor: not-allowed; }

@@ -81,9 +81,13 @@ export const getUserByPublicId = (publicId) => { //
 export const searchUsers = (username) => {
   return usersApi.searchUsersByUsername(username); //
 };
+//Bibliotecas / Buscar Juego
 export const fetchGameDetailsByIgdbId = (igdbId) => {
-  // userGameLibraryApi es la instancia de UserGameLibraryControllerApi
   return userGameLibraryApi.getGameDetails(igdbId); //
+};
+
+export const getMyUserGameLibrary = () => {
+  return userGameLibraryApi.getMyGameLibrary(); //
 };
 
 export const addOrUpdateGameInUserLibrary = (igdbId, userGameDataDTO) => {
@@ -94,9 +98,3 @@ export const removeGameFromUserLibrary = (igdbId) => { // Usado en GameDetailsVi
     return userGameLibraryApi.removeGameFromMyLibrary(igdbId); //
 };
 
-// ... y así sucesivamente para los otros controladores y sus métodos.
-// Puedes optar por exportar las instancias completas si prefieres:
-// export { authApi, usersApi, gamesApi, /* ... */ };
-
-// Por ahora, exportaremos las funciones específicas que se necesitan en authStore y las futuras vistas.
-// Es una buena práctica encapsular las llamadas a la API aquí.

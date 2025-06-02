@@ -30,6 +30,8 @@ public interface UserGameMapper {
      * @return El UserGameResponseDTO resultante.
      */
     @Mapping(source = "game.igdbId", target = "gameIgdbId")
+    @Mapping(source = "game.name", target = "gameName")
+    @Mapping(source = "game.cover", target = "gameCover")
     UserGameResponseDTO toResponseDto(UserGame userGame);
 
     /**

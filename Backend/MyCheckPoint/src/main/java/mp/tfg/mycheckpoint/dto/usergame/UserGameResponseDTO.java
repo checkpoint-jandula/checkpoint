@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import mp.tfg.mycheckpoint.dto.enums.UserGamePersonalPlatform;
 import mp.tfg.mycheckpoint.dto.enums.UserGameStatus;
+import mp.tfg.mycheckpoint.dto.games.CoverDto;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -33,6 +34,15 @@ public class UserGameResponseDTO {
     @Schema(description = "ID de IGDB del juego al que se refiere esta entrada de la biblioteca.", example = "1020")
     @JsonProperty("game_igdb_id")
     private Long gameIgdbId;
+
+
+    @Schema(description = "Nombre del juego.") // NUEVO
+    @JsonProperty("game_name")              // NUEVO
+    private String gameName;                // NUEVO
+
+    @Schema(description = "Información de la carátula del juego.") // NUEVO
+    @JsonProperty("game_cover")             // NUEVO
+    private CoverDto gameCover;
 
     /**
      * Estado actual del juego según el usuario (ej. COMPLETADO_HISTORIA, JUGANDO).
