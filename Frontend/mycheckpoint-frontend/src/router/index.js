@@ -13,10 +13,9 @@ import GameDetailsView from "../views/GameDetails/GameDetailsView.vue";
 
 // Vistas para las listas/tiers públicos y búsqueda de usuarios
 import ViewPublicGameListsView from "../views/ViewPublicGameListsView/ViewPublicGameListsView.vue"; // Crear este placeholder
-import ViewSinglePublicGameListView from "../views/ViewSinglePublicGameListView/ViewSinglePublicGameListView.vue"; // Crear este placeholder
 import ViewPublicTierListsView from "../views/ViewPublicTierListsView/ViewPublicTierListsView.vue"; // Crear este placeholder
 import ViewSinglePublicTierListView from "../views/ViewSinglePublicTierListView/ViewSinglePublicTierListView.vue"; // Crear este placeholder
-import EditGameListView from "../views/EditGameListView/EditGameListView.vue"; // Crear este placeholder
+import GameListDetailView from "../views/GameListDetailView/GameListDetailView.vue"; // Crear este placeholder
 import SearchUsersView from "../views/SearchUsersView/SearchUsersView.vue"; // Crear este placeholder
 
 import { useAuthStore } from "@/stores/authStore";
@@ -84,15 +83,15 @@ const routes = [
     component: ViewPublicGameListsView, // Crear este componente placeholder
   },
   {
-    path: "/gamelists/public/:listPublicId", // NUEVA RUTA para ver una lista pública
+    path: "/gamelists/public/:listPublicId", // RUTA para ver una lista pública
     name: "view-public-gamelist",
-    component: ViewSinglePublicGameListView, // Placeholder por ahora
+    component: GameListDetailView, 
     props: true,
   },
   {
-    path: "/my-gamelists/:listPublicId/edit", // Ruta para editar una lista específica
-    name: "edit-gamelist",
-    component: EditGameListView,
+    path: "/my-gamelists/:listPublicId/detail", // Ruta para una lista específica del usuario
+    name: "gamelist-detail",
+    component: GameListDetailView,
     props: true, // Para pasar listPublicId como prop al componente
     meta: { requiresAuth: true }, // Esta vista requiere autenticación
   },

@@ -113,8 +113,6 @@ export const createMyGameList = (gameListRequestDTO) => {
 };
 
 export const deleteMyGameList = (listPublicId) => {
-  // gameListsApi es tu instancia de GameListControllerApi
-  // deleteMyGameList es el método generado que corresponde a DELETE /api/v1/users/me/gamelists/{listPublicId}
   return gameListsApi.deleteMyGameList(listPublicId); //
 };
 
@@ -122,9 +120,11 @@ export const getMySpecificGameListDetails = (listPublicId) => {
   return gameListsApi.getMySpecificGameList(listPublicId); // OperationId: getMySpecificGameList
 };
 
+export const viewPublicGameListDetails = (listPublicId) => {
+  return gameListsApi.viewPublicGameList(listPublicId); // OperationId: viewPublicGameList
+};
+
 export const updateMyUserGameList = (listPublicId, gameListRequestDTO) => {
-  // gameListsApi es tu instancia de GameListControllerApi
-  // updateMyGameList es el método generado que corresponde a PUT /api/v1/users/me/gamelists/{listPublicId}
   return gameListsApi.updateMyGameList(listPublicId, gameListRequestDTO); //
 };
 

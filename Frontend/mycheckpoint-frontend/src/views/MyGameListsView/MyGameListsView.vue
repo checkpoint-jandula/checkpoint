@@ -14,7 +14,7 @@
 
     <div class="gamelists-grid" v-if="!isLoading && gameLists.length > 0">
       <div v-for="list in gameLists" :key="list.public_id" class="gamelist-card-mylists">
-        <RouterLink :to="{ name: 'edit-gamelist', params: { listPublicId: list.public_id } }" class="card-link-mylists">
+        <RouterLink :to="{ name: 'gamelist-detail', params: { listPublicId: list.public_id } }" class="card-link-mylists">
           <div class="card-header-mylists">
             <h3 class="list-name-mylists">{{ list.name }}</h3>
             <span class="list-status-chip" :class="list.is_public ? 'public' : 'private'">
@@ -70,7 +70,7 @@
 import { ref, onMounted, reactive } from 'vue';
 import { RouterLink } from 'vue-router';
 import { getMyGameLists, createMyGameList } from '@/services/apiInstances';
-// No necesitamos authStore aquí ya que los endpoints son para '/me/'
+
 
 const gameLists = ref([]); // Array<GameListResponseDTO>
 const isLoading = ref(true);

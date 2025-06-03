@@ -1,5 +1,5 @@
 <template>
-  <div class="edit-gamelist-view">
+  <div class="gamelist-detail-view">
     <div v-if="isLoading && !gameListDetails" class="loading-message">Cargando detalles de la lista...</div>
     <div v-else-if="errorMessageApi" class="error-message">{{ errorMessageApi }}</div>
 
@@ -22,7 +22,7 @@
               </span>
             </div>
           </div>
-          <div class="header-actions-gamelist">
+          <div v-if="isOwner" class="header-actions-gamelist">
             <button @click="openEditMetadataModal" class="action-button secondary">
               Editar Detalles de Lista
             </button>
@@ -33,7 +33,7 @@
         </div>
       </section>
 
-      <div v-if="showEditMetadataModal" class="modal-overlay" @click.self="closeEditMetadataModal">
+      <div v-if="showEditMetadataModal && isOwner" class="modal-overlay" @click.self="closeEditMetadataModal">
         <div class="modal-panel">
           <form @submit.prevent="handleUpdateListMetadata" class="edit-list-form-modal">
             <div class="modal-header">
@@ -72,10 +72,10 @@
       <section class="games-in-list-section section-block">
         <div class="section-header-actions">
           <h2>Juegos en "{{ gameListDetails.name }}" ({{ gameListDetails.game_count || (gameListDetails.games_in_list ? gameListDetails.games_in_list.length : 0) }})</h2>
-          <button @click="openAddGamesModal" class="action-button primary" :disabled="isLoadingActionOnGame">Añadir Juegos</button>
+          <button v-if="isOwner" @click="openAddGamesModal" class="action-button primary" :disabled="isLoadingActionOnGame">Añadir Juegos</button>
         </div>
         
-        <div v-if="isLoadingActionOnGame && !showAddGamesModal" class="loading-message small-loader">Actualizando lista...</div>
+        <div v-if="isLoadingActionOnGame && !showAddGamesModal && isOwner" class="loading-message small-loader">Actualizando lista...</div>
         <div v-else-if="!gameListDetails.games_in_list || gameListDetails.games_in_list.length === 0" class="empty-message list-empty">
           Esta lista aún no tiene juegos.
         </div>
@@ -96,6 +96,7 @@
               </div>
             </RouterLink>
             <button 
+              v-if="isOwner"
               @click.stop="handleRemoveGameFromList(gameEntry.internal_id)" 
               class="remove-game-button" 
               title="Quitar de la lista"
@@ -107,7 +108,7 @@
       </section>
     </div>
 
-    <div v-if="showAddGamesModal" class="modal-overlay" @click.self="closeAddGamesModal">
+    <div v-if="showAddGamesModal && isOwner" class="modal-overlay" @click.self="closeAddGamesModal">
       <div class="modal-panel add-games-modal-panel">
         <div class="modal-header">
           <h3>Añadir Juegos a "{{ gameListDetails?.name }}"</h3>
@@ -150,16 +151,17 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch, reactive } from 'vue';
+import { ref, onMounted, watch, reactive, computed } from 'vue';
 import { useRoute, RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { 
-  getMySpecificGameListDetails, 
+  getMySpecificGameListDetails,
+  viewPublicGameListDetails, 
   updateMyUserGameList,
   addGameToMyGameList,
   removeGameFromMyGameList,
-  getMyUserGameLibrary, // Para el modal de añadir juegos
-  deleteMyGameList // Para eliminar la lista completa
+  getMyUserGameLibrary, 
+  deleteMyGameList 
 } from '@/services/apiInstances';
 import defaultLibraryCover from '@/assets/img/default-game-cover.png';
 
@@ -169,7 +171,6 @@ const props = defineProps({
     required: true,
   },
 });
-
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
@@ -197,6 +198,13 @@ const gamesToAdd = ref(new Set()); // Set de internal_id de UserGame
 const addGamesErrorMessage = ref('');
 const isLoadingActionOnGame = ref(false); // Loader para añadir/quitar juego individual
 
+const isOwner = computed(() => {
+  if (!authStore.isAuthenticated || !authStore.currentUser || !gameListDetails.value) {
+    return false;
+  }
+  return authStore.currentUser.nombre_usuario === gameListDetails.value.owner_username;
+});
+
 const fetchListDetails = async (id) => {
   if (!id) {
     errorMessageApi.value = "ID de lista no proporcionado.";
@@ -207,20 +215,44 @@ const fetchListDetails = async (id) => {
   errorMessageApi.value = '';
   // gameListDetails.value = null; // No resetear aquí para que no parpadee si solo se actualizan los juegos
   try {
+    // Intenta obtenerla como si fuera del usuario actual
     const response = await getMySpecificGameListDetails(id);
     gameListDetails.value = response.data;
-    console.log("Detalles de la lista de juegos cargados/actualizados:", gameListDetails.value);
+    console.log("Detalles de la lista (propia) cargados:", gameListDetails.value);
   } catch (error) {
-    console.error(`Error cargando detalles de la lista de juegos (ID: ${id}):`, error);
-    if (error.response) {
-      errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar los detalles de la lista.'}`;
-      if (error.response.status === 403 || error.response.status === 401 || error.response.status === 404) {
-        router.push({ name: 'my-gamelists-profile-tab' }); // Redirigir a la vista de "Mis Listas" en el perfil
+    console.warn(`No se pudo cargar la lista ${id} como propia del usuario. Intentando como pública...`, error.response?.status);
+    // Si falla (ej. 403 No eres el dueño, 404 No es tuya), intenta obtenerla como pública
+    if (error.response && (error.response.status === 403 || error.response.status === 404 || error.response.status === 401)) {
+      try {
+        const publicResponse = await viewPublicGameListDetails(id);
+        gameListDetails.value = publicResponse.data;
+        // Asegurarse de que realmente sea pública si el endpoint la devuelve
+        if (!gameListDetails.value.is_public) {
+            // Si el endpoint viewPublicGameList devuelve una lista privada (no debería según la semántica)
+            errorMessageApi.value = "Esta lista no es pública.";
+            gameListDetails.value = null; // No mostrarla
+            router.push({ name: 'home' }); // O a una página de error
+            return;
+        }
+        console.log("Detalles de la lista (pública de otro) cargados:", gameListDetails.value);
+      } catch (publicError) {
+        console.error(`Error cargando lista pública de juegos (ID: ${id}):`, publicError);
+        if (publicError.response) {
+          errorMessageApi.value = `Error ${publicError.response.status}: ${publicError.response.data.message || publicError.response.data.error || 'No se pudo cargar la lista pública.'}`;
+        } else {
+          errorMessageApi.value = 'Error de red al cargar la lista pública.';
+        }
+        gameListDetails.value = null;
       }
-    } else {
-      errorMessageApi.value = 'Error de red al cargar los detalles de la lista.';
+    } else { // Otro tipo de error en la primera llamada
+        console.error(`Error cargando detalles de la lista de juegos (ID: ${id}):`, error);
+        if (error.response) {
+            errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar los detalles de la lista.'}`;
+        } else {
+            errorMessageApi.value = 'Error de red al cargar los detalles de la lista.';
+        }
+        gameListDetails.value = null;
     }
-    gameListDetails.value = null; // Asegurarse de limpiar en caso de error total
   } finally {
     isLoading.value = false;
   }
@@ -477,7 +509,7 @@ const truncateText = (text, maxLength) => {
 };
 </script>
 <style scoped>
-.edit-gamelist-view {
+.gamelist-detail-view {
   max-width: 900px;
   margin: 1rem auto;
   padding: 1rem;
