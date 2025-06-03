@@ -14,7 +14,7 @@ import GameDetailsView from "../views/GameDetails/GameDetailsView.vue";
 // Vistas para las listas/tiers públicos y búsqueda de usuarios
 import ViewPublicGameListsView from "../views/ViewPublicGameListsView/ViewPublicGameListsView.vue"; // Crear este placeholder
 import ViewPublicTierListsView from "../views/ViewPublicTierListsView/ViewPublicTierListsView.vue"; // Crear este placeholder
-import ViewSinglePublicTierListView from "../views/ViewSinglePublicTierListView/ViewSinglePublicTierListView.vue"; // Crear este placeholder
+import TierListDetail from "@/views/TierListDetailView/TierListDetail.vue";
 import GameListDetailView from "../views/GameListDetailView/GameListDetailView.vue"; // Crear este placeholder
 import SearchUsersView from "../views/SearchUsersView/SearchUsersView.vue"; // Crear este placeholder
 
@@ -103,7 +103,7 @@ const routes = [
   {
     path: "/tierlists/public/:tierListPublicId", // NUEVA RUTA para ver una tier list pública
     name: "view-public-tierlist",
-    component: ViewSinglePublicTierListView, // Placeholder por ahora
+    component: TierListDetail, // Placeholder por ahora
     props: true,
   },
   {

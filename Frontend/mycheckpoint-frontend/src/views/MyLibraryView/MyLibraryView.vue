@@ -1,7 +1,5 @@
 <template>
   <div class="my-library-view">
-    <h1>Mi Biblioteca de Juegos</h1>
-
     <div class="filters-panel section-block">
       <h3>Filtrar Biblioteca</h3>
       <div class="filter-controls">
@@ -39,7 +37,7 @@
     <div v-else-if="errorMessage" class="error-message">{{ errorMessage }}</div>
     <div v-else-if="filteredLibraryGames.length === 0" class="empty-library-message">
       <span v-if="myLibraryGames.length === 0 && !selectedStatus && !selectedPlatform && selectedMinScore === null">
-        Aún no tienes juegos en tu biblioteca. ¡Empieza a añadir algunos! [cite: 51]
+        Aún no tienes juegos en tu biblioteca. ¡Empieza a añadir algunos! 
       </span>
       <span v-else>
         No hay juegos que coincidan con tus filtros actuales.
@@ -56,25 +54,25 @@
             @error="onLibraryCoverError" 
           />
           <div class="card-content">
-            <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3> [cite: 54]
+            <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3> 
             <div class="user-game-info">
               <div v-if="gameEntry.status" class="info-item">
                 <strong>Estado:</strong> {{ formatUserGameStatus(gameEntry.status) }}
               </div>
               <div v-if="gameEntry.score !== null && gameEntry.score !== undefined" class="info-item">
-                <strong>Puntuación:</strong> {{ gameEntry.score }}/10 [cite: 55]
+                <strong>Puntuación:</strong> {{ gameEntry.score }}/10 
               </div>
               <div v-if="gameEntry.personal_platform" class="info-item">
                 <strong>Plataforma:</strong> {{ formatPersonalPlatform(gameEntry.personal_platform) }}
               </div>
-              <div v-if="gameEntry.has_possession !== null && gameEntry.has_possession !== undefined" class="info-item"> [cite: 56]
-                <strong>Lo Tengo:</strong> {{ gameEntry.has_possession ? 'Sí' : 'No' }} [cite: 57]
+              <div v-if="gameEntry.has_possession !== null && gameEntry.has_possession !== undefined" class="info-item"> 
+                <strong>Lo Tengo:</strong> {{ gameEntry.has_possession ? 'Sí' : 'No' }} 
               </div>
               <div v-if="gameEntry.start_date" class="info-item">
                 <strong>Empezado:</strong> {{ formatDateSimple(gameEntry.start_date) }}
               </div>
               <div v-if="gameEntry.end_date" class="info-item">
-                <strong>Terminado:</strong> {{ formatDateSimple(gameEntry.end_date) }} [cite: 58]
+                <strong>Terminado:</strong> {{ formatDateSimple(gameEntry.end_date) }} 
               </div>
             </div>
           </div>
@@ -86,15 +84,15 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'; // Añadido computed
-import { RouterLink } from 'vue-router'; // [cite: 59]
+import { RouterLink } from 'vue-router'; 
 import { getMyUserGameLibrary } from '@/services/apiInstances';
 import { useAuthStore } from '@/stores/authStore';
-import defaultLibraryCover from '@/assets/img/default-game-cover.png'; // [cite: 60]
+import defaultLibraryCover from '@/assets/img/default-game-cover.png'; 
 
 const authStore = useAuthStore();
 
 const myLibraryGames = ref([]);
-const isLoading = ref(true); // [cite: 61]
+const isLoading = ref(true); 
 const errorMessage = ref('');
 
 // --- Estado para los Filtros ---
@@ -129,24 +127,24 @@ const scoreOptions = [
 
 const fetchLibrary = async () => {
   isLoading.value = true;
-  errorMessage.value = ''; // [cite: 62]
+  errorMessage.value = ''; 
   try {
     const response = await getMyUserGameLibrary();
     myLibraryGames.value = response.data;
-    // console.log("Biblioteca cargada:", myLibraryGames.value); // [cite: 63]
+    // console.log("Biblioteca cargada:", myLibraryGames.value); 
   } catch (error) {
     console.error("Error cargando la biblioteca:", error);
-    if (error.response) { // [cite: 64]
-      errorMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo cargar tu biblioteca.'}`; // [cite: 65]
+    if (error.response) { 
+      errorMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo cargar tu biblioteca.'}`; 
     } else {
-      errorMessage.value = 'Error de red al cargar tu biblioteca.'; // [cite: 66]
+      errorMessage.value = 'Error de red al cargar tu biblioteca.'; 
     }
   } finally {
     isLoading.value = false;
   }
 };
 
-onMounted(() => { // [cite: 67]
+onMounted(() => { 
   if (authStore.isAuthenticated) {
     fetchLibrary();
   } else {
@@ -175,41 +173,66 @@ const filteredLibraryGames = computed(() => {
 });
 
 // Funciones Helper (ya las tenías, me aseguro de que la de getCoverUrl sea la que funciona para ti)
-const formatUserGameStatus = (status) => { // [cite: 68]
+const formatUserGameStatus = (status) => { 
   if (!status) return 'No especificado';
-  const statusMap = { /* tu mapa de estados */ }; // [cite: 69]
-  return statusMap[status] || status; // [cite: 70]
+  const statusMap = {
+    'COMPLETED': 'Completado',
+    'COMPLETED_MAIN_STORY': 'Historia Principal Completada',
+    'COMPLETED_MAIN_AND_SIDES': 'Principal + Secundarias Importantes Completado',
+    'COMPLETED_100_PERCENT': 'Completado al 100%',
+    'ARCHIVED': 'Archivado',
+    'ARCHIVED_ABANDONED': 'Archivado (Abandonado)',
+    'ARCHIVED_NOT_PLAYING': 'Archivado (Sin Jugar)',
+    'WISHLIST': 'En Lista de Deseos',
+    'PLAYING': 'Jugando',
+    'PLAYING_PAUSED': 'Jugando (En Pausa)',
+    'PLAYING_ENDLESS': 'Jugando (Sin Fin / Rejugable)'
+    // Añade más si tu enum tiene más valores
+  };
+  return statusMap[status] || status; 
 };
 
-const formatPersonalPlatform = (platform) => { // [cite: 71]
+const formatPersonalPlatform = (platform) => { 
   if (!platform) return 'No especificada';
-  const platformMap = { /* tu mapa de plataformas */ };
-  return platformMap[platform] || platform; // [cite: 72]
+  const platformMap = {
+    'STEAM': 'Steam',
+    'EPIC_GAMES': 'Epic Games Store',
+    'GOG_GALAXY': 'GOG Galaxy',
+    'XBOX': 'Xbox',
+    'PLAYSTATION': 'PlayStation',
+    'NINTENDO': 'Nintendo',
+    'BATTLE_NET': 'Battle.net',
+    'EA_APP': 'EA App',
+    'UBISOFT_CONNECT': 'Ubisoft Connect',
+    'OTHER': 'Otra'
+    // Añade más si tu enum tiene más valores
+  };
+  return platformMap[platform] || platform; 
 };
 
 const formatDateSimple = (dateString) => dateString || '';
 
-const getCoverUrl = (coverData, targetSizeFallback = 't_cover_big') => { // [cite: 73]
-  const currentPlaceholder = defaultLibraryCover; // [cite: 75]
+const getCoverUrl = (coverData, targetSizeFallback = 't_cover_big') => { 
+  const currentPlaceholder = defaultLibraryCover; 
   // console.log('[getCoverUrl] Recibido coverData:', coverData);
-  if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') { // [cite: 76]
+  if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') { 
     let imageUrl = coverData.url;
-    if (imageUrl.startsWith('//')) { // [cite: 77]
-      imageUrl = `https:${imageUrl}`; // [cite: 78]
+    if (imageUrl.startsWith('//')) { 
+      imageUrl = `https:${imageUrl}`; 
     }
     if (imageUrl.includes('/t_thumb/')) {
-      imageUrl = imageUrl.replace('/t_thumb/', `/${targetSizeFallback}/`); // [cite: 79]
+      imageUrl = imageUrl.replace('/t_thumb/', `/${targetSizeFallback}/`); 
     } else if (imageUrl.includes('/t_cover_small/')) {
-      imageUrl = imageUrl.replace('/t_cover_small/', `/${targetSizeFallback}/`); // [cite: 80]
+      imageUrl = imageUrl.replace('/t_cover_small/', `/${targetSizeFallback}/`); 
     }
-    return imageUrl; // [cite: 82]
+    return imageUrl; 
   }
-  return currentPlaceholder; // [cite: 83]
+  return currentPlaceholder; 
 };
 
 const onLibraryCoverError = (event) => {
   console.warn("Error al cargar imagen de biblioteca, usando placeholder:", event.target.src);
-  event.target.src = defaultLibraryCover; // [cite: 84]
+  event.target.src = defaultLibraryCover; 
 };
 
 const resetFilters = () => {

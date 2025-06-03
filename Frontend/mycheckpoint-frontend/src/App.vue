@@ -85,8 +85,8 @@ header {
 
 .logo {
   margin-right: 0.75rem;
-  height: 35px; /* Ligeramente más pequeño */
-  width: 35px;
+  height: 50px; /* Ligeramente más pequeño */
+  width: 50px;
 }
 
 .app-title {

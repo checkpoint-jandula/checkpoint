@@ -145,6 +145,10 @@ export const getMyProfileTierLists = () => {
   return tierListsApi.getAllProfileTierListsForCurrentUser(); //
 };
 
+export const getTierListDetailsByPublicId = (tierListPublicId) => {
+  return tierListsApi.getTierListByPublicId(tierListPublicId); //
+};
+
 export const createMyProfileTierList = (tierListCreateRequestDTO) => { // Ya deberías tener esta de antes
   return tierListsApi.createProfileTierList(tierListCreateRequestDTO); //
 };
