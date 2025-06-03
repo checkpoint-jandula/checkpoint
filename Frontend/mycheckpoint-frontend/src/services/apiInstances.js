@@ -141,3 +141,11 @@ export const fetchAllPublicTierLists = () => {
   return tierListsApi.getAllPublicTierLists(); //
 };
 
+export const getMyProfileTierLists = () => {
+  return tierListsApi.getAllProfileTierListsForCurrentUser(); //
+};
+
+export const createMyProfileTierList = (tierListCreateRequestDTO) => { // Ya deberías tener esta de antes
+  return tierListsApi.createProfileTierList(tierListCreateRequestDTO); //
+};
+

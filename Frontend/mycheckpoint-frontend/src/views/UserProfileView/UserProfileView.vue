@@ -33,6 +33,10 @@
               v-if="isOwnProfile">
         Mis Listas de Juegos
       </button>
+      <button @click="setActiveTab('my-tierlists')" :class="{ 'active-tab': activeTab === 'my-tierlists' }"
+              v-if="isOwnProfile">
+        Mis Tier Lists de Juegos
+      </button>
       </nav>
 
       <div class="tab-content">
@@ -54,8 +58,8 @@
         <MyGameListsView />
       </div>
 
-        <div v-if="activeTab === 'tierlists'" class="tab-pane">
-          <p>Tier Lists de {{ viewedUser.nombre_usuario }} (Pendiente).</p>
+        <div v-if="activeTab === 'my-tierlists'" class="tab-pane">
+          <MyTierListsView/>
         </div>
       </div>
 
@@ -77,6 +81,7 @@ import defaultAvatar from '@/assets/img/default-avatar.png'; // Placeholder para
 // Importar el componente de la biblioteca del usuario
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue'; // Ajusta la ruta si es necesario
 import MyGameListsView from '../MyGameListsView/MyGameListsView.vue';
+import MyTierListsView from '../MyTierListsView/MyTierListsView.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
