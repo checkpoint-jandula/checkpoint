@@ -357,6 +357,32 @@
         </form>
       </div>
     </div>
+    <div v-if="showAddSectionModal && isEditableTierList" class="modal-overlay" @click.self="closeAddSectionModal">
+      <div class="modal-panel add-section-modal-panel">
+        <form @submit.prevent="handleAddSection" class="add-section-form">
+          <div class="modal-header">
+            <h3>Añadir Nueva Tier</h3>
+            <button type="button" @click="closeAddSectionModal" class="modal-close-button" aria-label="Cerrar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="newSectionName">Nombre de la Tier:</label>
+              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100" v-focus>
+              <small>Ej: S, A, Buenos, Mis Favoritos...</small>
+            </div>
+            <div v-if="addSectionErrorMessage" class="error-message modal-error">{{ addSectionErrorMessage }}</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="closeAddSectionModal" class="action-button secondary" :disabled="isAddingSection">
+              Cancelar
+            </button>
+            <button type="submit" :disabled="isAddingSection || !newSectionForm.name.trim()" class="action-button primary">
+              {{ isAddingSection ? 'Añadiendo...' : 'Añadir Tier' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 <script setup>
@@ -367,6 +393,7 @@ import {
   getTierListDetailsByPublicId,
   updateMyTierListMetadata,
   deleteMyTierList,
+  addSectionToMyTierList,
   // --- Funciones API placeholder para futuras implementaciones ---
   // addSectionToMyTierList,
   // updateMySectionName,
@@ -413,7 +440,11 @@ const editingSectionName = ref(false);
 const editingSectionId = ref(null);
 const currentSectionNameEdit = ref("");
 
-// (Placeholders para otros estados de modales como añadir sección, añadir ítems)
+// --- NUEVO: Estado para Modal de "Añadir Sección" ---
+const showAddSectionModal = ref(false);
+const newSectionForm = reactive({ name: '' }); // TierSectionRequestDTO tiene 'name'
+const isAddingSection = ref(false);
+const addSectionErrorMessage = ref('');
 
 const isOwner = computed(() => {
   if (
@@ -693,12 +724,53 @@ const confirmRemoveSection = async (sectionId) => {
   }
 };
 
-// --- Lógica para Añadir/Quitar Ítems (Placeholders) ---
+// --- NUEVA: Lógica para Añadir Nueva Sección (Tier) ---
 const openAddSectionModal = () => {
-  if (!isEditableTierList.value) return;
-  alert("TODO: Abrir modal para añadir nueva sección (tier).");
+  if (!isEditableTierList.value) { // Solo para PROFILE_GLOBAL y si es dueño
+    alert("Solo se pueden añadir secciones a Tier Lists de tipo 'Perfil Global' que te pertenezcan.");
+    return;
+  }
+  newSectionForm.name = ''; // Resetear el nombre
+  addSectionErrorMessage.value = '';
+  showAddSectionModal.value = true;
 };
 
+const closeAddSectionModal = () => {
+  showAddSectionModal.value = false;
+};
+
+const handleAddSection = async () => {
+  if (!newSectionForm.name || newSectionForm.name.trim() === '') {
+    addSectionErrorMessage.value = "El nombre de la sección es obligatorio.";
+    return;
+  }
+  if (!isEditableTierList.value) { // Doble chequeo
+    addSectionErrorMessage.value = "No se puede añadir sección a este tipo de Tier List.";
+    return;
+  }
+
+  isAddingSection.value = true;
+  addSectionErrorMessage.value = '';
+
+  const requestDTO = { name: newSectionForm.name.trim() }; // TierSectionRequestDTO
+
+  try {
+    const response = await addSectionToMyTierList(props.tierListPublicId, requestDTO);
+    tierListDetails.value = response.data; // La API devuelve la TierList actualizada
+    closeAddSectionModal();
+  } catch (error) {
+    console.error("Error añadiendo sección a la Tier List:", error);
+    if (error.response?.data) {
+      addSectionErrorMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo añadir la sección.";
+    } else {
+      addSectionErrorMessage.value = "Error de red al añadir la sección.";
+    }
+  } finally {
+    isAddingSection.value = false;
+  }
+};
+
+// --- Lógica para Añadir/Quitar Ítems (Placeholders) ---
 const openAddGamesToTierModal = (sectionId) => {
   if (!isEditableTierList.value) {
     alert("No puedes añadir juegos a este tipo de Tier List.");

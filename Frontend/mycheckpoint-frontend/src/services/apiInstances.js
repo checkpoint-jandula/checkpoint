@@ -161,3 +161,7 @@ export const deleteMyTierList = (tierListPublicId) => {
   return tierListsApi.deleteTierList(tierListPublicId); //
 };
 
+export const addSectionToMyTierList = (tierListPublicId, tierSectionRequestDTO) => {
+  return tierListsApi.addSectionToTierList(tierListPublicId, tierSectionRequestDTO); //
+};
+
