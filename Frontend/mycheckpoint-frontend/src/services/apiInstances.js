@@ -171,3 +171,7 @@ export const updateMySectionName = (tierListPublicId, sectionInternalId, tierSec
   return tierListsApi.updateSectionName(tierListPublicId, sectionInternalId, tierSectionRequestDTO); //
 };
 
+export const removeSectionFromMyTierList = (tierListPublicId, sectionInternalId) => {
+  return tierListsApi.removeSectionFromTierList(tierListPublicId, sectionInternalId); //
+};
+

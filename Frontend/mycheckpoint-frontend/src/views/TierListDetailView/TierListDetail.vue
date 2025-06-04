@@ -88,7 +88,7 @@
       </section>
 
       <div class="tier-maker-container section-block">
-        <div class="add-section-controls" v-if="isEditableTierList">
+        <div class="add-section-controls" v-if="isOwner">
           <button @click="openAddSectionModal" class="action-button secondary">
             Añadir Nueva Tier (Fila)
           </button>
@@ -355,7 +355,7 @@
         </form>
       </div>
     </div>
-    <div v-if="showAddSectionModal && isEditableTierList" class="modal-overlay" @click.self="closeAddSectionModal">
+    <div v-if="showAddSectionModal && isOwner" class="modal-overlay" @click.self="closeAddSectionModal">
       <div class="modal-panel add-section-modal-panel">
         <form @submit.prevent="handleAddSection" class="add-section-form">
           <div class="modal-header">
@@ -393,6 +393,7 @@ import {
   deleteMyTierList,
   addSectionToMyTierList,
   updateMySectionName,
+  removeSectionFromMyTierList,
   // --- Funciones API placeholder para futuras implementaciones ---
   // addSectionToMyTierList,
   // updateMySectionName,
@@ -766,11 +767,53 @@ const saveSectionName = async (sectionId) => {
   }
 };
 
+// --- LÓGICA ACTUALIZADA PARA ELIMINAR SECCIÓN ---
+const confirmRemoveSection = async (sectionId) => {
+  // La edición/eliminación de secciones está disponible para ambos tipos si es el propietario
+  if (!isOwner.value) { 
+    alert("Solo el propietario puede eliminar secciones.");
+    return;
+  }
+
+  const section = tierListDetails.value?.sections?.find(s => s.internal_id === sectionId);
+  if (!section) {
+    alert("Sección no encontrada.");
+    return;
+  }
+  // No se puede eliminar la sección por defecto "Sin Clasificar" (esta lógica ya previene que aparezca en sortedCustomSections)
+  // Adicionalmente, la API no permite eliminar la última sección personalizable.
+  if (sortedCustomSections.value.length <= 1) {
+    alert("No puedes eliminar la última sección. Una Tier List debe tener al menos una tier personalizable.");
+    return;
+  }
+
+  if (window.confirm(`¿Seguro que quieres eliminar la tier "${section.name}"? Los juegos en ella se moverán a "Sin Clasificar".`)) {
+    isLoadingSectionAction.value = true; // Usar un loader específico para acciones de sección/item
+    errorMessageApi.value = ''; // Limpiar errores globales
+    try {
+      const response = await removeSectionFromMyTierList(props.tierListPublicId, sectionId);
+      tierListDetails.value = response.data; // La API devuelve la TierList actualizada
+      // Opcionalmente, podrías mostrar un mensaje de éxito temporal
+    } catch (error) {
+      console.error(`Error eliminando sección ID ${sectionId}:`, error);
+      if (error.response?.data) {
+        // Mostrar error en un lugar visible, tal vez un toast o un ref específico para errores de sección
+        alert(`Error: ${error.response.data.message || error.response.data.error || "No se pudo eliminar la sección."}`);
+      } else {
+        alert("Error de red al eliminar la sección.");
+      }
+    } finally {
+      isLoadingSectionAction.value = false;
+    }
+  }
+};
+
+
 
 // --- NUEVA: Lógica para Añadir Nueva Sección (Tier) ---
 const openAddSectionModal = () => {
-  if (!isEditableTierList.value) { // Solo para PROFILE_GLOBAL y si es dueño
-    alert("Solo se pueden añadir secciones a Tier Lists de tipo 'Perfil Global' que te pertenezcan.");
+  if (!isOwner.value) { // Solo para PROFILE_GLOBAL y si es dueño
+    alert("Solo se pueden añadir secciones a Tier Lists que te pertenezcan.");
     return;
   }
   newSectionForm.name = ''; // Resetear el nombre
@@ -787,11 +830,7 @@ const handleAddSection = async () => {
     addSectionErrorMessage.value = "El nombre de la sección es obligatorio.";
     return;
   }
-  if (!isEditableTierList.value) { // Doble chequeo
-    addSectionErrorMessage.value = "No se puede añadir sección a este tipo de Tier List.";
-    return;
-  }
-
+  
   isAddingSection.value = true;
   addSectionErrorMessage.value = '';
 
