@@ -107,17 +107,9 @@
                   <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
                     class="tier-item-cover-compact" @error="onTierItemCoverError" />
                 </RouterLink>
-                <button v-if="
-                  isEditableTierList ||
-                  (isOwner &&
-                    tierListDetails.type ===
-                    'FROM_GAMELIST') /*y se permite mover*/
-                " @click.stop="
-                    handleRemoveItemFromTier(
-                      item.tier_list_item_id,
-                      section.internal_id
-                    )
-                    " class="remove-item-button-compact" title="Quitar ítem de esta tier">
+                <button 
+                  v-if="isEditableTierList" @click.stop="handleRemoveItemFromTierList(item.tier_list_item_id)" class="remove-item-button-compact" 
+                  title="Quitar ítem de la tier list">
                   &times;
                 </button>
               </div>
@@ -318,6 +310,7 @@ import {
   updateMySectionName,
   removeSectionFromMyTierList,
   addItemToMyUnclassifiedSection,
+  removeItemFromMyTierList,
   getMyUserGameLibrary
   // --- Funciones API placeholder para futuras implementaciones ---
   // addSectionToMyTierList,
@@ -917,6 +910,39 @@ const handleAddSelectedGamesToUnclassified = async () => { // Nombre específico
     }
   } catch (error) { /* ... (manejo de error como antes) ... */ }
   finally { isLoadingTierItemAction.value = false; }
+};
+
+// --- LÓGICA ACTUALIZADA PARA QUITAR ÍTEM DE TIER LIST (PROFILE_GLOBAL) ---
+const handleRemoveItemFromTierList = async (tierListItemId) => {
+  // Esta acción solo está permitida para Tier Lists de tipo PROFILE_GLOBAL y si el usuario es el propietario.
+  if (!isEditableTierList.value) { 
+    alert("Solo puedes quitar ítems directamente de Tier Lists de tipo 'Perfil Global' que te pertenezcan."); 
+    return; 
+  }
+  if (!tierListItemId) {
+    console.error("ID del ítem de la tier list no proporcionado.");
+    // Podrías mostrar un mensaje de error al usuario aquí si lo deseas
+    return;
+  }
+
+  if (window.confirm("¿Estás seguro de que quieres quitar este juego de la tier list?")) {
+    isLoadingTierItemAction.value = true;
+    // Podrías tener un mensaje específico para esta acción si quieres
+    // editTierListMetadataMessage.value = ''; 
+    // editTierListMetadataError.value = false;
+    try {
+      console.log(`Quitando ítem con ID ${tierListItemId} de la Tier List ${props.tierListPublicId}`);
+      const response = await removeItemFromMyTierList(props.tierListPublicId, tierListItemId);
+      tierListDetails.value = response.data; // La API devuelve la TierList actualizada
+      // alert("Ítem quitado de la Tier List."); // O un mensaje de toast/notificación
+    } catch (error) {
+      console.error(`Error quitando ítem ${tierListItemId} de la Tier List:`, error);
+      // Mostrar error al usuario
+      alert(`Error: ${error.response?.data?.message || error.response?.data?.error || 'No se pudo quitar el ítem.'}`);
+    } finally {
+      isLoadingTierItemAction.value = false;
+    }
+  }
 };
 
 // Función para obtener URL de carátula de un item de la Tier List

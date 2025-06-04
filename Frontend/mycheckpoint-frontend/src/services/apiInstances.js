@@ -179,3 +179,7 @@ export const addItemToMyUnclassifiedSection = (tierListPublicId, tierListItemAdd
   return tierListsApi.addItemToUnclassifiedSection(tierListPublicId, tierListItemAddRequestDTO); //
 };
 
+export const removeItemFromMyTierList = (tierListPublicId, tierListItemInternalId) => {
+  return tierListsApi.removeItemFromTierList(tierListPublicId, tierListItemInternalId); //
+};
+
