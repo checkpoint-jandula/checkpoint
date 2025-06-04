@@ -12,56 +12,41 @@
         <div class="header-content">
           <div class="header-info">
             <h1>{{ tierListDetails.name }}</h1>
-            <p
-              v-if="tierListDetails.description"
-              class="list-description-detail"
-            >
+            <p v-if="tierListDetails.description" class="list-description-detail">
               {{ tierListDetails.description }}
             </p>
             <p v-else class="list-description-detail-empty">
               <em>Esta tier list no tiene descripción.</em>
             </p>
             <div class="list-meta-detail">
-              <span
-                :class="[
-                  'status-chip',
-                  tierListDetails.is_public ? 'public' : 'private',
-                ]"
-              >
+              <span :class="[
+                'status-chip',
+                tierListDetails.is_public ? 'public' : 'private',
+              ]">
                 {{ tierListDetails.is_public ? "Pública" : "Privada" }}
               </span>
               <span class="meta-separator">|</span>
               <span>Tipo: {{ formatTierListType(tierListDetails.type) }}</span>
-              <span
-                v-if="
-                  tierListDetails.type === 'FROM_GAMELIST' &&
-                  tierListDetails.source_game_list_public_id
-                "
-                class="meta-separator"
-                >|</span
-              >
-              <span
-                v-if="
-                  tierListDetails.type === 'FROM_GAMELIST' &&
-                  tierListDetails.source_game_list_public_id
-                "
-              >
-                <RouterLink
-                  :to="{
-                    name: 'gamelist-detail',
-                    params: {
-                      listPublicId: tierListDetails.source_game_list_public_id,
-                    },
-                  }"
-                >
+              <span v-if="
+                tierListDetails.type === 'FROM_GAMELIST' &&
+                tierListDetails.source_game_list_public_id
+              " class="meta-separator">|</span>
+              <span v-if="
+                tierListDetails.type === 'FROM_GAMELIST' &&
+                tierListDetails.source_game_list_public_id
+              ">
+                <RouterLink :to="{
+                  name: 'gamelist-detail',
+                  params: {
+                    listPublicId: tierListDetails.source_game_list_public_id,
+                  },
+                }">
                   Ver GameList Origen
                 </RouterLink>
               </span>
               <span class="meta-separator">|</span>
               <span>Creada por: {{ tierListDetails.owner_username }}</span>
-              <span v-if="tierListDetails.updated_at" class="meta-separator"
-                >|</span
-              >
+              <span v-if="tierListDetails.updated_at" class="meta-separator">|</span>
               <span v-if="tierListDetails.updated_at">
                 Última act.:
                 {{ formatReadableDate(tierListDetails.updated_at) }}
@@ -69,18 +54,10 @@
             </div>
           </div>
           <div v-if="isOwner" class="header-actions-tierlist">
-            <button
-              v-if="isEditableTierList"
-              @click="openEditTierListMetadataModal"
-              class="action-button secondary"
-            >
+            <button v-if="isEditableTierList" @click="openEditTierListMetadataModal" class="action-button secondary">
               Editar Detalles
             </button>
-            <button
-              @click="handleDeleteTierList"
-              :disabled="isLoading"
-              class="action-button secondary"
-            >
+            <button @click="handleDeleteTierList" :disabled="isLoading" class="action-button secondary">
               Eliminar Tier List
             </button>
           </div>
@@ -94,90 +71,53 @@
           </button>
         </div>
 
-        <div
-          v-for="section in sortedCustomSections"
-          :key="section.internal_id"
-          class="tier-row"
-        >
-          <div
-            class="tier-label"
-            :style="{ backgroundColor: getTierColor(section.name) }"
-          >
-            <span
-              v-if="
-                !editingSectionName || editingSectionId !== section.internal_id
-              "
-              >{{ section.name }}</span
-            >
-            <input
-              v-if="isOwner && editingSectionName && editingSectionId === section.internal_id && !section.is_default_unclassified" 
-              v-model="currentSectionNameEdit"
-              @keyup.enter="saveSectionName(section.internal_id)"
-              @blur="saveSectionName(section.internal_id)"
-              @keyup.esc="cancelEditSectionName"
-              class="section-name-input"
-              v-focus
-            />
+        <div v-for="section in sortedCustomSections" :key="section.internal_id" class="tier-row">
+          <div class="tier-label" :style="{ backgroundColor: getTierColor(section.name) }">
+            <span v-if="
+              !editingSectionName || editingSectionId !== section.internal_id
+            ">{{ section.name }}</span>
+            <input v-if="
+              isOwner &&
+              editingSectionName &&
+              editingSectionId === section.internal_id &&
+              !section.is_default_unclassified
+            " v-model="currentSectionNameEdit" @keyup.enter="saveSectionName(section.internal_id)"
+              @blur="saveSectionName(section.internal_id)" @keyup.esc="cancelEditSectionName" class="section-name-input"
+              v-focus />
             <div v-if="isOwner && !section.is_default_unclassified" class="tier-actions">
-              <button
-                @click="startEditSectionName(section)"
-                class="icon-button"
-                title="Editar nombre tier"
-              >
+              <button @click="startEditSectionName(section)" class="icon-button" title="Editar nombre tier">
                 &#9998;
               </button>
-              <button
-                @click="confirmRemoveSection(section.internal_id)"
-                class="icon-button danger"
-                title="Eliminar tier"
-              >
+              <button @click="confirmRemoveSection(section.internal_id)" class="icon-button danger"
+                title="Eliminar tier">
                 &times;
               </button>
             </div>
           </div>
           <div class="tier-items-droppable-area">
-            <div
-              v-if="!section.items || section.items.length === 0"
-              class="tier-empty-placeholder"
-            >
-              {{ isOwner ? 'Arrastra o añade juegos aquí' : '(Vacío)'}}
+            <div v-if="!section.items || section.items.length === 0" class="tier-empty-placeholder">
+              {{ isOwner ? "Arrastra o añade juegos aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div
-                v-for="item in section.items"
-                :key="item.tier_list_item_id"
-                class="tier-item-compact"
-              >
-                <RouterLink
-                  :to="{
-                    name: 'game-details',
-                    params: { igdbId: item.game_igdb_id },
-                  }"
-                  :title="item.game_name"
-                >
-                  <img
-                    :src="getItemCoverUrl(item.game_cover_url, 'cover_big')"
-                    :alt="item.game_name"
-                    class="tier-item-cover-compact"
-                    @error="onTierItemCoverError"
-                  />
+              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact">
+                <RouterLink :to="{
+                  name: 'game-details',
+                  params: { igdbId: item.game_igdb_id },
+                }" :title="item.game_name">
+                  <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
+                    class="tier-item-cover-compact" @error="onTierItemCoverError" />
                 </RouterLink>
-                <button
-                  v-if="
-                    isEditableTierList ||
-                    (isOwner &&
-                      tierListDetails.type ===
-                        'FROM_GAMELIST') /*y se permite mover*/
-                  "
-                  @click.stop="
+                <button v-if="
+                  isEditableTierList ||
+                  (isOwner &&
+                    tierListDetails.type ===
+                    'FROM_GAMELIST') /*y se permite mover*/
+                " @click.stop="
                     handleRemoveItemFromTier(
                       item.tier_list_item_id,
                       section.internal_id
                     )
-                  "
-                  class="remove-item-button-compact"
-                  title="Quitar ítem de esta tier"
-                >
+                    " class="remove-item-button-compact" title="Quitar ítem de esta tier">
                   &times;
                 </button>
               </div>
@@ -185,72 +125,47 @@
           </div>
         </div>
 
-        <div
-          class="tier-row unclassified-tier-row"
-          v-if="
-            tierListDetails.unclassified_section ||
-            (isEditableTierList &&
+        <div class="tier-row unclassified-tier-row" v-if="
+          tierListDetails.unclassified_section ||
+          (isEditableTierList &&
               /*lógica para mostrar juegos de la biblioteca no añadidos*/ true)
-          "
-        >
+        ">
           <div class="tier-label unclassified-label">
             <span>{{
               tierListDetails.unclassified_section
                 ? tierListDetails.unclassified_section.name
                 : "Juegos Disponibles"
             }}</span>
-            <button
-              v-if="isEditableTierList"
-              @click="openAddGamesToTierModal(null)"
-              class="action-button-small tertiary"
-              title="Añadir juegos de tu biblioteca a esta Tier List"
-            >
+            <button v-if="isEditableTierList" @click="openAddGamesToUnclassifiedModal"
+              class="action-button-small tertiary" title="Añadir juegos de tu biblioteca a esta Tier List">
               Añadir Juegos de Biblioteca
             </button>
           </div>
           <div class="tier-items-droppable-area">
-            <div
-              v-if="
-                !tierListDetails.unclassified_section ||
-                !tierListDetails.unclassified_section.items ||
-                tierListDetails.unclassified_section.items.length === 0
-              "
-              class="tier-empty-placeholder"
-            >
+            <div v-if="
+              !tierListDetails.unclassified_section ||
+              !tierListDetails.unclassified_section.items ||
+              tierListDetails.unclassified_section.items.length === 0
+            " class="tier-empty-placeholder">
               {{
                 tierListDetails.type === "FROM_GAMELIST"
-                  ? "Los juegos de la GameList base aparecerán aquí si no están en una tier."
-                  : "Arrastra juegos aquí o añádelos desde tu biblioteca."
+                  ? "Arrastra juegos aquí o añádelos desde tu biblioteca."
+                  : "(Vacìo)"
               }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div
-                v-for="item in tierListDetails.unclassified_section.items"
-                :key="item.tier_list_item_id"
-                class="tier-item-compact"
-              >
-                <RouterLink
-                  :to="{
-                    name: 'game-details',
-                    params: { igdbId: item.game_igdb_id },
-                  }"
-                  :title="item.game_name"
-                >
-                  <img
-                    :src="getItemCoverUrl(item.game_cover_url, 'cover_big')"
-                    :alt="item.game_name"
-                    class="tier-item-cover-compact"
-                    @error="onTierItemCoverError"
-                  />
+              <div v-for="item in tierListDetails.unclassified_section.items" :key="item.tier_list_item_id"
+                class="tier-item-compact">
+                <RouterLink :to="{
+                  name: 'game-details',
+                  params: { igdbId: item.game_igdb_id },
+                }" :title="item.game_name">
+                  <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
+                    class="tier-item-cover-compact" @error="onTierItemCoverError" />
                 </RouterLink>
-                <button
-                  v-if="isEditableTierList"
-                  @click.stop="
-                    handleRemoveItemFromTierList(item.tier_list_item_id)
-                  "
-                  class="remove-item-button-compact"
-                  title="Quitar ítem de la tier list (si es PROFILE_GLOBAL)"
-                >
+                <button v-if="isEditableTierList" @click.stop="
+                  handleRemoveItemFromTierList(item.tier_list_item_id)
+                  " class="remove-item-button-compact" title="Quitar ítem de la tier list (si es PROFILE_GLOBAL)">
                   &times;
                 </button>
               </div>
@@ -260,91 +175,93 @@
       </div>
     </div>
 
-    <div
-      v-if="!isLoading && !tierListDetails && errorMessageApi"
-      class="no-results-message"
-    >
+    <div v-if="showAddGamesToUnclassifiedModal && isEditableTierList" class="modal-overlay"
+      @click.self="closeAddGamesToUnclassifiedModal">
+      <div class="modal-panel add-games-modal-panel">
+        <div class="modal-header">
+          <h3>Añadir Juegos a "{{ tierListDetails?.unclassified_section?.name || 'Sin Clasificar' }}"</h3>
+          <button type="button" @click="closeAddGamesToUnclassifiedModal" class="modal-close-button"
+            aria-label="Cerrar">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="isLoadingLibraryForSelection" class="loading-message">Cargando tu biblioteca...</div>
+          <div v-if="addItemsErrorMessage" class="error-message modal-error">{{ addItemsErrorMessage }}</div>
+
+          <div v-if="!isLoadingLibraryForSelection && libraryForSelection.length === 0 && !addItemsErrorMessage"
+            class="empty-message">
+            No hay juegos en tu biblioteca para añadir (o ya están todos en la Tier List).
+          </div>
+
+          <ul class="add-games-list" v-if="libraryForSelection.length > 0">
+            <li v-for="game in libraryForSelection" :key="game.internal_id"
+              :class="{ 'selected-for-add': gamesToAdd.has(game.internal_id) }"
+              @click="toggleGameForAdditionInternal(game.internal_id)"> <img
+                :src="getItemCoverUrl(game.game_cover.url, 'cover_big')" :alt="game.game_name"
+                class="add-game-cover-thumb" @error="onTierItemCoverError" />
+              <span class="add-game-name-text">{{ game.game_name || `ID: ${game.game_igdb_id}` }}</span>
+              <input type="checkbox" :checked="gamesToAdd.has(game.internal_id)" @click.stop readonly
+                class="add-game-checkbox" />
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <div v-if="addItemsErrorMessage && !isLoadingLibraryForSelection"
+            class="action-message modal-action-message error-message">
+            {{ addItemsErrorMessage }}
+          </div>
+          <button type="button" @click="closeAddGamesToUnclassifiedModal" class="action-button secondary"
+            :disabled="isLoadingTierItemAction || isLoadingLibraryForSelection">
+            Cancelar
+          </button>
+          <button @click="handleAddSelectedGamesToUnclassified"
+            :disabled="isLoadingTierItemAction || isLoadingLibraryForSelection || gamesToAdd.size === 0"
+            class="action-button primary">
+            {{ isLoadingTierItemAction ? 'Añadiendo...' : `Añadir (${gamesToAdd.size})` }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!isLoading && !tierListDetails && errorMessageApi" class="no-results-message">
       No se pudo cargar la Tier List o no es accesible.
     </div>
-    <div
-      v-if="showEditTierListMetadataModal && isEditableTierList"
-      class="modal-overlay"
-      @click.self="closeEditTierListMetadataModal"
-    >
+    <div v-if="showEditTierListMetadataModal && isEditableTierList" class="modal-overlay"
+      @click.self="closeEditTierListMetadataModal">
       <div class="modal-panel">
-        <form
-          @submit.prevent="handleUpdateTierListMetadata"
-          class="edit-tierlist-form-modal"
-        >
+        <form @submit.prevent="handleUpdateTierListMetadata" class="edit-tierlist-form-modal">
           <div class="modal-header">
             <h3>Editar Detalles de la Tier List</h3>
-            <button
-              type="button"
-              @click="closeEditTierListMetadataModal"
-              class="modal-close-button"
-              aria-label="Cerrar"
-            >
+            <button type="button" @click="closeEditTierListMetadataModal" class="modal-close-button"
+              aria-label="Cerrar">
               &times;
             </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
               <label for="editTierListName">Nombre de la Tier List:</label>
-              <input
-                type="text"
-                id="editTierListName"
-                v-model="editTierListForm.name"
-                required
-                maxlength="150"
-              />
+              <input type="text" id="editTierListName" v-model="editTierListForm.name" required maxlength="150" />
             </div>
             <div class="form-group">
-              <label for="editTierListDescription"
-                >Descripción (opcional):</label
-              >
-              <textarea
-                id="editTierListDescription"
-                v-model="editTierListForm.description"
-                rows="3"
-                maxlength="1000"
-              ></textarea>
+              <label for="editTierListDescription">Descripción (opcional):</label>
+              <textarea id="editTierListDescription" v-model="editTierListForm.description" rows="3"
+                maxlength="1000"></textarea>
             </div>
             <div class="form-group checkbox-group">
-              <input
-                type="checkbox"
-                id="editTierListIsPublic"
-                v-model="editTierListForm.is_public"
-              />
-              <label for="editTierListIsPublic"
-                >¿Hacer esta Tier List pública?</label
-              >
+              <input type="checkbox" id="editTierListIsPublic" v-model="editTierListForm.is_public" />
+              <label for="editTierListIsPublic">¿Hacer esta Tier List pública?</label>
             </div>
           </div>
           <div class="modal-footer">
-            <div
-              v-if="editTierListMetadataMessage"
-              :class="
-                editTierListMetadataError ? 'error-message' : 'success-message'
-              "
-              class="action-message modal-action-message"
-            >
+            <div v-if="editTierListMetadataMessage" :class="editTierListMetadataError ? 'error-message' : 'success-message'
+              " class="action-message modal-action-message">
               {{ editTierListMetadataMessage }}
             </div>
-            <button
-              type="button"
-              @click="closeEditTierListMetadataModal"
-              class="action-button secondary"
-              :disabled="isLoadingTierListMetadataUpdate"
-            >
+            <button type="button" @click="closeEditTierListMetadataModal" class="action-button secondary"
+              :disabled="isLoadingTierListMetadataUpdate">
               Cancelar
             </button>
-            <button
-              type="submit"
-              :disabled="
-                isLoadingTierListMetadataUpdate || !editTierListForm.name.trim()
-              "
-              class="action-button primary"
-            >
+            <button type="submit" :disabled="isLoadingTierListMetadataUpdate || !editTierListForm.name.trim()
+              " class="action-button primary">
               {{
                 isLoadingTierListMetadataUpdate
                   ? "Guardando..."
@@ -360,22 +277,28 @@
         <form @submit.prevent="handleAddSection" class="add-section-form">
           <div class="modal-header">
             <h3>Añadir Nueva Tier</h3>
-            <button type="button" @click="closeAddSectionModal" class="modal-close-button" aria-label="Cerrar">&times;</button>
+            <button type="button" @click="closeAddSectionModal" class="modal-close-button" aria-label="Cerrar">
+              &times;
+            </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
               <label for="newSectionName">Nombre de la Tier:</label>
-              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100">
+              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100" />
               <small>Ej: S, A, Buenos, Mis Favoritos...</small>
             </div>
-            <div v-if="addSectionErrorMessage" class="error-message modal-error">{{ addSectionErrorMessage }}</div>
+            <div v-if="addSectionErrorMessage" class="error-message modal-error">
+              {{ addSectionErrorMessage }}
+            </div>
           </div>
           <div class="modal-footer">
-            <button type="button" @click="closeAddSectionModal" class="action-button secondary" :disabled="isAddingSection">
+            <button type="button" @click="closeAddSectionModal" class="action-button secondary"
+              :disabled="isAddingSection">
               Cancelar
             </button>
-            <button type="submit" :disabled="isAddingSection || !newSectionForm.name.trim()" class="action-button primary">
-              {{ isAddingSection ? 'Añadiendo...' : 'Añadir Tier' }}
+            <button type="submit" :disabled="isAddingSection || !newSectionForm.name.trim()"
+              class="action-button primary">
+              {{ isAddingSection ? "Añadiendo..." : "Añadir Tier" }}
             </button>
           </div>
         </form>
@@ -384,7 +307,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch, reactive, computed, nextTick} from "vue";
+import { ref, onMounted, watch, reactive, computed, nextTick } from "vue";
 import { useRoute, RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -394,6 +317,8 @@ import {
   addSectionToMyTierList,
   updateMySectionName,
   removeSectionFromMyTierList,
+  addItemToMyUnclassifiedSection,
+  getMyUserGameLibrary
   // --- Funciones API placeholder para futuras implementaciones ---
   // addSectionToMyTierList,
   // updateMySectionName,
@@ -421,14 +346,13 @@ const tierListDetails = ref(null); // TierListResponseDTO
 const isLoading = ref(true);
 const errorMessageApi = ref("");
 
-
 // --- Estado para editar metadatos de TierList ---
 const showEditTierListMetadataModal = ref(false);
 const isLoadingTierListMetadataUpdate = ref(false);
 const editMetadataMessage = ref(""); // <--- DEFINICIÓN
 const editMetadataError = ref(false); // <--- DEFINICIÓN
 const editTierListMetadataError = ref(false);
-const editTierListMetadataMessage = ref(''); // <--- DEFINICIÓN
+const editTierListMetadataMessage = ref(""); // <--- DEFINICIÓN
 const editTierListForm = reactive({
   name: "",
   description: null,
@@ -441,15 +365,23 @@ const editingSectionId = ref(null);
 const currentSectionNameEdit = ref("");
 
 // Variables de estado para mensajes de error/éxito específicos de la edición de sección
-const sectionEditMessage = ref('');
+const sectionEditMessage = ref("");
 const sectionEditError = ref(false);
 const isLoadingSectionAction = ref(false);
 
 // --- NUEVO: Estado para Modal de "Añadir Sección" ---
 const showAddSectionModal = ref(false);
-const newSectionForm = reactive({ name: '' }); // TierSectionRequestDTO tiene 'name'
+const newSectionForm = reactive({ name: "" }); // TierSectionRequestDTO tiene 'name'
 const isAddingSection = ref(false);
-const addSectionErrorMessage = ref('');
+const addSectionErrorMessage = ref("");
+
+// --- ESTADO PARA MODAL DE AÑADIR JUEGOS (ahora específico para "Sin Clasificar") ---
+const showAddGamesToUnclassifiedModal = ref(false); // Nuevo nombre para claridad
+const isLoadingLibraryForSelection = ref(false); //
+const libraryForSelection = ref([]);             //
+const gamesToAdd = ref(new Set());      // Set de internal_id de UserGame a añadir
+const addItemsErrorMessage = ref('');           // (Renombrado de addGamesErrorMessage)
+const isLoadingTierItemAction = ref(false);     // (Renombrado de isLoadingActionOnGame)
 
 const isOwner = computed(() => {
   if (
@@ -500,11 +432,10 @@ const fetchTierListDetails = async (id) => {
       error
     );
     if (error.response) {
-      errorMessageApi.value = `Error ${error.response.status}: ${
-        error.response.data.message ||
+      errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message ||
         error.response.data.error ||
         "No se pudieron cargar los detalles."
-      }`;
+        }`;
       if (error.response.status === 403 || error.response.status === 404) {
         router.push({ name: "home" });
       }
@@ -532,7 +463,7 @@ watch(
 const vFocus = {
   mounted: (el) => {
     // `nextTick` espera a que Vue haya actualizado el DOM
-    nextTick(() => { 
+    nextTick(() => {
       el.focus();
     });
   },
@@ -544,7 +475,7 @@ const vFocus = {
         el.focus();
       });
     }
-  }
+  },
 };
 
 // --- Lógica para Editar Metadatos de la Tier List ---
@@ -561,8 +492,8 @@ const openEditTierListMetadataModal = () => {
   // Resetear mensajes del modal
   editMetadataMessage.value = ""; // <--- Se usa aquí
   editMetadataError.value = false; // <--- Se usa aquí
-  editTierListMetadataMessage.value = ''; // Resetea el mensaje
-  editTierListMetadataError.value = false;   // Resetea el estado de error
+  editTierListMetadataMessage.value = ""; // Resetea el mensaje
+  editTierListMetadataError.value = false; // Resetea el estado de error
   showEditTierListMetadataModal.value = true;
 };
 
@@ -572,17 +503,19 @@ const closeEditTierListMetadataModal = () => {
 
 const handleUpdateTierListMetadata = async () => {
   if (!isEditableTierList.value) {
-    editTierListMetadataMessage.value = "No tienes permiso para editar esta Tier List o no es editable.";
+    editTierListMetadataMessage.value =
+      "No tienes permiso para editar esta Tier List o no es editable.";
     editTierListMetadataError.value = true;
     return;
   }
   if (!editTierListForm.name || editTierListForm.name.trim() === "") {
-    editTierListMetadataMessage.value = "El nombre de la Tier List es obligatorio.";
+    editTierListMetadataMessage.value =
+      "El nombre de la Tier List es obligatorio.";
     editTierListMetadataError.value = true;
     return;
   }
   isLoadingTierListMetadataUpdate.value = true;
-  editTierListMetadataMessage.value = '';
+  editTierListMetadataMessage.value = "";
   editTierListMetadataError.value = false;
 
   const requestDTO = {
@@ -608,7 +541,7 @@ const handleUpdateTierListMetadata = async () => {
 
   if (!hasChanges) {
     editTierListMetadataMessage.value = "No se han realizado cambios.";
-    editTierListMetadataError.value = false; 
+    editTierListMetadataError.value = false;
     isLoadingTierListMetadataUpdate.value = false;
     return;
   }
@@ -619,16 +552,22 @@ const handleUpdateTierListMetadata = async () => {
       changes
     );
     tierListDetails.value = response.data;
-    editTierListMetadataMessage.value = "¡Detalles de la Tier List actualizados!";
+    editTierListMetadataMessage.value =
+      "¡Detalles de la Tier List actualizados!";
     editTierListMetadataError.value = false;
     setTimeout(() => closeEditTierListMetadataModal(), 1500);
   } catch (error) {
     console.error("Error actualizando metadatos de la Tier List:", error);
     editTierListMetadataError.value = true;
     if (error.response?.data) {
-       editTierListMetadataMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo actualizar la Tier List.";
+      editTierListMetadataMessage.value =
+        error.response.data.errors?.join(", ") ||
+        error.response.data.message ||
+        error.response.data.error ||
+        "No se pudo actualizar la Tier List.";
     } else {
-      editTierListMetadataMessage.value = "Error de red al actualizar la Tier List.";
+      editTierListMetadataMessage.value =
+        "Error de red al actualizar la Tier List.";
     }
   } finally {
     isLoadingTierListMetadataUpdate.value = false;
@@ -697,7 +636,7 @@ const startEditSectionName = (section) => {
   editingSectionId.value = section.internal_id;
   currentSectionNameEdit.value = section.name;
   editingSectionName.value = true;
-  sectionEditMessage.value = ''; // Limpiar mensajes previos
+  sectionEditMessage.value = ""; // Limpiar mensajes previos
   sectionEditError.value = false;
   // El foco se maneja con v-focus en el template
 };
@@ -705,8 +644,8 @@ const startEditSectionName = (section) => {
 const cancelEditSectionName = () => {
   editingSectionName.value = false;
   editingSectionId.value = null;
-  currentSectionNameEdit.value = '';
-  sectionEditMessage.value = '';
+  currentSectionNameEdit.value = "";
+  sectionEditMessage.value = "";
   sectionEditError.value = false;
 };
 
@@ -716,23 +655,31 @@ const saveSectionName = async (sectionId) => {
     return;
   }
 
-  const section = tierListDetails.value?.sections?.find(s => s.internal_id === sectionId) || 
-                  (tierListDetails.value?.unclassified_section?.internal_id === sectionId ? tierListDetails.value.unclassified_section : null);
+  const section =
+    tierListDetails.value?.sections?.find((s) => s.internal_id === sectionId) ||
+    (tierListDetails.value?.unclassified_section?.internal_id === sectionId
+      ? tierListDetails.value.unclassified_section
+      : null);
 
   const newName = currentSectionNameEdit.value.trim();
 
-  if (!section || newName === '' || newName === section.name) {
+  if (!section || newName === "" || newName === section.name) {
     // Si no hay cambios, o el nombre está vacío, o no se encontró la sección, cancelar edición.
     cancelEditSectionName();
-    if (newName === '' && section) { // Si se intentó guardar vacío
-        sectionEditMessage.value = "El nombre de la sección no puede estar vacío.";
-        sectionEditError.value = true;
-        // No ocultar inmediatamente para que se vea el mensaje
-        setTimeout(() => { sectionEditMessage.value = ''; sectionEditError.value = false; }, 3000);
+    if (newName === "" && section) {
+      // Si se intentó guardar vacío
+      sectionEditMessage.value =
+        "El nombre de la sección no puede estar vacío.";
+      sectionEditError.value = true;
+      // No ocultar inmediatamente para que se vea el mensaje
+      setTimeout(() => {
+        sectionEditMessage.value = "";
+        sectionEditError.value = false;
+      }, 3000);
     }
     return;
   }
-  
+
   // No se puede editar el nombre de la sección "Sin Clasificar" por defecto
   if (section.is_default_unclassified) {
     alert("El nombre de la sección 'Sin Clasificar' no se puede cambiar.");
@@ -741,22 +688,35 @@ const saveSectionName = async (sectionId) => {
   }
 
   isLoadingSectionAction.value = true;
-  sectionEditMessage.value = '';
+  sectionEditMessage.value = "";
   sectionEditError.value = false;
 
   try {
     const requestDTO = { name: newName }; // TierSectionRequestDTO
-    const response = await updateMySectionName(props.tierListPublicId, sectionId, requestDTO);
+    const response = await updateMySectionName(
+      props.tierListPublicId,
+      sectionId,
+      requestDTO
+    );
     // Actualizar los detalles de la tier list completa con la respuesta
-    tierListDetails.value = response.data; 
+    tierListDetails.value = response.data;
     sectionEditMessage.value = "Nombre de la sección actualizado.";
     sectionEditError.value = false;
-    setTimeout(() => { sectionEditMessage.value = ''; }, 3000);
+    setTimeout(() => {
+      sectionEditMessage.value = "";
+    }, 3000);
   } catch (error) {
-    console.error(`Error actualizando nombre de sección ID ${sectionId}:`, error);
+    console.error(
+      `Error actualizando nombre de sección ID ${sectionId}:`,
+      error
+    );
     sectionEditError.value = true;
     if (error.response?.data) {
-      sectionEditMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo actualizar el nombre de la sección.";
+      sectionEditMessage.value =
+        error.response.data.errors?.join(", ") ||
+        error.response.data.message ||
+        error.response.data.error ||
+        "No se pudo actualizar el nombre de la sección.";
     } else {
       sectionEditMessage.value = "Error de red al actualizar el nombre.";
     }
@@ -770,12 +730,14 @@ const saveSectionName = async (sectionId) => {
 // --- LÓGICA ACTUALIZADA PARA ELIMINAR SECCIÓN ---
 const confirmRemoveSection = async (sectionId) => {
   // La edición/eliminación de secciones está disponible para ambos tipos si es el propietario
-  if (!isOwner.value) { 
+  if (!isOwner.value) {
     alert("Solo el propietario puede eliminar secciones.");
     return;
   }
 
-  const section = tierListDetails.value?.sections?.find(s => s.internal_id === sectionId);
+  const section = tierListDetails.value?.sections?.find(
+    (s) => s.internal_id === sectionId
+  );
   if (!section) {
     alert("Sección no encontrada.");
     return;
@@ -783,22 +745,36 @@ const confirmRemoveSection = async (sectionId) => {
   // No se puede eliminar la sección por defecto "Sin Clasificar" (esta lógica ya previene que aparezca en sortedCustomSections)
   // Adicionalmente, la API no permite eliminar la última sección personalizable.
   if (sortedCustomSections.value.length <= 1) {
-    alert("No puedes eliminar la última sección. Una Tier List debe tener al menos una tier personalizable.");
+    alert(
+      "No puedes eliminar la última sección. Una Tier List debe tener al menos una tier personalizable."
+    );
     return;
   }
 
-  if (window.confirm(`¿Seguro que quieres eliminar la tier "${section.name}"? Los juegos en ella se moverán a "Sin Clasificar".`)) {
+  if (
+    window.confirm(
+      `¿Seguro que quieres eliminar la tier "${section.name}"? Los juegos en ella se moverán a "Sin Clasificar".`
+    )
+  ) {
     isLoadingSectionAction.value = true; // Usar un loader específico para acciones de sección/item
-    errorMessageApi.value = ''; // Limpiar errores globales
+    errorMessageApi.value = ""; // Limpiar errores globales
     try {
-      const response = await removeSectionFromMyTierList(props.tierListPublicId, sectionId);
+      const response = await removeSectionFromMyTierList(
+        props.tierListPublicId,
+        sectionId
+      );
       tierListDetails.value = response.data; // La API devuelve la TierList actualizada
       // Opcionalmente, podrías mostrar un mensaje de éxito temporal
     } catch (error) {
       console.error(`Error eliminando sección ID ${sectionId}:`, error);
       if (error.response?.data) {
         // Mostrar error en un lugar visible, tal vez un toast o un ref específico para errores de sección
-        alert(`Error: ${error.response.data.message || error.response.data.error || "No se pudo eliminar la sección."}`);
+        alert(
+          `Error: ${error.response.data.message ||
+          error.response.data.error ||
+          "No se pudo eliminar la sección."
+          }`
+        );
       } else {
         alert("Error de red al eliminar la sección.");
       }
@@ -808,16 +784,15 @@ const confirmRemoveSection = async (sectionId) => {
   }
 };
 
-
-
 // --- NUEVA: Lógica para Añadir Nueva Sección (Tier) ---
 const openAddSectionModal = () => {
-  if (!isOwner.value) { // Solo para PROFILE_GLOBAL y si es dueño
+  if (!isOwner.value) {
+    // Solo para PROFILE_GLOBAL y si es dueño
     alert("Solo se pueden añadir secciones a Tier Lists que te pertenezcan.");
     return;
   }
-  newSectionForm.name = ''; // Resetear el nombre
-  addSectionErrorMessage.value = '';
+  newSectionForm.name = ""; // Resetear el nombre
+  addSectionErrorMessage.value = "";
   showAddSectionModal.value = true;
 };
 
@@ -826,24 +801,31 @@ const closeAddSectionModal = () => {
 };
 
 const handleAddSection = async () => {
-  if (!newSectionForm.name || newSectionForm.name.trim() === '') {
+  if (!newSectionForm.name || newSectionForm.name.trim() === "") {
     addSectionErrorMessage.value = "El nombre de la sección es obligatorio.";
     return;
   }
-  
+
   isAddingSection.value = true;
-  addSectionErrorMessage.value = '';
+  addSectionErrorMessage.value = "";
 
   const requestDTO = { name: newSectionForm.name.trim() }; // TierSectionRequestDTO
 
   try {
-    const response = await addSectionToMyTierList(props.tierListPublicId, requestDTO);
+    const response = await addSectionToMyTierList(
+      props.tierListPublicId,
+      requestDTO
+    );
     tierListDetails.value = response.data; // La API devuelve la TierList actualizada
     closeAddSectionModal();
   } catch (error) {
     console.error("Error añadiendo sección a la Tier List:", error);
     if (error.response?.data) {
-      addSectionErrorMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo añadir la sección.";
+      addSectionErrorMessage.value =
+        error.response.data.errors?.join(", ") ||
+        error.response.data.message ||
+        error.response.data.error ||
+        "No se pudo añadir la sección.";
     } else {
       addSectionErrorMessage.value = "Error de red al añadir la sección.";
     }
@@ -852,28 +834,89 @@ const handleAddSection = async () => {
   }
 };
 
-// --- Lógica para Añadir/Quitar Ítems (Placeholders) ---
-const openAddGamesToTierModal = (sectionId) => {
-  if (!isEditableTierList.value) {
-    alert("No puedes añadir juegos a este tipo de Tier List.");
-    return;
-  }
-  alert(
-    `TODO: Abrir modal para añadir juegos a sección ID ${
-      sectionId !== null ? sectionId : "Sin Clasificar"
-    }`
-  );
+// --- LÓGICA ACTUALIZADA PARA AÑADIR JUEGOS A "SIN CLASIFICAR" ---
+const fetchLibraryForUnclassifiedSelection = async () => { // Nombre más específico
+  isLoadingLibraryForSelection.value = true;
+  addItemsErrorMessage.value = '';
+  libraryForSelection.value = [];
+  try {
+    const libraryResponse = await getMyUserGameLibrary();
+    if (!libraryResponse.data) throw new Error("No se recibieron datos de la biblioteca.");
+
+    const allItemsInTierListSet = new Set();
+    tierListDetails.value?.unclassified_section?.items?.forEach(item => allItemsInTierListSet.add(item.user_game_id)); //
+    tierListDetails.value?.sections?.forEach(section => {
+      section.items?.forEach(item => allItemsInTierListSet.add(item.user_game_id));
+    });
+
+    console.log("[AddGamesToUnclassifiedModal] UserGame IDs ya en la Tier List:", Array.from(allItemsInTierListSet));
+
+    libraryForSelection.value = libraryResponse.data.filter(libraryGame => {
+      // Asumimos que libraryGame (UserGameResponseDTO) tiene 'internal_id' que es el 'user_game_id'
+      const hasValidId = libraryGame.internal_id != null;
+      const notAlreadyInTierList = !allItemsInTierListSet.has(libraryGame.internal_id);
+      return hasValidId && notAlreadyInTierList;
+    });
+    console.log("[AddGamesToUnclassifiedModal] Juegos de biblioteca disponibles:", JSON.parse(JSON.stringify(libraryForSelection.value)));
+
+    if (libraryForSelection.value.length === 0) {
+      addItemsErrorMessage.value = libraryResponse.data.length > 0 ?
+        "Todos los juegos de tu biblioteca ya están en esta Tier List o falta información de ID." :
+        "No hay juegos en tu biblioteca para añadir.";
+    }
+  } catch (error) { /* ... (manejo de error como antes) ... */ }
+  finally { isLoadingLibraryForSelection.value = false; }
 };
 
-const handleRemoveItemFromTierList = async (tierListItemId) => {
+const openAddGamesToUnclassifiedModal = () => {
   if (!isEditableTierList.value) {
-    alert("No puedes quitar ítems de este tipo de Tier List directamente.");
+    alert("Solo se pueden añadir juegos a Tier Lists de tipo 'Perfil Global' que te pertenezcan.");
     return;
   }
-  if (window.confirm("¿Seguro que quieres quitar este juego de la tier?")) {
-    alert(`TODO: API Call - Quitar ítem ${tierListItemId}`);
-    await fetchTierListDetails(props.tierListPublicId);
+  gamesToAdd.value.clear();
+  fetchLibraryForUnclassifiedSelection(); // Llama a la función específica
+  showAddGamesToUnclassifiedModal.value = true; // Usa el ref específico para este modal
+};
+
+const closeAddGamesToUnclassifiedModal = () => { // Función específica para cerrar
+  showAddGamesToUnclassifiedModal.value = false;
+};
+
+const toggleGameForAdditionInternal = (userGameInternalId) => { // Renombrada para evitar confusión con la del template
+  if (!userGameInternalId) return;
+  if (gamesToAdd.value.has(userGameInternalId)) {
+    gamesToAdd.value.delete(userGameInternalId);
+  } else {
+    gamesToAdd.value.add(userGameInternalId);
   }
+};
+
+const handleAddSelectedGamesToUnclassified = async () => { // Nombre específico
+  if (gamesToAdd.value.size === 0) {
+    addItemsErrorMessage.value = "Selecciona al menos un juego."; return;
+  }
+  isLoadingTierItemAction.value = true;
+  addItemsErrorMessage.value = '';
+
+  const promises = [];
+  gamesToAdd.value.forEach(userGameId => {
+    const dto = { user_game_id: userGameId, order: null }; // TierListItemAddRequestDTO
+    promises.push(addItemToMyUnclassifiedSection(props.tierListPublicId, dto)); //
+  });
+
+  try {
+    const results = await Promise.allSettled(promises);
+    const someSucceeded = results.some(result => result.status === 'fulfilled');
+    if (someSucceeded) {
+      await fetchTierListDetails(props.tierListPublicId);
+      closeAddGamesToUnclassifiedModal();
+    }
+    const failedCount = results.filter(result => result.status === 'rejected').length;
+    if (failedCount > 0) {
+      addItemsErrorMessage.value = `No se pudieron añadir ${failedCount} juego(s).`;
+    }
+  } catch (error) { /* ... (manejo de error como antes) ... */ }
+  finally { isLoadingTierItemAction.value = false; }
 };
 
 // Función para obtener URL de carátula de un item de la Tier List
@@ -938,5 +981,4 @@ const getTierColor = (sectionName) => {
   return "rgba(200, 200, 200, 0.5)";
 };
 </script>
-<style src="./TierListDetail.css" scoped>
-</style>
+<style src="./TierListDetail.css" scoped></style>
