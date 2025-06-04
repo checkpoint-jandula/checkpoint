@@ -95,7 +95,10 @@
             </div>
           </div>
           <div class="tier-items-droppable-area"
-              :class="{ 'drag-over-active': dragOverSectionId === section.internal_id && isOwner }"
+              :class="{ 
+              'drag-over-active': dragOverSectionId === section.internal_id && dragOverItemId === null && isOwner,
+              'can-drop': isOwner && draggedItemInfo /* Añade clase si se puede soltar */
+            }"
               @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
               @dragleave="isOwner ? handleDragLeaveSection($event, section.internal_id) : null"
               @drop="isOwner ? handleDropOnSection($event, section.internal_id) : null">
@@ -103,10 +106,17 @@
               {{ isOwner ? "Arrastra o añade juegos aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
+              <div 
+                v-for="(item, index) in section.items" 
+                :key="item.tier_list_item_id" 
+                class="tier-item-compact"
+                :class="{ 'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner }"
                 :draggable="isOwner"
                 @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
                 @dragend="isOwner ? handleDragEnd($event) : null"
+                @dragover.prevent.stop="isOwner ? handleDragOver($event, section.internal_id, item.tier_list_item_id) : null" 
+                @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
+                @drop.stop="isOwner ? handleDrop($event, section.internal_id, item.tier_list_item_id) : null"
               >
                 <RouterLink :to="{
                   name: 'game-details',
@@ -142,7 +152,10 @@
             </button>
           </div>
           <div class="tier-items-droppable-area" 
-            :class="{ 'drag-over-active': dragOverSectionId === tierListDetails.unclassified_section.internal_id && isOwner }"
+            :class="{ 
+              'drag-over-active': dragOverSectionId === tierListDetails.unclassified_section.internal_id && dragOverItemId === null && isOwner,
+              'can-drop': isOwner && draggedItemInfo
+            }"
             @dragover.prevent="isOwner ? handleDragOver($event, tierListDetails.unclassified_section.internal_id) : null"
             @dragleave="isOwner ? handleDragLeaveSection($event, tierListDetails.unclassified_section.internal_id) : null"
             @drop="isOwner ? handleDropOnSection($event, tierListDetails.unclassified_section.internal_id) : null"
@@ -159,11 +172,17 @@
               }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div v-for="item in tierListDetails.unclassified_section.items" :key="item.tier_list_item_id"
+              <div 
+                v-for="item in tierListDetails.unclassified_section.items" 
+                :key="item.tier_list_item_id" 
                 class="tier-item-compact"
+                :class="{ 'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner }"
                 :draggable="isOwner"
                 @dragstart="isOwner ? handleDragStart($event, item, tierListDetails.unclassified_section.internal_id) : null"
                 @dragend="isOwner ? handleDragEnd($event) : null"
+                @dragover.prevent.stop="isOwner ? handleDragOver($event, tierListDetails.unclassified_section.internal_id, item.tier_list_item_id) : null"
+                @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
+                @drop.stop="isOwner ? handleDrop($event, tierListDetails.unclassified_section.internal_id, item.tier_list_item_id) : null"
               >
                 <RouterLink :to="{
                   name: 'game-details',
@@ -351,6 +370,7 @@ const errorMessageApi = ref("");
 // --- ESTADO PARA DRAG AND DROP ---
 const draggedItemInfo = ref(null); // { tierListItemId: number, originalSectionId: number | null, originalOrder: number }
 const dragOverSectionId = ref(null); // Para feedback visual
+const dragOverItemId = ref(null); // NUEVO: Para saber sobre qué ítem se está arrastrando
 
 
 // --- Estado para editar metadatos de TierList ---
@@ -961,27 +981,125 @@ const handleRemoveItemFromTierList = async (tierListItemId) => {
 
 // --- LÓGICA DE DRAG AND DROP ---
 const handleDragStart = (event, item, originalSectionInternalId) => {
-  if (!isOwner.value) { // Solo el propietario puede mover ítems
-    event.preventDefault();
-    return;
-  }
-  console.log('Drag Start:', item, 'from section:', originalSectionInternalId);
+  if (!isOwner.value) { event.preventDefault(); return; }
   event.dataTransfer.effectAllowed = 'move';
-  event.dataTransfer.setData('text/plain', item.tier_list_item_id); // Guardamos el ID del ítem
-  draggedItemInfo.value = {
-    tierListItemId: item.tier_list_item_id,
-    userGameId: item.user_game_id, // Necesario para el DTO de movimiento si lo requiriera (aunque no lo hace directamente)
-    originalSectionId: originalSectionInternalId,
-    // originalOrder: item.item_order // Necesitaríamos el order para optimizaciones locales, pero la API lo recalcula
+  // Guardamos el ID del TierListItem y su sección original
+  event.dataTransfer.setData('application/json', JSON.stringify({ 
+    tierListItemId: item.tier_list_item_id, 
+    originalSectionId: originalSectionInternalId 
+  }));
+  draggedItemInfo.value = { 
+    tierListItemId: item.tier_list_item_id, 
+    originalSectionId: originalSectionInternalId 
   };
-  // Añadir una clase al elemento que se arrastra para feedback visual
-  event.target.closest('.tier-item-compact').classList.add('dragging-item');
+  event.target.closest('.tier-item-compact')?.classList.add('dragging-item');
 };
 
-const handleDragOver = (event, targetSectionId) => {
-  event.preventDefault(); // Necesario para permitir el drop
+// Ahora handleDragOver puede recibir un itemId si se está sobre un ítem
+const handleDragOver = (event, targetSectionId, targetItemId = null) => {
+  if (!isOwner.value || !draggedItemInfo.value) return;
+  event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
-  dragOverSectionId.value = targetSectionId; // Para feedback visual
+  dragOverSectionId.value = targetSectionId;
+  dragOverItemId.value = targetItemId; // Guardar sobre qué ítem estamos
+};
+
+const handleDragLeaveItemOrSection = (event) => {
+  // Lógica simple para quitar el feedback visual.
+  // Puede necesitar ser más robusta si hay muchos elementos anidados.
+  // Si el relatedTarget (hacia dónde va el mouse) no es parte del área de drop, reseteamos.
+  if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
+    dragOverSectionId.value = null;
+    dragOverItemId.value = null;
+  } else if (!event.relatedTarget) { // A veces relatedTarget es null al salir del navegador o a un iframe
+    dragOverSectionId.value = null;
+    dragOverItemId.value = null;
+  }
+};
+
+const handleDrop = async (event, targetSectionId, beforeItemId = null) => {
+  event.preventDefault();
+  if (!draggedItemInfo.value || !isOwner.value) return;
+
+  const draggedData = JSON.parse(event.dataTransfer.getData('application/json'));
+  const tierListItemIdToMove = draggedData.tierListItemId;
+  const originalSectionId = draggedData.originalSectionId;
+
+  let targetSection = tierListDetails.value?.sections?.find(s => s.internal_id === targetSectionId);
+  if (!targetSection) {
+    if (tierListDetails.value?.unclassified_section?.internal_id === targetSectionId) {
+      targetSection = tierListDetails.value.unclassified_section;
+    } else {
+      console.error("Sección destino no encontrada en drop");
+      handleDragEnd(); return;
+    }
+  }
+
+  let newOrder = 0;
+  const itemsInTargetSection = targetSection.items || [];
+
+  if (beforeItemId !== null) {
+    // Se soltó sobre un ítem específico, encontrar su orden para insertar antes
+    const beforeItemIndex = itemsInTargetSection.findIndex(item => item.tier_list_item_id === beforeItemId);
+    if (beforeItemIndex !== -1) {
+      // Si el ítem arrastrado viene de la misma sección y se mueve ANTES de su posición original, el índice no cambia.
+      // Si se mueve DESPUÉS de su posición original, el índice es el del 'beforeItem'.
+      // Esta lógica puede ser compleja y a menudo el backend la maneja mejor.
+      // Por ahora, asumimos que el backend reordena si le damos el índice del elemento "antes de".
+      newOrder = itemsInTargetSection[beforeItemIndex].item_order;
+    } else {
+      // No se encontró el item 'before', añadir al final
+      newOrder = itemsInTargetSection.length;
+    }
+  } else {
+    // Se soltó en el área de la sección, no sobre un ítem específico -> añadir al final
+    newOrder = itemsInTargetSection.length;
+  }
+  
+  // Ajuste si se mueve dentro de la misma sección hacia una posición posterior
+  // Si el item se movió de la misma sección Y su orden original era menor que el nuevo orden de destino,
+  // y el nuevo orden se calculó como 'length', hay que restar 1 porque el item "desaparece" temporalmente.
+  // Esta lógica de frontend para el 'newOrder' puede ser complicada y propensa a errores.
+  // Es más robusto si el backend puede aceptar un "target_item_id" y una posición ("before" o "after").
+  // Por ahora, el DTO solo pide 'new_order'. Un 'new_order' simple (como el índice) debería ser manejado por el backend.
+
+  console.log(`Drop: Mover item ID ${tierListItemIdToMove} (originalmente en ${originalSectionId}) a sección ID ${targetSectionId}. ¿Antes del item ID ${beforeItemId}? Nuevo orden objetivo: ${newOrder}`);
+  
+  isLoadingTierItemAction.value = true;
+  errorMessageApi.value = '';
+
+  const moveDTO = {
+    target_section_internal_id: targetSectionId,
+    new_order: newOrder 
+  };
+
+  try {
+    const response = await moveItemInMyTierList(props.tierListPublicId, tierListItemIdToMove, moveDTO);
+    tierListDetails.value = response.data; // Actualizar con la respuesta completa
+  } catch (error) {
+    console.error("Error moviendo ítem en Tier List:", error);
+    if (error.response?.data) {
+      errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo mover el ítem.";
+    } else {
+      errorMessageApi.value = "Error de red al mover el ítem.";
+    }
+    // Recargar los detalles si la actualización local es compleja o falla
+    await fetchTierListDetails(props.tierListPublicId);
+  } finally {
+    isLoadingTierItemAction.value = false;
+    handleDragEnd(event); // Pasar el evento
+  }
+};
+
+const handleDragEnd = (event) => { // event puede ser opcional si se llama desde otros sitios sin él
+  console.log('Drag End');
+  // Limpiar cualquier clase 'dragging-item' de todos los items
+  document.querySelectorAll('.tier-item-compact.dragging-item').forEach(el => {
+    el.classList.remove('dragging-item');
+  });
+  draggedItemInfo.value = null;
+  dragOverSectionId.value = null;
+  dragOverItemId.value = null;
 };
 
 const handleDragLeaveSection = (event, sectionId) => {
@@ -1043,14 +1161,6 @@ const handleDropOnSection = async (event, targetSectionId) => {
   }
 };
 
-const handleDragEnd = (event) => {
-  console.log('Drag End');
-  if (event.target && typeof event.target.classList === 'object') {
-    event.target.closest('.tier-item-compact')?.classList.remove('dragging-item');
-  }
-  draggedItemInfo.value = null;
-  dragOverSectionId.value = null;
-};
 
 // Función para obtener URL de carátula de un item de la Tier List
 const getItemCoverUrl = (itemCoverUrl, targetSize = "cover_small") => {
