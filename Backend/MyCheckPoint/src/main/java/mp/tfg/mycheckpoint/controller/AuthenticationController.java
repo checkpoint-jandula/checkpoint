@@ -219,6 +219,7 @@ public class AuthenticationController {
         // Para desarrollo, es http://localhost:5173 (el puerto de Vite)
         // Para producción, esta debería ser la URL pública de tu frontend.
         // Hacerla configurable a través de application.properties.
+        //Fichero de configuracion.
         String frontendLoginUrl = "http://localhost:5173/login";
 
         try {

@@ -1,0 +1,111 @@
+.view-public-gamelists {
+  max-width: 1200px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+.view-public-gamelists > h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--color-heading);
+}
+
+.loading-message, .error-message, .empty-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: var(--color-text);
+}
+.error-message {
+  color: #d8000c;
+  background-color: #ffbaba;
+  border: 1px solid #d8000c;
+  border-radius: 4px;
+}
+.empty-message {
+  color: var(--color-text-light-2);
+}
+
+.gamelists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.gamelist-card {
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: flex; /* Para que el enlace ocupe toda la tarjeta */
+  flex-direction: column;
+}
+
+.gamelist-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.gamelist-card .card-link {
+  text-decoration: none;
+  color: inherit;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Asegura que el enlace ocupe todo el espacio */
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.list-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin: 0;
+}
+
+.game-count {
+  font-size: 0.9rem;
+  color: var(--color-text-light-2);
+  background-color: var(--color-background-mute);
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+}
+
+.list-description {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  flex-grow: 1; /* Para que ocupe el espacio y empuje el footer hacia abajo */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limitar a 3 líneas */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: calc(1.5em * 3); /* Reserva espacio para 3 líneas */
+}
+.list-description-empty {
+  font-size: 0.9rem;
+  color: var(--color-text-light-2);
+  font-style: italic;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+}
+
+
+.list-footer {
+  margin-top: auto; /* Empuja el footer hacia abajo */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--color-text-light-2);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}

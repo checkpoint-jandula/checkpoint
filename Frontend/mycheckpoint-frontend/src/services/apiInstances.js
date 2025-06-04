@@ -109,7 +109,7 @@ export const getMyGameLists = () => {
 };
 
 export const createMyGameList = (gameListRequestDTO) => {
-  return gameListsApi.createMyGameList(gameListRequestDTO); // OperationId: createMyGameList
+  return gameListsApi.createMyGameList(gameListRequestDTO); 
 };
 
 export const deleteMyGameList = (listPublicId) => {
@@ -117,39 +117,47 @@ export const deleteMyGameList = (listPublicId) => {
 };
 
 export const getMySpecificGameListDetails = (listPublicId) => {
-  return gameListsApi.getMySpecificGameList(listPublicId); // OperationId: getMySpecificGameList
+  return gameListsApi.getMySpecificGameList(listPublicId); 
 };
 
 export const viewPublicGameListDetails = (listPublicId) => {
-  return gameListsApi.viewPublicGameList(listPublicId); // OperationId: viewPublicGameList
+  return gameListsApi.viewPublicGameList(listPublicId); 
 };
 
 export const updateMyUserGameList = (listPublicId, gameListRequestDTO) => {
-  return gameListsApi.updateMyGameList(listPublicId, gameListRequestDTO); //
+  return gameListsApi.updateMyGameList(listPublicId, gameListRequestDTO); 
 };
 
 export const addGameToMyGameList = (listPublicId, addGameToCustomListRequestDTO) => {
-  return gameListsApi.addGameToMyCustomList(listPublicId, addGameToCustomListRequestDTO); //
+  return gameListsApi.addGameToMyCustomList(listPublicId, addGameToCustomListRequestDTO); 
 };
 
 export const removeGameFromMyGameList = (listPublicId, userGameInternalId) => {
-  return gameListsApi.removeGameFromMyCustomList(listPublicId, userGameInternalId); //
+  return gameListsApi.removeGameFromMyCustomList(listPublicId, userGameInternalId); 
 };
 
 //Tier Lists
 export const fetchAllPublicTierLists = () => {
-  return tierListsApi.getAllPublicTierLists(); //
+  return tierListsApi.getAllPublicTierLists(); 
 };
 
 export const getMyProfileTierLists = () => {
-  return tierListsApi.getAllProfileTierListsForCurrentUser(); //
+  return tierListsApi.getAllProfileTierListsForCurrentUser(); 
 };
 
 export const getTierListDetailsByPublicId = (tierListPublicId) => {
-  return tierListsApi.getTierListByPublicId(tierListPublicId); //
+  return tierListsApi.getTierListByPublicId(tierListPublicId); 
 };
 
-export const createMyProfileTierList = (tierListCreateRequestDTO) => { // Ya deberías tener esta de antes
-  return tierListsApi.createProfileTierList(tierListCreateRequestDTO); //
+export const createMyProfileTierList = (tierListCreateRequestDTO) => { 
+  return tierListsApi.createProfileTierList(tierListCreateRequestDTO); 
+};
+
+export const updateMyTierListMetadata = (tierListPublicId, tierListUpdateRequestDTO) => {
+  return tierListsApi.updateTierListMetadata(tierListPublicId, tierListUpdateRequestDTO); 
+};
+
+export const deleteMyTierList = (tierListPublicId) => {
+  return tierListsApi.deleteTierList(tierListPublicId); //
 };
 

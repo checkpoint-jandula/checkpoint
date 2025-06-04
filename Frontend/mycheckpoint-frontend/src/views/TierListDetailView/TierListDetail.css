@@ -1,0 +1,361 @@
+/* Contenedor de todas las Tiers/Filas */
+.tier-maker-container {
+  padding: 1rem; /* Menos padding que un section-block normal si se desea */
+}
+.add-section-controls {
+  margin-bottom: 1.5rem;
+  text-align: right;
+}
+
+.tier-row {
+  display: flex;
+  align-items: stretch; /* Para que label e items tengan la misma altura */
+  margin-bottom: 0.5rem; /* Espacio mínimo entre filas de tiers */
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  min-height: 100px; /* Altura mínima para una fila de tier */
+}
+.unclassified-tier-row {
+  margin-top: 2rem; /* Más espacio antes de la sección "Sin Clasificar" */
+  border-style: dashed;
+}
+
+.tier-label {
+  width: 100px; /* Ancho fijo para la etiqueta de la tier (S, A, B...) */
+  min-width: 100px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column; /* Para nombre y acciones */
+  justify-content: center; /* Centrar nombre verticalmente */
+  align-items: center; /* Centrar nombre horizontalmente */
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white; /* Texto blanco sobre fondo de color */
+  border-right: 1px solid var(--color-border-hover);
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  position: relative; /* Para posicionar acciones de tier */
+}
+.tier-label .section-name-input {
+  width: 90%;
+  font-size: 1.2rem;
+  text-align: center;
+  border: 1px dashed #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tier-label .tier-actions {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tier-label .icon-button {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.tier-label .icon-button.danger:hover {
+  background: red;
+}
+.tier-label .icon-button:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.unclassified-label {
+  /* Para la sección de "Sin Clasificar" o "Juegos Disponibles" */
+  background-color: var(
+    --color-background-mute
+  ) !important; /* Color diferente */
+  color: var(--color-text-light-2);
+  font-size: 1rem;
+  font-style: italic;
+}
+.unclassified-label button.action-button-small {
+  margin-top: 0.5rem;
+}
+
+.tier-items-droppable-area {
+  flex-grow: 1;
+  padding: 0.5rem;
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.02
+  ); /* Fondo muy sutil para el área de items */
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  min-height: 90px; /* Para que se vea el área aunque esté vacía */
+}
+
+.tier-empty-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 80px; /* Para que el placeholder tenga altura */
+  color: var(--color-text-light-2);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.tier-items-grid-horizontal {
+  display: flex;
+  flex-wrap: wrap; /* Los ítems se ajustarán a la siguiente línea */
+  gap: 0.5rem; /* Espacio entre ítems */
+  align-items: flex-start; /* Alinear ítems arriba */
+}
+
+.tier-item-compact {
+  width: 75px; /* Ancho de cada ítem/juego en la tier */
+  background-color: var(--color-background);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: grab; /* Para indicar que se puede arrastrar (futuro) */
+  position: relative; /* Para el botón de eliminar */
+}
+.tier-item-compact a {
+  display: block;
+  text-decoration: none;
+}
+.tier-item-cover-compact {
+  width: 100%;
+  aspect-ratio: 3 / 4; /* Mantener proporción de portada */
+  object-fit: cover;
+  display: block; /* Evita espacio extra debajo */
+  background-color: var(--color-background-soft);
+}
+/* .tier-item-name (no es necesario si la tarjeta es solo la imagen) */
+
+/* Botón para quitar ítem de la tier */
+.remove-item-button-compact {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: rgba(200, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.tier-item-compact:hover .remove-item-button-compact {
+  opacity: 1;
+}
+.remove-item-button-compact:hover {
+  background-color: red;
+}
+
+/*Estilos modal de edición de metadatos de la Tier List*/
+.modal-overlay {
+  position: fixed; /* Se queda fijo en la pantalla */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.65); /* Fondo semitransparente oscuro */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que esté por encima de otro contenido */
+  padding: 1rem; /* Para que no se pegue a los bordes en pantallas pequeñas */
+}
+
+.modal-panel {
+  background-color: var(--color-background-soft); /* */
+  padding: 0; /* El padding interno lo manejarán el header, body y footer */
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35);
+  width: 90%;
+  max-width: 550px; /* Ancho máximo del modal, ajusta según necesidad */
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* Alto máximo, con scroll si el contenido es muy largo */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border); /* */
+  flex-shrink: 0; /* Para que no se encoja si el body tiene mucho contenido */
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--color-heading); /* */
+  font-weight: 600;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--color-text-light-2); /* */
+  cursor: pointer;
+  padding: 0.2rem;
+}
+.modal-close-button:hover {
+  color: var(--color-text); /* */
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto; /* Scroll si el contenido del formulario es muy largo */
+  flex-grow: 1; /* Para que ocupe el espacio disponible */
+}
+
+/* Estilos para formularios dentro de modales (ej. .edit-list-form-modal, .create-list-form) */
+.modal-panel form .form-group {
+  /* Aplica a cualquier .form-group dentro de un modal */
+  margin-bottom: 1.2rem;
+}
+.modal-panel form .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.modal-panel form label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--color-text); /* */
+  font-weight: 500;
+}
+
+.modal-panel form input[type="text"],
+.modal-panel form input[type="number"], /* Si tienes inputs de número */
+.modal-panel form textarea,
+.modal-panel form select {
+  /* Si usas select en modales */
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-border); /* */
+  border-radius: 4px;
+  background-color: var(--color-background); /* */
+  color: var(--color-text); /* */
+  font-size: 1rem;
+  box-sizing: border-box; /* Importante para que el padding no desborde */
+}
+.modal-panel form input[type="text"],
+.modal-panel form textarea,
+.modal-panel form select {
+  border-color: hsla(160, 100%, 37%, 1); /* */
+  box-shadow: 0 0 0 2px hsla(160, 100%, 37%, 0.2); /* */
+  outline: none;
+}
+
+.modal-panel form .checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-top: 0.75rem; /* Más espacio si viene después de otro campo */
+}
+.modal-panel form .checkbox-group input[type="checkbox"] {
+  margin-right: 0.6rem;
+  width: auto; /* Resetear ancho del input general */
+  transform: scale(1.1); /* Hacer el checkbox un poco más grande */
+  accent-color: hsla(160, 100%, 37%, 1); /* */
+}
+.modal-panel form .checkbox-group label {
+  margin-bottom: 0;
+  font-size: 1rem;
+  font-weight: normal;
+  color: var(--color-text); /* */
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border); /* */
+  display: flex;
+  justify-content: space-between; /* Mensaje a la izquierda, botones a la derecha */
+  align-items: center;
+  gap: 0.75rem; /* Espacio entre botones si están agrupados */
+  flex-shrink: 0; /* Para que no se encoja si el body tiene mucho contenido */
+}
+.modal-footer .action-message {
+  /* Para mensajes de error/éxito en el footer */
+  flex-grow: 1; /* Ocupa el espacio disponible, empujando los botones */
+  text-align: left;
+  font-size: 0.9em;
+  margin-right: 1rem; /* Espacio antes de los botones */
+}
+.modal-footer .buttons-group {
+  /* Opcional, si agrupas botones */
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Estilos para botones de acción pequeños dentro de las secciones */
+.action-button-small {
+  padding: 0.3em 0.8em;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+.action-button-small.tertiary {
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.action-button-small.tertiary:hover:not(:disabled) {
+  background-color: var(--color-border);
+}
+.action-button-small.danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #d9534f;
+  border-color: rgba(220, 53, 69, 0.3);
+}
+.action-button-small.danger:hover:not(:disabled) {
+  background-color: rgba(220, 53, 69, 0.2);
+  border-color: #d9534f;
+}
+
+/* Action button (reutilizado) */
+.action-button {
+  padding: 0.6em 1.2em;
+  margin: 0.5rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  border: 1px solid transparent;
+}
+.action-button.primary {
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border-color: hsla(160, 100%, 37%, 1);
+}
+.action-button.primary:hover:not(:disabled) {
+  background-color: hsla(160, 100%, 30%, 1);
+}
+.action-button.secondary {
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+  border-color: var(--color-border-hover);
+}
+.action-button.secondary:hover:not(:disabled) {
+  background-color: var(--color-border);
+}
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
