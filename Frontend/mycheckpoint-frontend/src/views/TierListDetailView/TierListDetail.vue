@@ -110,17 +110,15 @@
               >{{ section.name }}</span
             >
             <input
-              v-if="
-                isEditableTierList &&
-                editingSectionName &&
-                editingSectionId === section.internal_id
-              "
+              v-if="isOwner && editingSectionName && editingSectionId === section.internal_id && !section.is_default_unclassified" 
               v-model="currentSectionNameEdit"
               @keyup.enter="saveSectionName(section.internal_id)"
               @blur="saveSectionName(section.internal_id)"
+              @keyup.esc="cancelEditSectionName"
               class="section-name-input"
+              v-focus
             />
-            <div v-if="isEditableTierList" class="tier-actions">
+            <div v-if="isOwner && !section.is_default_unclassified" class="tier-actions">
               <button
                 @click="startEditSectionName(section)"
                 class="icon-button"
@@ -142,7 +140,7 @@
               v-if="!section.items || section.items.length === 0"
               class="tier-empty-placeholder"
             >
-              Arrastra juegos aquí
+              {{ isOwner ? 'Arrastra o añade juegos aquí' : '(Vacío)'}}
             </div>
             <div v-else class="tier-items-grid-horizontal">
               <div
@@ -367,7 +365,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="newSectionName">Nombre de la Tier:</label>
-              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100" v-focus>
+              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100">
               <small>Ej: S, A, Buenos, Mis Favoritos...</small>
             </div>
             <div v-if="addSectionErrorMessage" class="error-message modal-error">{{ addSectionErrorMessage }}</div>
@@ -386,7 +384,7 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch, reactive, computed} from "vue";
+import { ref, onMounted, watch, reactive, computed, nextTick} from "vue";
 import { useRoute, RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -394,6 +392,7 @@ import {
   updateMyTierListMetadata,
   deleteMyTierList,
   addSectionToMyTierList,
+  updateMySectionName,
   // --- Funciones API placeholder para futuras implementaciones ---
   // addSectionToMyTierList,
   // updateMySectionName,
@@ -439,6 +438,11 @@ const editTierListForm = reactive({
 const editingSectionName = ref(false);
 const editingSectionId = ref(null);
 const currentSectionNameEdit = ref("");
+
+// Variables de estado para mensajes de error/éxito específicos de la edición de sección
+const sectionEditMessage = ref('');
+const sectionEditError = ref(false);
+const isLoadingSectionAction = ref(false);
 
 // --- NUEVO: Estado para Modal de "Añadir Sección" ---
 const showAddSectionModal = ref(false);
@@ -523,6 +527,24 @@ watch(
     }
   }
 );
+
+const vFocus = {
+  mounted: (el) => {
+    // `nextTick` espera a que Vue haya actualizado el DOM
+    nextTick(() => { 
+      el.focus();
+    });
+  },
+  // Podrías necesitar 'updated' si el input se reutiliza y solo cambia su visibilidad,
+  // pero con v-if, 'mounted' debería ser suficiente cuando el input se crea.
+  updated: (el, binding) => {
+    if (binding.value && binding.oldValue !== binding.value) {
+      nextTick(() => {
+        el.focus();
+      });
+    }
+  }
+};
 
 // --- Lógica para Editar Metadatos de la Tier List ---
 const openEditTierListMetadataModal = () => {
@@ -667,62 +689,83 @@ const handleDeleteTierList = async () => {
   }
 };
 
-// --- Lógica para Editar Nombre de Sección (Placeholders) ---
+// --- LÓGICA ACTUALIZADA PARA EDITAR NOMBRE DE SECCIÓN ---
 const startEditSectionName = (section) => {
-  if (!isEditableTierList.value) return;
+  if (!isOwner.value) return; // Solo el propietario puede intentar editar
+  // La restricción de "is_default_unclassified" se maneja en saveSectionName
   editingSectionId.value = section.internal_id;
   currentSectionNameEdit.value = section.name;
   editingSectionName.value = true;
+  sectionEditMessage.value = ''; // Limpiar mensajes previos
+  sectionEditError.value = false;
+  // El foco se maneja con v-focus en el template
+};
+
+const cancelEditSectionName = () => {
+  editingSectionName.value = false;
+  editingSectionId.value = null;
+  currentSectionNameEdit.value = '';
+  sectionEditMessage.value = '';
+  sectionEditError.value = false;
 };
 
 const saveSectionName = async (sectionId) => {
-  if (!editingSectionName.value || editingSectionId.value !== sectionId) return;
-  const section =
-    tierListDetails.value?.sections?.find((s) => s.internal_id === sectionId) ||
-    (tierListDetails.value?.unclassified_section?.internal_id === sectionId
-      ? tierListDetails.value.unclassified_section
-      : null);
-  if (
-    !section ||
-    currentSectionNameEdit.value.trim() === "" ||
-    currentSectionNameEdit.value === section.name
-  ) {
-    editingSectionName.value = false;
-    editingSectionId.value = null;
+  if (!editingSectionName.value || editingSectionId.value !== sectionId) {
+    // No es un guardado activo o es para otra sección
     return;
   }
+
+  const section = tierListDetails.value?.sections?.find(s => s.internal_id === sectionId) || 
+                  (tierListDetails.value?.unclassified_section?.internal_id === sectionId ? tierListDetails.value.unclassified_section : null);
+
+  const newName = currentSectionNameEdit.value.trim();
+
+  if (!section || newName === '' || newName === section.name) {
+    // Si no hay cambios, o el nombre está vacío, o no se encontró la sección, cancelar edición.
+    cancelEditSectionName();
+    if (newName === '' && section) { // Si se intentó guardar vacío
+        sectionEditMessage.value = "El nombre de la sección no puede estar vacío.";
+        sectionEditError.value = true;
+        // No ocultar inmediatamente para que se vea el mensaje
+        setTimeout(() => { sectionEditMessage.value = ''; sectionEditError.value = false; }, 3000);
+    }
+    return;
+  }
+  
+  // No se puede editar el nombre de la sección "Sin Clasificar" por defecto
   if (section.is_default_unclassified) {
     alert("El nombre de la sección 'Sin Clasificar' no se puede cambiar.");
-    editingSectionName.value = false;
-    editingSectionId.value = null;
+    cancelEditSectionName();
     return;
   }
-  alert(
-    `TODO: API Call - Guardar nombre "${currentSectionNameEdit.value}" para sección ID ${sectionId}`
-  );
-  await fetchTierListDetails(props.tierListPublicId);
-  editingSectionName.value = false;
-  editingSectionId.value = null;
+
+  isLoadingSectionAction.value = true;
+  sectionEditMessage.value = '';
+  sectionEditError.value = false;
+
+  try {
+    const requestDTO = { name: newName }; // TierSectionRequestDTO
+    const response = await updateMySectionName(props.tierListPublicId, sectionId, requestDTO);
+    // Actualizar los detalles de la tier list completa con la respuesta
+    tierListDetails.value = response.data; 
+    sectionEditMessage.value = "Nombre de la sección actualizado.";
+    sectionEditError.value = false;
+    setTimeout(() => { sectionEditMessage.value = ''; }, 3000);
+  } catch (error) {
+    console.error(`Error actualizando nombre de sección ID ${sectionId}:`, error);
+    sectionEditError.value = true;
+    if (error.response?.data) {
+      sectionEditMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo actualizar el nombre de la sección.";
+    } else {
+      sectionEditMessage.value = "Error de red al actualizar el nombre.";
+    }
+  } finally {
+    isLoadingSectionAction.value = false;
+    editingSectionName.value = false; // Salir del modo edición
+    editingSectionId.value = null;
+  }
 };
 
-const confirmRemoveSection = async (sectionId) => {
-  if (!isEditableTierList.value) return;
-  const section = tierListDetails.value?.sections?.find(
-    (s) => s.internal_id === sectionId
-  );
-  if (!section || section.is_default_unclassified) {
-    alert("No se puede eliminar esta sección.");
-    return;
-  }
-  if (
-    window.confirm(
-      `¿Seguro que quieres eliminar la tier "${section.name}"? Los juegos se moverán a 'Sin Clasificar'.`
-    )
-  ) {
-    alert(`TODO: API Call - Eliminar sección ID ${sectionId}`);
-    await fetchTierListDetails(props.tierListPublicId);
-  }
-};
 
 // --- NUEVA: Lógica para Añadir Nueva Sección (Tier) ---
 const openAddSectionModal = () => {

@@ -165,3 +165,9 @@ export const addSectionToMyTierList = (tierListPublicId, tierSectionRequestDTO) 
   return tierListsApi.addSectionToTierList(tierListPublicId, tierSectionRequestDTO); //
 };
 
+export const updateMySectionName = (tierListPublicId, sectionInternalId, tierSectionRequestDTO) => {
+  // tierListsApi es tu instancia de TierListControllerApi
+  // updateSectionName es el método generado que corresponde a PUT /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}
+  return tierListsApi.updateSectionName(tierListPublicId, sectionInternalId, tierSectionRequestDTO); //
+};
+
