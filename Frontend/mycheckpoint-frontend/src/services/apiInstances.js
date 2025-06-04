@@ -183,3 +183,8 @@ export const removeItemFromMyTierList = (tierListPublicId, tierListItemInternalI
   return tierListsApi.removeItemFromTierList(tierListPublicId, tierListItemInternalId); //
 };
 
+export const moveItemInMyTierList = (tierListPublicId, tierListItemInternalId, tierListItemMoveRequestDTO) => {
+  return tierListsApi.moveItemInTierList(tierListPublicId, tierListItemInternalId, tierListItemMoveRequestDTO); //
+};
+
+

@@ -808,6 +808,9 @@ public class TierListServiceImpl implements TierListService {
      *                                                  inconsistencia de datos.
      * @throws jakarta.persistence.PersistenceException Si ocurre un error durante las operaciones de persistencia
      *                                                  con la base de datos.
+     *
+     *
+     *                                                  REVISAR
      */
     @Override
     @Transactional
@@ -816,115 +819,81 @@ public class TierListServiceImpl implements TierListService {
         logger.info("INICIO moveItemInTierList - User: {}, TierListID: {}, ItemID: {}, TargetSectionID: {}, NewOrder: {}",
                 userEmail, tierListPublicId, tierListItemInternalId, itemMoveRequestDTO.getTargetSectionInternalId(), itemMoveRequestDTO.getNewOrder());
 
-        TierList tierList = tierListRepository.findByPublicIdAndOwnerWithSections(tierListPublicId, owner)
-                .map(tl -> {
-                    initializeTierListDetails(tl);
-                    logger.debug("TierList {} y detalles cargados.", tl.getPublicId());
-                    return tl;
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario()));
+        TierList tierList = (TierList) tierListRepository.findByPublicIdAndOwner(tierListPublicId, owner).orElseThrow(() -> new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario()));
 
-        final Long finalTierListItemInternalId = tierListItemInternalId;
-        TierListItem itemToMove = tierList.getSections().stream()
-                .flatMap(s -> s.getItems().stream())
-                .filter(item -> Objects.equals(item.getInternalId(), finalTierListItemInternalId))
-                .findFirst()
-                .orElseThrow(() -> {
-                    logger.error("ITEM NO ENCONTRADO - TierListItem con ID {} no encontrado en la TierList {}", finalTierListItemInternalId, tierListPublicId);
-                    return new ResourceNotFoundException("TierListItem con ID " + finalTierListItemInternalId + " no encontrado en la TierList " + tierListPublicId);
-                });
-        logger.debug("Item a mover (ID: {}) encontrado. Sección actual ID: {}. UserGameID: {}",
-                itemToMove.getInternalId(), itemToMove.getTierSection().getInternalId(), itemToMove.getUserGame() != null ? itemToMove.getUserGame().getInternalId() : "N/A");
+        TierListItem itemToMove = tierListItemRepository.findById(tierListItemInternalId) // Cargar el ítem directamente
+                .orElseThrow(() -> new ResourceNotFoundException("TierListItem con ID " + tierListItemInternalId + " no encontrado."));
 
-        TierSection oldSection = itemToMove.getTierSection();
+        // Verificar que el ítem pertenece a la tier list que se está editando
+        if (itemToMove.getTierSection() == null || !Objects.equals(itemToMove.getTierSection().getTierList().getInternalId(), tierList.getInternalId())) {
+            throw new InvalidOperationException("El ítem no pertenece a la TierList especificada o su sección es nula.");
+        }
+
+        TierSection oldSection = itemToMove.getTierSection(); // Sección actual del ítem
+        // Cargar la nueva sección asegurándose de que pertenece a la misma TierList
         TierSection newSection = tierList.getSections().stream()
                 .filter(s -> Objects.equals(s.getInternalId(), itemMoveRequestDTO.getTargetSectionInternalId()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Sección destino con ID " + itemMoveRequestDTO.getTargetSectionInternalId() + " no encontrada."));
-        logger.debug("Sección original ID: {}, Sección destino ID: {}", oldSection.getInternalId(), newSection.getInternalId());
+                .orElseThrow(() -> new ResourceNotFoundException("Sección destino con ID " + itemMoveRequestDTO.getTargetSectionInternalId() + " no encontrada en esta TierList."));
 
-        if (tierList.getType() == TierListType.FROM_GAMELIST) {
-            GameList sourceGameList = tierList.getSourceGameList();
-            if (sourceGameList != null) Hibernate.initialize(sourceGameList.getUserGames());
-            if (sourceGameList == null || itemToMove.getUserGame() == null || !sourceGameList.getUserGames().contains(itemToMove.getUserGame())) {
-                throw new InvalidOperationException("El juego asociado a este item ya no pertenece a la GameList origen o hay una inconsistencia.");
-            }
-        }
+        logger.debug("Item a mover (ID: {}) encontrado. Sección actual ID: {}. Sección destino ID: {}",
+                itemToMove.getInternalId(), oldSection.getInternalId(), newSection.getInternalId());
+
+        // ... (tu validación para TierListType.FROM_GAMELIST) ...
 
         boolean sectionChanged = !Objects.equals(oldSection.getInternalId(), newSection.getInternalId());
 
-        // Paso 1: Actualizar la FK del ítem a la nueva sección.
-        itemToMove.setTierSection(newSection);
-        logger.debug("itemToMove (ID: {}) FK actualizada a newSection (ID: {}).", itemToMove.getInternalId(), newSection.getInternalId());
-
-        // Paso 2: Guardar el TierListItem individualmente para persistir el cambio de FK.
-        try {
-            tierListItemRepository.save(itemToMove); // Guardar el cambio de FK si la sección del ítem fue actualizada.
-            logger.debug("itemToMove (ID: {}) guardado con nueva sección.", itemToMove.getInternalId());
-        } catch (Exception e) {
-            logger.error("ERROR al guardar itemToMove (ID: {}) después de setTierSection: {}", itemToMove.getInternalId(), e.getMessage(), e);
-            throw e;
-        }
-
-        // Paso 3: Hacer flush del EntityManager para asegurar que el UPDATE de la FK del itemToMove
-        // se envíe a la BD antes de manipular las colecciones que podrían activar orphanRemoval.
-        try {
-            entityManager.flush();
-            logger.debug("EntityManager flusheado después de guardar itemToMove.");
-        } catch (Exception e) {
-            logger.error("ERROR durante entityManager.flush() después de guardar itemToMove (ID: {}): {}", itemToMove.getInternalId(), e.getMessage(), e);
-            throw e; // Si aquí falla, el problema de estado ya es evidente.
-        }
-
+        // Si la sección cambia, quita el item de la colección de la sección antigua.
+        // JPA/Hibernate debería manejar esto en memoria por ahora.
         if (sectionChanged) {
-            if (oldSection != null && oldSection.getItems() != null) {
-                // Eliminar de la colección de la sección antigua en memoria
-                boolean removed = oldSection.getItems().removeIf(it -> Objects.equals(it.getInternalId(), itemToMove.getInternalId()));
-                logger.debug("ItemToMove (ID: {}) {} de oldSection.items. Tamaño oldSection.items: {}", itemToMove.getInternalId(), removed ? "eliminado" : "NO eliminado", oldSection.getItems().size());
-            }
+            oldSection.getItems().remove(itemToMove);
         }
 
-        List<TierListItem> newSectionItemsList = newSection.getItems();
-        newSectionItemsList.removeIf(it -> Objects.equals(it.getInternalId(), itemToMove.getInternalId())); // Quitar cualquier referencia existente por ID
+        // Actualiza la sección y el orden del ítem.
+        itemToMove.setTierSection(newSection);
+        itemToMove.setItemOrder(itemMoveRequestDTO.getNewOrder());
 
-        // Añadir a la colección de la nueva sección en memoria en la posición correcta
-        int targetOrderIdx = itemMoveRequestDTO.getNewOrder();
-        if (targetOrderIdx < 0 || targetOrderIdx > newSectionItemsList.size()) {
-            // Si el índice es inválido, añadir al final
-            newSectionItemsList.add(itemToMove);
+        // Añade el ítem a la colección de la nueva sección (en la posición correcta).
+        // Quita cualquier referencia existente si el ítem ya estaba (por reordenamiento dentro de la misma sección)
+        newSection.getItems().removeIf(it -> Objects.equals(it.getInternalId(), itemToMove.getInternalId()));
+
+        List<TierListItem> targetItems = newSection.getItems();
+        int targetIndex = itemMoveRequestDTO.getNewOrder();
+        if (targetIndex < 0 || targetIndex > targetItems.size()) {
+            targetItems.add(itemToMove);
         } else {
-            newSectionItemsList.add(targetOrderIdx, itemToMove);
+            targetItems.add(targetIndex, itemToMove);
         }
 
-
-        // Reordenar los ítems en las colecciones de las secciones afectadas en memoria
-        // (esto debería actualizar el campo 'itemOrder' de cada TierListItem)
-        if (sectionChanged && oldSection != null) {
-            reorderItemsAndUpdate(oldSection.getItems());
+        // Reordenar los items en las secciones afectadas para actualizar sus campos itemOrder.
+        // Esta función debe iterar por la lista de items de la sección y setear item.setItemOrder(index).
+        if (sectionChanged) {
+            reorderItemsAndUpdateOrders(oldSection);
         }
-        reorderItemsAndUpdate(newSectionItemsList);
-        logger.debug("Items de newSection (ID: {}) reordenados. itemToMove (ID: {}) tiene nuevo order: {}.", newSection.getInternalId(), itemToMove.getInternalId(), itemToMove.getItemOrder());
+        reorderItemsAndUpdateOrders(newSection);
 
+        // En lugar de guardar el item individualmente primero, deja que la cascada desde TierList lo maneje.
+        // El @Transactional al final del método hará el commit.
+        // Hibernate debería ser lo suficientemente inteligente para ver que el item cambió de padre (TierSection)
+        // y que no es un huérfano a eliminar, sino un item a actualizar.
+        TierList updatedTierList = tierListRepository.save(tierList); // Guardar la entidad raíz
 
-        // Paso 6: Guardar la entidad raíz (TierList).
-        // Esto debería ahora principalmente guardar los cambios de orden y las asociaciones de colección.
-        // No debería intentar borrar itemToMove si el flush anterior y la lógica de FK funcionaron.
-        logger.debug("Llamando a tierListRepository.saveAndFlush(tierList) para cambios finales...");
-        TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
-        logger.info("TierList (ID: {}) guardada y flusheada FINALMENTE.", updatedTierList.getPublicId());
+        // Opcional: un flush aquí si quieres forzar la sincronización antes de mapear la respuesta.
+        // entityManager.flush();
 
+        logger.info("Item ID {} movido exitosamente a sección ID {} en orden {} en TierList '{}'"/* ... */);
 
-        logger.info("Item ID {} (UserGame ID: {}) movido de sección ID {} a sección ID {} (orden final: {}) en TierList '{}' por usuario {}",
-                itemToMove.getInternalId(),
-                (itemToMove.getUserGame() != null ? itemToMove.getUserGame().getInternalId() : "N/A"),
-                (oldSection != null ? oldSection.getInternalId() : "N/A"),
-                newSection.getInternalId(),
-                itemToMove.getItemOrder(), // Este valor debería haber sido actualizado por reorderItemsAndUpdate
-                updatedTierList.getName(),
-                userEmail);
-
-        initializeTierListDetails(updatedTierList); // Asegurar que el DTO de respuesta tenga todos los datos frescos
+        initializeTierListDetails(updatedTierList); // Para la respuesta DTO
         return tierListMapper.toTierListResponseDTOWithSections(updatedTierList);
+    }
+
+    // Asegúrate que reorderItemsAndUpdateOrders actualice los itemOrder en los objetos de la lista
+    private void reorderItemsAndUpdateOrders(TierSection section) {
+        if (section == null || section.getItems() == null) return;
+        List<TierListItem> items = section.getItems();
+        for (int i = 0; i < items.size(); i++) {
+            items.get(i).setItemOrder(i);
+        }
     }
 
     /**

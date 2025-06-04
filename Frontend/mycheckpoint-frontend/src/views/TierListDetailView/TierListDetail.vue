@@ -94,12 +94,20 @@
               </button>
             </div>
           </div>
-          <div class="tier-items-droppable-area">
+          <div class="tier-items-droppable-area"
+              :class="{ 'drag-over-active': dragOverSectionId === section.internal_id && isOwner }"
+              @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
+              @dragleave="isOwner ? handleDragLeaveSection($event, section.internal_id) : null"
+              @drop="isOwner ? handleDropOnSection($event, section.internal_id) : null">
             <div v-if="!section.items || section.items.length === 0" class="tier-empty-placeholder">
               {{ isOwner ? "Arrastra o añade juegos aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact">
+              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
+                :draggable="isOwner"
+                @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
+                @dragend="isOwner ? handleDragEnd($event) : null"
+              >
                 <RouterLink :to="{
                   name: 'game-details',
                   params: { igdbId: item.game_igdb_id },
@@ -133,7 +141,12 @@
               Añadir Juegos de Biblioteca
             </button>
           </div>
-          <div class="tier-items-droppable-area">
+          <div class="tier-items-droppable-area" 
+            :class="{ 'drag-over-active': dragOverSectionId === tierListDetails.unclassified_section.internal_id && isOwner }"
+            @dragover.prevent="isOwner ? handleDragOver($event, tierListDetails.unclassified_section.internal_id) : null"
+            @dragleave="isOwner ? handleDragLeaveSection($event, tierListDetails.unclassified_section.internal_id) : null"
+            @drop="isOwner ? handleDropOnSection($event, tierListDetails.unclassified_section.internal_id) : null"
+          >
             <div v-if="
               !tierListDetails.unclassified_section ||
               !tierListDetails.unclassified_section.items ||
@@ -147,7 +160,11 @@
             </div>
             <div v-else class="tier-items-grid-horizontal">
               <div v-for="item in tierListDetails.unclassified_section.items" :key="item.tier_list_item_id"
-                class="tier-item-compact">
+                class="tier-item-compact"
+                :draggable="isOwner"
+                @dragstart="isOwner ? handleDragStart($event, item, tierListDetails.unclassified_section.internal_id) : null"
+                @dragend="isOwner ? handleDragEnd($event) : null"
+              >
                 <RouterLink :to="{
                   name: 'game-details',
                   params: { igdbId: item.game_igdb_id },
@@ -311,16 +328,8 @@ import {
   removeSectionFromMyTierList,
   addItemToMyUnclassifiedSection,
   removeItemFromMyTierList,
-  getMyUserGameLibrary
-  // --- Funciones API placeholder para futuras implementaciones ---
-  // addSectionToMyTierList,
-  // updateMySectionName,
-  // removeSectionFromMyTierList,
-  // addItemToMyTierListSection,
-  // addItemToMyUnclassifiedSection,
-  // removeItemFromMyTierList,
-  // moveItemInMyTierList,
-  // getMyUserGameLibrary // Para el modal de añadir ítems
+  moveItemInMyTierList,
+  getMyUserGameLibrary,
 } from "@/services/apiInstances";
 import defaultTierItemCover from "@/assets/img/default-game-cover.png"; // Placeholder para ítems de tier
 
@@ -338,6 +347,11 @@ const authStore = useAuthStore();
 const tierListDetails = ref(null); // TierListResponseDTO
 const isLoading = ref(true);
 const errorMessageApi = ref("");
+
+// --- ESTADO PARA DRAG AND DROP ---
+const draggedItemInfo = ref(null); // { tierListItemId: number, originalSectionId: number | null, originalOrder: number }
+const dragOverSectionId = ref(null); // Para feedback visual
+
 
 // --- Estado para editar metadatos de TierList ---
 const showEditTierListMetadataModal = ref(false);
@@ -943,6 +957,99 @@ const handleRemoveItemFromTierList = async (tierListItemId) => {
       isLoadingTierItemAction.value = false;
     }
   }
+};
+
+// --- LÓGICA DE DRAG AND DROP ---
+const handleDragStart = (event, item, originalSectionInternalId) => {
+  if (!isOwner.value) { // Solo el propietario puede mover ítems
+    event.preventDefault();
+    return;
+  }
+  console.log('Drag Start:', item, 'from section:', originalSectionInternalId);
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', item.tier_list_item_id); // Guardamos el ID del ítem
+  draggedItemInfo.value = {
+    tierListItemId: item.tier_list_item_id,
+    userGameId: item.user_game_id, // Necesario para el DTO de movimiento si lo requiriera (aunque no lo hace directamente)
+    originalSectionId: originalSectionInternalId,
+    // originalOrder: item.item_order // Necesitaríamos el order para optimizaciones locales, pero la API lo recalcula
+  };
+  // Añadir una clase al elemento que se arrastra para feedback visual
+  event.target.closest('.tier-item-compact').classList.add('dragging-item');
+};
+
+const handleDragOver = (event, targetSectionId) => {
+  event.preventDefault(); // Necesario para permitir el drop
+  event.dataTransfer.dropEffect = 'move';
+  dragOverSectionId.value = targetSectionId; // Para feedback visual
+};
+
+const handleDragLeaveSection = (event, sectionId) => {
+  // Si el cursor sale del área de drop de esta sección, quitar el highlight
+  if (dragOverSectionId.value === sectionId) {
+      // Podrías necesitar una lógica más compleja si hay elementos anidados
+      // Por ahora, simple:
+      dragOverSectionId.value = null;
+  }
+};
+
+const handleDropOnSection = async (event, targetSectionId) => {
+  event.preventDefault();
+  if (!draggedItemInfo.value) return;
+
+  const tierListItemIdToMove = draggedItemInfo.value.tierListItemId;
+  
+  // Determinar el nuevo orden (por defecto al final de la nueva sección)
+  let newOrder = 0;
+  let targetSection;
+  if (targetSectionId === tierListDetails.value?.unclassified_section?.internal_id) {
+    targetSection = tierListDetails.value.unclassified_section;
+  } else {
+    targetSection = tierListDetails.value?.sections?.find(s => s.internal_id === targetSectionId);
+  }
+  if (targetSection && targetSection.items) {
+    newOrder = targetSection.items.length;
+    // Si el ítem se mueve dentro de la misma sección, y no es el último, su nuevo orden podría ser su longitud - 1
+    if (draggedItemInfo.value.originalSectionId === targetSectionId) {
+        newOrder = Math.max(0, targetSection.items.length -1);
+    }
+  }
+
+  console.log(`Drop: Mover item ID ${tierListItemIdToMove} a sección ID ${targetSectionId}, nuevo orden (estimado): ${newOrder}`);
+  
+  isLoadingTierItemAction.value = true; // Usar un loader
+  errorMessageApi.value = '';
+
+  const moveDTO = { // TierListItemMoveRequestDTO
+    target_section_internal_id: targetSectionId,
+    new_order: newOrder 
+  };
+
+  try {
+    const response = await moveItemInMyTierList(props.tierListPublicId, tierListItemIdToMove, moveDTO);
+    tierListDetails.value = response.data; // Actualizar con la respuesta completa
+  } catch (error) {
+    console.error("Error moviendo ítem en Tier List:", error);
+    if (error.response?.data) {
+      errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo mover el ítem.";
+    } else {
+      errorMessageApi.value = "Error de red al mover el ítem.";
+    }
+    // Podrías querer recargar los detalles si la actualización local es compleja o falla
+    await fetchTierListDetails(props.tierListPublicId);
+  } finally {
+    isLoadingTierItemAction.value = false;
+    handleDragEnd(event); // Limpiar estado de drag
+  }
+};
+
+const handleDragEnd = (event) => {
+  console.log('Drag End');
+  if (event.target && typeof event.target.classList === 'object') {
+    event.target.closest('.tier-item-compact')?.classList.remove('dragging-item');
+  }
+  draggedItemInfo.value = null;
+  dragOverSectionId.value = null;
 };
 
 // Función para obtener URL de carátula de un item de la Tier List

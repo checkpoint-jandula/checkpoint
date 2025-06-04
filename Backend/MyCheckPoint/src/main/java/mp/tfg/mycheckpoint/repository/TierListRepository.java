@@ -83,4 +83,6 @@ public interface TierListRepository extends JpaRepository<TierList, Long> {
     List<TierList> findAllByIsPublicTrueAndFetchSections();
 
     List<TierList> findByOwnerAndType(User user, TierListType tierListType);
+
+    Optional<Object> findByPublicIdAndOwner(UUID tierListPublicId, User owner);
 }

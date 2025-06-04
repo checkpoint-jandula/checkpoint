@@ -449,3 +449,26 @@
     border: none;
     padding-left: 0;
 }
+
+/* Estilos Drag Drop */
+.tier-items-droppable-area.drag-over-active {
+  background-color: hsla(160, 100%, 37%, 0.1); /* Verde claro para indicar zona de drop válida */
+  border-style: dashed;
+  border-color: hsla(160, 100%, 37%, 1);
+}
+
+.tier-item-compact.dragging-item {
+  opacity: 0.5;
+  border: 2px dashed #fff; /* O un estilo que indique que se está arrastrando */
+  transform: scale(0.95);
+}
+
+/* Podrías añadir un placeholder visual para dónde se va a dropear el item */
+.drop-placeholder {
+  width: 70px; /* Mismo ancho que .tier-item-compact */
+  height: 93px; /* Mismo alto que .tier-item-compact (ajusta según tu aspect-ratio) */
+  background-color: rgba(255,255,255,0.2);
+  border: 2px dashed var(--color-text-light-2);
+  border-radius: 4px;
+  margin: 0.25rem; /* Similar al gap de .tier-items-grid-horizontal */
+}
