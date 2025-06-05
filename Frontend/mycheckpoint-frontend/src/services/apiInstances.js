@@ -136,6 +136,11 @@ export const removeGameFromMyGameList = (listPublicId, userGameInternalId) => {
   return gameListsApi.removeGameFromMyCustomList(listPublicId, userGameInternalId); 
 };
 
+export const getOrCreateTierListFromGameList = (gameListPublicId) => {
+  // Llama al método específico generado, no a un .get() genérico
+  return tierListsApi.getOrCreateTierListForGameList(gameListPublicId);
+};
+
 //Tier Lists
 export const fetchAllPublicTierLists = () => {
   return tierListsApi.getAllPublicTierLists(); 
@@ -186,5 +191,7 @@ export const removeItemFromMyTierList = (tierListPublicId, tierListItemInternalI
 export const moveItemInMyTierList = (tierListPublicId, tierListItemInternalId, tierListItemMoveRequestDTO) => {
   return tierListsApi.moveItemInTierList(tierListPublicId, tierListItemInternalId, tierListItemMoveRequestDTO); //
 };
+
+
 
 

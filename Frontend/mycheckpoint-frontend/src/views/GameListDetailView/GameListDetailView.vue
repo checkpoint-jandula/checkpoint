@@ -26,7 +26,12 @@
             <button @click="openEditMetadataModal" class="action-button secondary">
               Editar Detalles de Lista
             </button>
-            <button @click="handleDeleteList" :disabled="isLoadingMetadataUpdate || isLoadingActionOnGame" class="action-button danger">
+            <button @click="handleGetOrCreateTierListFromGameList" class="action-button primary"
+              :disabled="isLoadingTierListCreation || isLoadingMetadataUpdate || isLoadingActionOnGame">
+              {{ isLoadingTierListCreation ? 'Procesando Tier List...' : 'Crear/Ver Tier List de esta Lista' }}
+            </button>
+            <button @click="handleDeleteList" :disabled="isLoadingMetadataUpdate || isLoadingActionOnGame"
+              class="action-button danger">
               Eliminar Lista
             </button>
           </div>
@@ -38,7 +43,8 @@
           <form @submit.prevent="handleUpdateListMetadata" class="edit-list-form-modal">
             <div class="modal-header">
               <h3>Editar Detalles de la Lista</h3>
-              <button type="button" @click="closeEditMetadataModal" class="modal-close-button" aria-label="Cerrar">&times;</button>
+              <button type="button" @click="closeEditMetadataModal" class="modal-close-button"
+                aria-label="Cerrar">&times;</button>
             </div>
             <div class="modal-body">
               <div class="form-group">
@@ -47,7 +53,8 @@
               </div>
               <div class="form-group">
                 <label for="editListDescription">Descripción (opcional):</label>
-                <textarea id="editListDescription" v-model="editListForm.description" rows="4" maxlength="1000"></textarea>
+                <textarea id="editListDescription" v-model="editListForm.description" rows="4"
+                  maxlength="1000"></textarea>
               </div>
               <div class="form-group checkbox-group">
                 <input type="checkbox" id="editListIsPublic" v-model="editListForm.is_public">
@@ -55,13 +62,16 @@
               </div>
             </div>
             <div class="modal-footer">
-              <div v-if="editMetadataMessage" :class="editMetadataError ? 'error-message' : 'success-message'" class="action-message modal-action-message">
+              <div v-if="editMetadataMessage" :class="editMetadataError ? 'error-message' : 'success-message'"
+                class="action-message modal-action-message">
                 {{ editMetadataMessage }}
               </div>
-              <button type="button" @click="closeEditMetadataModal" class="action-button secondary" :disabled="isLoadingMetadataUpdate">
+              <button type="button" @click="closeEditMetadataModal" class="action-button secondary"
+                :disabled="isLoadingMetadataUpdate">
                 Cancelar
               </button>
-              <button type="submit" :disabled="isLoadingMetadataUpdate || !editListForm.name" class="action-button primary">
+              <button type="submit" :disabled="isLoadingMetadataUpdate || !editListForm.name"
+                class="action-button primary">
                 {{ isLoadingMetadataUpdate ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
             </div>
@@ -71,23 +81,26 @@
 
       <section class="games-in-list-section section-block">
         <div class="section-header-actions">
-          <h2>Juegos en "{{ gameListDetails.name }}" ({{ gameListDetails.game_count || (gameListDetails.games_in_list ? gameListDetails.games_in_list.length : 0) }})</h2>
-          <button v-if="isOwner" @click="openAddGamesModal" class="action-button primary" :disabled="isLoadingActionOnGame">Añadir Juegos</button>
+          <h2>Juegos en "{{ gameListDetails.name }}" ({{ gameListDetails.game_count || (gameListDetails.games_in_list ?
+            gameListDetails.games_in_list.length : 0) }})</h2>
+          <button v-if="isOwner" @click="openAddGamesModal" class="action-button primary"
+            :disabled="isLoadingActionOnGame">Añadir Juegos</button>
         </div>
-        
-        <div v-if="isLoadingActionOnGame && !showAddGamesModal && isOwner" class="loading-message small-loader">Actualizando lista...</div>
-        <div v-else-if="!gameListDetails.games_in_list || gameListDetails.games_in_list.length === 0" class="empty-message list-empty">
+
+        <div v-if="isLoadingActionOnGame && !showAddGamesModal && isOwner" class="loading-message small-loader">
+          Actualizando lista...</div>
+        <div v-else-if="!gameListDetails.games_in_list || gameListDetails.games_in_list.length === 0"
+          class="empty-message list-empty">
           Esta lista aún no tiene juegos.
         </div>
         <div class="library-grid" v-else>
-          <div v-for="gameEntry in gameListDetails.games_in_list" :key="gameEntry.internal_id" class="library-game-card">
-            <RouterLink :to="{ name: 'game-details', params: { igdbId: gameEntry.game_igdb_id } }" class="game-card-link-content">
-              <img 
-                :src="getCoverUrl(gameEntry.game_cover, 'cover_big')" 
-                :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`" 
-                class="library-game-cover" 
-                @error="onListGameCoverError" 
-              />
+          <div v-for="gameEntry in gameListDetails.games_in_list" :key="gameEntry.internal_id"
+            class="library-game-card">
+            <RouterLink :to="{ name: 'game-details', params: { igdbId: gameEntry.game_igdb_id } }"
+              class="game-card-link-content">
+              <img :src="getCoverUrl(gameEntry.game_cover, 'cover_big')"
+                :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`" class="library-game-cover"
+                @error="onListGameCoverError" />
               <div class="card-content">
                 <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3>
                 <div v-if="gameEntry.status" class="info-item minimal-info">
@@ -95,12 +108,8 @@
                 </div>
               </div>
             </RouterLink>
-            <button 
-              v-if="isOwner"
-              @click.stop="handleRemoveGameFromList(gameEntry.internal_id)" 
-              class="remove-game-button" 
-              title="Quitar de la lista"
-              :disabled="isLoadingActionOnGame">
+            <button v-if="isOwner" @click.stop="handleRemoveGameFromList(gameEntry.internal_id)"
+              class="remove-game-button" title="Quitar de la lista" :disabled="isLoadingActionOnGame">
               &times;
             </button>
           </div>
@@ -112,41 +121,49 @@
       <div class="modal-panel add-games-modal-panel">
         <div class="modal-header">
           <h3>Añadir Juegos a "{{ gameListDetails?.name }}"</h3>
-          <button type="button" @click="closeAddGamesModal" class="modal-close-button" aria-label="Cerrar">&times;</button>
+          <button type="button" @click="closeAddGamesModal" class="modal-close-button"
+            aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
           <div v-if="isLoadingLibraryForSelection" class="loading-message">Cargando tu biblioteca...</div>
           <div v-if="addGamesErrorMessage" class="error-message modal-error">{{ addGamesErrorMessage }}</div>
-          
-          <div v-if="!isLoadingLibraryForSelection && libraryForSelection.length === 0 && !addGamesErrorMessage" class="empty-message">
+
+          <div v-if="!isLoadingLibraryForSelection && libraryForSelection.length === 0 && !addGamesErrorMessage"
+            class="empty-message">
             No hay más juegos en tu biblioteca para añadir o ya están todos en esta lista.
           </div>
 
           <ul class="add-games-list" v-if="libraryForSelection.length > 0">
-            <li v-for="game in libraryForSelection" :key="game.internal_id" 
-                :class="{ 'selected-for-add': gamesToAdd.has(game.internal_id) }"
-                @click="toggleGameForAddition(game.internal_id)">
-              <img :src="getCoverUrl(game.game_cover, 'cover_big')" @error="onListGameCoverError" class="add-game-cover-thumb" />
+            <li v-for="game in libraryForSelection" :key="game.internal_id"
+              :class="{ 'selected-for-add': gamesToAdd.has(game.internal_id) }"
+              @click="toggleGameForAddition(game.internal_id)">
+              <img :src="getCoverUrl(game.game_cover, 'cover_big')" @error="onListGameCoverError"
+                class="add-game-cover-thumb" />
               <span class="add-game-name-text">{{ game.game_name || `ID: ${game.game_igdb_id}` }}</span>
-              <input type="checkbox" :checked="gamesToAdd.has(game.internal_id)" @click.stop readonly class="add-game-checkbox"/>
+              <input type="checkbox" :checked="gamesToAdd.has(game.internal_id)" @click.stop readonly
+                class="add-game-checkbox" />
             </li>
           </ul>
         </div>
         <div class="modal-footer">
-          <div v-if="addGamesErrorMessage && !isLoadingLibraryForSelection" :class="addGamesErrorMessage ? 'error-message' : ''" class="action-message modal-action-message">
+          <div v-if="addGamesErrorMessage && !isLoadingLibraryForSelection"
+            :class="addGamesErrorMessage ? 'error-message' : ''" class="action-message modal-action-message">
             {{ addGamesErrorMessage }}
           </div>
-          <button type="button" @click="closeAddGamesModal" class="action-button secondary" :disabled="isLoadingActionOnGame || isLoadingLibraryForSelection">
+          <button type="button" @click="closeAddGamesModal" class="action-button secondary"
+            :disabled="isLoadingActionOnGame || isLoadingLibraryForSelection">
             Cancelar
           </button>
-          <button @click="handleAddSelectedGamesToList" :disabled="isLoadingActionOnGame || isLoadingLibraryForSelection || gamesToAdd.size === 0" class="action-button primary">
+          <button @click="handleAddSelectedGamesToList"
+            :disabled="isLoadingActionOnGame || isLoadingLibraryForSelection || gamesToAdd.size === 0"
+            class="action-button primary">
             {{ isLoadingActionOnGame ? 'Añadiendo...' : `Añadir Seleccionados (${gamesToAdd.size})` }}
           </button>
         </div>
       </div>
     </div>
     <div v-if="!isLoading && !gameListDetails && errorMessageApi" class="no-results-message">
-        No se pudo cargar la lista de juegos o no tienes permiso para verla.
+      No se pudo cargar la lista de juegos o no tienes permiso para verla.
     </div>
   </div>
 </template>
@@ -154,14 +171,15 @@
 import { ref, onMounted, watch, reactive, computed } from 'vue';
 import { useRoute, RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-import { 
+import {
   getMySpecificGameListDetails,
-  viewPublicGameListDetails, 
+  viewPublicGameListDetails,
   updateMyUserGameList,
   addGameToMyGameList,
   removeGameFromMyGameList,
-  getMyUserGameLibrary, 
-  deleteMyGameList 
+  getMyUserGameLibrary,
+  deleteMyGameList,
+  getOrCreateTierListFromGameList
 } from '@/services/apiInstances';
 import defaultLibraryCover from '@/assets/img/default-game-cover.png';
 
@@ -189,6 +207,10 @@ const editListForm = reactive({
   description: null,
   is_public: false,
 });
+
+// --- NUEVO: Estado para creación/obtención de TierList ---
+const isLoadingTierListCreation = ref(false);
+const tierListCreationError = ref('');
 
 // Estado para Modal de "Añadir Juegos"
 const showAddGamesModal = ref(false);
@@ -228,11 +250,11 @@ const fetchListDetails = async (id) => {
         gameListDetails.value = publicResponse.data;
         // Asegurarse de que realmente sea pública si el endpoint la devuelve
         if (!gameListDetails.value.is_public) {
-            // Si el endpoint viewPublicGameList devuelve una lista privada (no debería según la semántica)
-            errorMessageApi.value = "Esta lista no es pública.";
-            gameListDetails.value = null; // No mostrarla
-            router.push({ name: 'home' }); // O a una página de error
-            return;
+          // Si el endpoint viewPublicGameList devuelve una lista privada (no debería según la semántica)
+          errorMessageApi.value = "Esta lista no es pública.";
+          gameListDetails.value = null; // No mostrarla
+          router.push({ name: 'home' }); // O a una página de error
+          return;
         }
         console.log("Detalles de la lista (pública de otro) cargados:", gameListDetails.value);
       } catch (publicError) {
@@ -245,13 +267,13 @@ const fetchListDetails = async (id) => {
         gameListDetails.value = null;
       }
     } else { // Otro tipo de error en la primera llamada
-        console.error(`Error cargando detalles de la lista de juegos (ID: ${id}):`, error);
-        if (error.response) {
-            errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar los detalles de la lista.'}`;
-        } else {
-            errorMessageApi.value = 'Error de red al cargar los detalles de la lista.';
-        }
-        gameListDetails.value = null;
+      console.error(`Error cargando detalles de la lista de juegos (ID: ${id}):`, error);
+      if (error.response) {
+        errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar los detalles de la lista.'}`;
+      } else {
+        errorMessageApi.value = 'Error de red al cargar los detalles de la lista.';
+      }
+      gameListDetails.value = null;
     }
   } finally {
     isLoading.value = false;
@@ -295,10 +317,10 @@ const handleUpdateListMetadata = async () => {
 
   const dto = {
     name: editListForm.name,
-    description: editListForm.description || null,
+    description: editListForm.description,
     is_public: editListForm.is_public,
   };
-  
+
   // Construir DTO solo con campos que cambiaron, si el backend soporta PATCH o PUT parcial.
   // Si el backend espera todos los campos para PUT, enviar 'dto' directamente.
   // La documentación de GameListControllerApi.updateMyGameList dice "Solo los campos proporcionados [...] serán actualizados".
@@ -316,8 +338,8 @@ const handleUpdateListMetadata = async () => {
   }
 
   try {
-    const response = await updateMyUserGameList(props.listPublicId, changes);
-    gameListDetails.value = response.data; 
+    const response = await updateMyUserGameList(props.listPublicId, dto);
+    gameListDetails.value = response.data;
     editMetadataMessage.value = "¡Detalles de la lista actualizados!";
     editMetadataError.value = false;
     setTimeout(() => closeEditMetadataModal(), 1500);
@@ -331,6 +353,39 @@ const handleUpdateListMetadata = async () => {
     }
   } finally {
     isLoadingMetadataUpdate.value = false;
+  }
+};
+
+// --- NUEVO: Lógica para Crear/Obtener TierList desde GameList ---
+const handleGetOrCreateTierListFromGameList = async () => {
+  if (!gameListDetails.value?.public_id) {
+    tierListCreationError.value = "No se puede procesar la Tier List: ID de GameList no disponible.";
+    return;
+  }
+  isLoadingTierListCreation.value = true;
+  tierListCreationError.value = '';
+  try {
+    // Llama a la función del servicio API que has creado o vas a crear
+    // y que internamente llama a GET /api/v1/gamelists/{gameListPublicId}/tierlist
+    const response = await getOrCreateTierListFromGameList(props.listPublicId);
+    const tierListData = response.data; // Se asume que la respuesta es TierListResponseDTO
+
+    if (tierListData && tierListData.public_id) {
+      // Redirige a la vista de detalle de la TierList
+      // Asegúrate que 'view-public-tierlist' es el nombre correcto de tu ruta para ver TierLists
+      router.push({ name: 'view-public-tierlist', params: { tierListPublicId: tierListData.public_id } });
+    } else {
+      throw new Error("La respuesta de la API no contiene el ID público de la Tier List.");
+    }
+  } catch (error) {
+    console.error("Error creando/obteniendo Tier List desde GameList:", error);
+    if (error.response) {
+      tierListCreationError.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo procesar la Tier List.'}`;
+    } else {
+      tierListCreationError.value = "Error de red o inesperado al procesar la Tier List.";
+    }
+  } finally {
+    isLoadingTierListCreation.value = false;
   }
 };
 
@@ -377,7 +432,7 @@ const handleAddSelectedGamesToList = async () => {
   }
   isLoadingActionOnGame.value = true;
   addGamesErrorMessage.value = '';
-  
+
   const promises = [];
   gamesToAdd.value.forEach(userGameId => {
     promises.push(addGameToMyGameList(props.listPublicId, { user_game_id: userGameId }));
@@ -386,7 +441,7 @@ const handleAddSelectedGamesToList = async () => {
   try {
     await Promise.all(promises);
     // Tras añadir, recargar los detalles de la lista para ver los cambios.
-    await fetchListDetails(props.listPublicId); 
+    await fetchListDetails(props.listPublicId);
     closeAddGamesModal();
   } catch (error) {
     console.error("Error añadiendo juegos a la lista:", error);
@@ -431,7 +486,7 @@ const handleRemoveGameFromList = async (userGameInternalId) => {
   }
 };
 
-// --- Lógica para "Eliminar Lista" (TODO) ---
+// --- Lógica para "Eliminar Lista" ---
 const handleDeleteList = async () => {
   if (!gameListDetails.value) return;
   if (window.confirm(`¿Estás seguro de que quieres eliminar la lista "${gameListDetails.value.name}" permanentemente? Esta acción no se puede deshacer.`)) {
@@ -439,13 +494,13 @@ const handleDeleteList = async () => {
     errorMessageApi.value = '';
     try {
       console.log("Intentando eliminar lista con listPublicId:", props.listPublicId);
-if (!props.listPublicId) {
-    errorMessageApi.value = "Error: ID de lista no disponible para eliminación.";
-    isLoading.value = false; // Asegúrate de resetear isLoading si retornas aquí
-    return;
-}
+      if (!props.listPublicId) {
+        errorMessageApi.value = "Error: ID de lista no disponible para eliminación.";
+        isLoading.value = false; // Asegúrate de resetear isLoading si retornas aquí
+        return;
+      }
       await deleteMyGameList(props.listPublicId);
-      
+
       // Redirección CORREGIDA:
       // Opción 1: Ir al perfil del usuario (y él puede seleccionar la pestaña de listas si quiere)
       if (authStore.currentUser?.public_id) {
@@ -457,22 +512,22 @@ if (!props.listPublicId) {
       } else {
         router.push({ name: 'home' }); // Fallback a la home si no podemos ir al perfil
       }
-      
+
       // Opcional: Si tienes una ruta específica que es la vista de "Mis Listas" (no la de edición)
       // router.push({ name: 'nombre-de-ruta-para-ver-todas-mis-listas' });
 
     } catch (error) {
-        console.error("Error eliminando la lista:", error);
-        if (error.response?.data) {
-          errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo eliminar la lista.";
-        } else if (error.message && error.message.includes("status code 404")) {
-            errorMessageApi.value = "No se pudo eliminar la lista: Recurso no encontrado (404). Verifica el endpoint o el ID.";
-        }
-         else {
-          errorMessageApi.value = "Error de red o inesperado al eliminar la lista.";
-        }
+      console.error("Error eliminando la lista:", error);
+      if (error.response?.data) {
+        errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo eliminar la lista.";
+      } else if (error.message && error.message.includes("status code 404")) {
+        errorMessageApi.value = "No se pudo eliminar la lista: Recurso no encontrado (404). Verifica el endpoint o el ID.";
+      }
+      else {
+        errorMessageApi.value = "Error de red o inesperado al eliminar la lista.";
+      }
     } finally {
-        isLoading.value = false;
+      isLoading.value = false;
     }
   }
 };
@@ -480,18 +535,18 @@ if (!props.listPublicId) {
 
 // --- Funciones Helper de Formato ---
 const getCoverUrl = (coverData, targetSize = 't_cover_small') => {
-  const currentPlaceholder = defaultLibraryCover; 
-  if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') { 
-    let imageUrl = coverData.url; 
+  const currentPlaceholder = defaultLibraryCover;
+  if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') {
+    let imageUrl = coverData.url;
     if (imageUrl.startsWith('//')) { imageUrl = `https:${imageUrl}`; }
     const originalUrlBeforeReplace = imageUrl;
     imageUrl = imageUrl.replace(/(\/t_)[a-zA-Z0-9_-]+(\/)/, `$1${targetSize}$2`);
     if (imageUrl === originalUrlBeforeReplace && !imageUrl.includes(`/${targetSize}/`) && imageUrl.includes('/upload/') && !imageUrl.includes('/igdb/image/upload/' + targetSize + '/')) {
       imageUrl = imageUrl.replace('/upload/', `/upload/${targetSize}/`);
     }
-    return imageUrl; 
+    return imageUrl;
   }
-  return currentPlaceholder; 
+  return currentPlaceholder;
 };
 const onListGameCoverError = (event) => { event.target.src = defaultLibraryCover; };
 const formatUserGameStatus = (status) => {
@@ -508,5 +563,4 @@ const truncateText = (text, maxLength) => {
   return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
 };
 </script>
-<style src="./GameListDetailView.css" scoped>
-</style>
+<style src="./GameListDetailView.css" scoped></style>

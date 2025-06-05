@@ -425,7 +425,7 @@ const isOwner = computed(() => {
 });
 
 const isEditableTierList = computed(() => {
-  return isOwner.value && tierListDetails.value?.type === "PROFILE_GLOBAL";
+  return isOwner.value;
 });
 
 const sortedCustomSections = computed(() => {
