@@ -54,7 +54,7 @@
             </div>
           </div>
           <div v-if="isOwner" class="header-actions-tierlist">
-            <button v-if="isEditableTierList" @click="openEditTierListMetadataModal" class="action-button secondary">
+            <button @click="openEditTierListMetadataModal" class="action-button secondary">
               Editar Detalles
             </button>
             <button @click="handleDeleteTierList" :disabled="isLoading" class="action-button secondary">
@@ -253,7 +253,7 @@
     <div v-if="!isLoading && !tierListDetails && errorMessageApi" class="no-results-message">
       No se pudo cargar la Tier List o no es accesible.
     </div>
-    <div v-if="showEditTierListMetadataModal && isEditableTierList" class="modal-overlay"
+    <div v-if="showEditTierListMetadataModal && isOwner" class="modal-overlay"
       @click.self="closeEditTierListMetadataModal">
       <div class="modal-panel">
         <form @submit.prevent="handleUpdateTierListMetadata" class="edit-tierlist-form-modal">
@@ -425,7 +425,7 @@ const isOwner = computed(() => {
 });
 
 const isEditableTierList = computed(() => {
-  return isOwner.value;
+  return isOwner.value && tierListDetails.value?.type === "PROFILE_GLOBAL";
 });
 
 const sortedCustomSections = computed(() => {
@@ -507,7 +507,7 @@ const vFocus = {
 
 // --- Lógica para Editar Metadatos de la Tier List ---
 const openEditTierListMetadataModal = () => {
-  if (!isEditableTierList.value || !tierListDetails.value) {
+  if (!isOwner.value || !tierListDetails.value) {
     alert(
       "Esta Tier List no puede editar sus metadatos (no eres el propietario o no es de tipo 'Perfil Global')."
     );
@@ -529,9 +529,9 @@ const closeEditTierListMetadataModal = () => {
 };
 
 const handleUpdateTierListMetadata = async () => {
-  if (!isEditableTierList.value) {
+  if (!isOwner.value) {
     editTierListMetadataMessage.value =
-      "No tienes permiso para editar esta Tier List o no es editable.";
+      "No tienes permiso para editar esta Tier List";
     editTierListMetadataError.value = true;
     return;
   }
