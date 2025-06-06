@@ -5,9 +5,9 @@
 
     <div v-if="viewedUser" class="profile-content-wrapper">
       <header class="profile-header section-block">
-        <img
-          :src="profilePictureUrl"
-          alt="Foto de perfil"
+        <img 
+          :src="profilePictureUrl" 
+          alt="Foto de perfil" 
           class="profile-avatar"
           @error="onAvatarError"
         />
@@ -15,7 +15,30 @@
           <h1>{{ viewedUser.nombre_usuario }}</h1>
           <p class="registration-date">Miembro desde: {{ formatReadableDate(viewedUser.fecha_registro) }}</p>
           
+          <div v-if="!isOwnProfile" class="friend-actions">
+            <button v-if="friendshipStatus === 'NONE'" @click="handleSendFriendRequest" :disabled="isLoadingFriendAction" class="action-button primary">
+              {{ isLoadingFriendAction ? 'Enviando...' : 'Añadir Amigo' }}
+            </button>
+
+            <button v-if="friendshipStatus === 'SENT'" @click="handleDeclineOrCancelRequest" :disabled="isLoadingFriendAction" class="action-button secondary">
+              {{ isLoadingFriendAction ? 'Cancelando...' : 'Cancelar Solicitud' }}
+            </button>
+            
+            <div v-if="friendshipStatus === 'RECEIVED'" class="friend-actions-received">
+              <span>{{ viewedUser.nombre_usuario }} te ha enviado una solicitud.</span>
+              <button @click="handleAcceptFriendRequest" :disabled="isLoadingFriendAction" class="action-button primary small">Aceptar</button>
+              <button @click="handleDeclineOrCancelRequest" :disabled="isLoadingFriendAction" class="action-button danger small">Rechazar</button>
+            </div>
+
+            <div v-if="friendshipStatus === 'FRIENDS'" class="friend-actions-friends">
+              <span><i class="icon-friends"></i> Amigos</span>
+              <button @click="handleRemoveFriend" :disabled="isLoadingFriendAction" class="action-button danger small">Eliminar</button>
+            </div>
+
+            <p v-if="friendActionError" class="action-feedback error">{{ friendActionError }}</p>
+            <p v-if="friendActionSuccess" class="action-feedback success">{{ friendActionSuccess }}</p>
           </div>
+        </div>
         <div v-if="isOwnProfile" class="profile-actions">
           <RouterLink :to="{ name: 'settings' }" class="action-button secondary">
             Ajustes de Mi Perfil
@@ -54,11 +77,11 @@
               <div class="library-grid" v-else>
                 <div v-for="gameEntry in publicLibrary" :key="gameEntry.game_igdb_id" class="library-game-card">
                   <RouterLink :to="{ name: 'game-details', params: { igdbId: gameEntry.game_igdb_id } }">
-                    <img
-                      :src="getCoverUrl(gameEntry.game_cover)"
-                      :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`"
-                      class="library-game-cover"
-                      @error="onLibraryCoverError"
+                    <img 
+                      :src="getCoverUrl(gameEntry.game_cover)" 
+                      :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`" 
+                      class="library-game-cover" 
+                      @error="onLibraryCoverError" 
                     />
                     <div class="card-content">
                       <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3>
@@ -67,7 +90,7 @@
                           <strong>Estado:</strong> {{ formatUserGameStatus(gameEntry.status) }}
                         </div>
                         <div v-if="gameEntry.score !== null && gameEntry.score !== undefined" class="info-item">
-                          <strong>Puntuación:</strong> {{ gameEntry.score }}/10
+                          <strong>Puntuación:</strong> {{ gameEntry.score }}/10 
                         </div>
                       </div>
                     </div>
@@ -82,11 +105,9 @@
               </div>
           </template>
         </div>
-
         <div v-if="activeTab === 'my-gamelists' && isOwnProfile" class="tab-pane">
           <MyGameListsView />
         </div>
-
         <div v-if="activeTab === 'my-tierlists' && isOwnProfile" class="tab-pane">
           <MyTierListsView/>
         </div>
@@ -102,13 +123,21 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-// MODIFICADO: Añadir getMyFriends a las importaciones
-import { getUserByPublicId, getPublicUserLibrary, getMyFriends } from '@/services/apiInstances';
+import { 
+  getUserByPublicId, 
+  getPublicUserLibrary, 
+  getMyFriends, 
+  getPendingRequestsSent, 
+  getPendingRequestsReceived,
+  sendFriendRequest,
+  acceptFriendRequest,
+  declineOrCancelFriendRequest,
+  removeFriend
+} from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
 import defaultAvatar from '@/assets/img/default-avatar.png';
 import defaultLibraryCover from '@/assets/img/default-game-cover.png';
 
-// Componentes para las pestañas del perfil propio
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue';
 import MyGameListsView from '../MyGameListsView/MyGameListsView.vue';
 import MyTierListsView from '../MyTierListsView/MyTierListsView.vue';
@@ -125,11 +154,16 @@ const publicLibrary = ref([]);
 const isLoadingPublicLibrary = ref(false);
 const publicLibraryError = ref('');
 
-// NUEVO: Estado para la lista de amigos del usuario actual
+// Estado para la lógica de amistad
 const friendsList = ref([]);
-const isLoadingFriends = ref(false);
+const sentRequests = ref([]);
+const receivedRequests = ref([]);
+const isLoadingFriendAction = ref(false);
+const friendActionError = ref('');
+const friendActionSuccess = ref('');
 
 const fetchUserProfile = async (publicId) => {
+  // ... (código existente de fetchUserProfile sin cambios)
   if (!publicId) {
     profileError.value = "No se ha especificado un ID de perfil.";
     isLoadingProfile.value = false;
@@ -161,6 +195,7 @@ const fetchUserProfile = async (publicId) => {
 };
 
 const fetchPublicLibrary = async (publicId) => {
+  // ... (código existente de fetchPublicLibrary sin cambios)
   isLoadingPublicLibrary.value = true;
   publicLibraryError.value = '';
   try {
@@ -178,18 +213,26 @@ const fetchPublicLibrary = async (publicId) => {
   }
 };
 
-// NUEVO: Función para obtener la lista de amigos
-const fetchFriendsList = async () => {
+const fetchAllFriendshipData = async () => {
   if (!authStore.isAuthenticated) return;
-  isLoadingFriends.value = true;
+  
+  // Limpiar datos antiguos antes de volver a cargar
+  friendsList.value = [];
+  sentRequests.value = [];
+  receivedRequests.value = [];
+
   try {
-    const response = await getMyFriends();
-    friendsList.value = response.data;
+    const [friends, sent, received] = await Promise.all([
+      getMyFriends(),
+      getPendingRequestsSent(),
+      getPendingRequestsReceived()
+    ]);
+    friendsList.value = friends.data;
+    sentRequests.value = sent.data;
+    receivedRequests.value = received.data;
   } catch (error) {
-    console.error("Error cargando la lista de amigos:", error);
-    // No mostraremos un error visible, simplemente la lista estará vacía
-  } finally {
-    isLoadingFriends.value = false;
+    console.error("Error cargando datos de amistad:", error);
+    friendActionError.value = "No se pudo cargar la información de amigos.";
   }
 };
 
@@ -197,21 +240,66 @@ const isOwnProfile = computed(() => {
   return authStore.isAuthenticated && viewedUser.value && authStore.currentUser?.public_id === viewedUser.value.public_id;
 });
 
-// NUEVO: Propiedad computada para saber si son amigos
 const areFriends = computed(() => {
-  if (!viewedUser.value || !friendsList.value || friendsList.value.length === 0) {
-    return false;
-  }
-  // Comprueba si algún amigo en la lista tiene el mismo public_id que el usuario del perfil visitado
+  if (!viewedUser.value || !friendsList.value) return false;
   return friendsList.value.some(friend => friend.user_public_id === viewedUser.value.public_id);
 });
 
-// MODIFICADO: Actualizar canViewLibrary para incluir la lógica de 'SOLO_AMIGOS'
+const friendshipStatus = computed(() => {
+  if (!viewedUser.value || !authStore.isAuthenticated || isOwnProfile.value) return null;
+  if (areFriends.value) return 'FRIENDS';
+  if (sentRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'SENT';
+  if (receivedRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'RECEIVED';
+  return 'NONE';
+});
+
+// --- Handlers para acciones de amistad ---
+
+const handleFriendAction = async (action) => {
+  isLoadingFriendAction.value = true;
+  friendActionError.value = '';
+  friendActionSuccess.value = '';
+  try {
+    await action();
+    // Refrescar todos los datos de amistad para actualizar el estado de los botones
+    await fetchAllFriendshipData(); 
+  } catch(error) {
+    console.error("Error en la acción de amistad:", error);
+    friendActionError.value = error.response?.data?.error || error.response?.data?.message || 'Ocurrió un error.';
+  } finally {
+    isLoadingFriendAction.value = false;
+  }
+};
+
+const handleSendFriendRequest = () => handleFriendAction(() => sendFriendRequest(viewedUser.value.public_id));
+const handleAcceptFriendRequest = () => handleFriendAction(() => acceptFriendRequest(viewedUser.value.public_id));
+const handleDeclineOrCancelRequest = () => handleFriendAction(() => declineOrCancelFriendRequest(viewedUser.value.public_id));
+const handleRemoveFriend = () => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar a ${viewedUser.value.nombre_usuario} de tus amigos?`)) {
+        handleFriendAction(() => removeFriend(viewedUser.value.public_id));
+    }
+};
+
+// ... (resto de funciones computadas y helpers sin cambios) ...
+
+onMounted(() => {
+  fetchUserProfile(route.params.publicId);
+  fetchAllFriendshipData();
+});
+
+watch(() => route.params.publicId, (newId) => {
+  if (newId) {
+    activeTab.value = 'library'; 
+    fetchUserProfile(newId);
+    // No es necesario recargar la lista de amigos aquí, ya que no depende del perfil visitado
+  }
+});
+
+// ... (resto de funciones de formato, etc.) ...
 const canViewLibrary = computed(() => {
     if (!viewedUser.value) return false;
     if (isOwnProfile.value) return true;
     if (viewedUser.value.visibilidad_perfil === 'PUBLICO') return true;
-    // Si la visibilidad es 'SOLO_AMIGOS', se permite ver si 'areFriends' es verdadero
     return viewedUser.value.visibilidad_perfil === 'SOLO_AMIGOS' && areFriends.value;
 });
 
@@ -278,19 +366,6 @@ const formatUserGameStatus = (status) => {
 const setActiveTab = (tabName) => {
   activeTab.value = tabName;
 };
-
-onMounted(() => {
-  fetchUserProfile(route.params.publicId);
-  // NUEVO: Cargar la lista de amigos cuando el componente se monta
-  fetchFriendsList();
-});
-
-watch(() => route.params.publicId, (newId) => {
-  if (newId) {
-    activeTab.value = 'library'; 
-    fetchUserProfile(newId);
-  }
-});
 </script>
 
 <style src="./UserProfileView.css" scoped>

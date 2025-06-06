@@ -87,6 +87,31 @@ export const getMyFriends = () => {
   return friendshipApi.getMyFriends(); // OperationId: getMyFriends
 };
 
+export const getPendingRequestsSent = () => {
+  return friendshipApi.getPendingRequestsSent(); // OperationId: getMySentFriendRequests
+};
+
+export const getPendingRequestsReceived = () => {
+  return friendshipApi.getPendingRequestsReceived(); // OperationId: getMyReceivedFriendRequests
+};
+
+export const sendFriendRequest = (receiverPublicId) => {
+  return friendshipApi.sendFriendRequest(receiverPublicId); // OperationId: sendFriendRequest
+};
+
+export const acceptFriendRequest = (requesterPublicId) => {
+  return friendshipApi.acceptFriendRequest(requesterPublicId); // OperationId: acceptFriendRequest
+};
+
+export const declineOrCancelFriendRequest = (otherUserPublicId) => {
+  return friendshipApi.declineOrCancelFriendRequest(otherUserPublicId); // OperationId: declineFriendRequest
+};
+
+export const removeFriend = (friendPublicId) => {
+  return friendshipApi.removeFriend(friendPublicId); // OperationId: removeFriend
+};
+
+
 //Bibliotecas / Buscar Juego
 export const fetchGameDetailsByIgdbId = (igdbId) => {
   return userGameLibraryApi.getGameDetails(igdbId); //
