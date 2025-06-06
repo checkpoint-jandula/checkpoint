@@ -1,20 +1,20 @@
 # PublicGameCommentDTO
 
-Lista de comentarios públicos realizados por otros usuarios sobre este juego. Puede estar vacía si no hay comentarios o si el juego no existe en la base de datos local para asociar comentarios.
+DTO que representa un comentario público sobre un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**username** | **string** |  | [optional] [default to undefined]
-**user_public_id** | **string** |  | [optional] [default to undefined]
-**comment_text** | **string** |  | [optional] [default to undefined]
-**comment_date** | **string** |  | [optional] [default to undefined]
+**username** | **string** | Nombre de usuario del autor del comentario. | [optional] [default to undefined]
+**user_public_id** | **string** | ID público del usuario autor del comentario. | [optional] [default to undefined]
+**comment_text** | **string** | Texto del comentario. | [optional] [default to undefined]
+**comment_date** | **string** | Fecha y hora de la última actualización del comentario (proveniente de UserGame.updatedAt). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { PublicGameCommentDTO } from './api';
+import { PublicGameCommentDTO } from '@mycheckpoint/api-client';
 
 const instance: PublicGameCommentDTO = {
     username,

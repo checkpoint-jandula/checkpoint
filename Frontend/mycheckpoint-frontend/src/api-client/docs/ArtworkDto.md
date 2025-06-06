@@ -1,18 +1,18 @@
 # ArtworkDto
 
-Información de los artes del juego.
+DTO para una obra de arte (artwork) de un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**url** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**url** | **string** | URL de la imagen de la obra de arte. | [optional] [default to undefined]
+**id** | **number** | ID de la obra de arte desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ArtworkDto } from './api';
+import { ArtworkDto } from '@mycheckpoint/api-client';
 
 const instance: ArtworkDto = {
     url,

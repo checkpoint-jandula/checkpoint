@@ -1,18 +1,18 @@
 # ThemeDto
 
-Temas principales del juego (ej. Fantasía, Ciencia Ficción).
+DTO para un tema asociado a un videojuego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre del tema. | [optional] [default to undefined]
+**id** | **number** | ID del tema desde IGDB. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ThemeDto } from './api';
+import { ThemeDto } from '@mycheckpoint/api-client';
 
 const instance: ThemeDto = {
     name,

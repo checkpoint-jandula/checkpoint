@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { FriendshipResponseDTO } from './api';
+import { FriendshipResponseDTO } from '@mycheckpoint/api-client';
 
 const instance: FriendshipResponseDTO = {
     friendship_id,

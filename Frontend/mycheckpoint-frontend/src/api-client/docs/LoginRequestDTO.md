@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { LoginRequestDTO } from './api';
+import { LoginRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: LoginRequestDTO = {
     identificador,

@@ -1,21 +1,21 @@
 # TierSectionResponseDTO
 
-Sección especial para ítems (juegos) que aún no han sido clasificados en ninguna tier. Contiene el nombre \'Juegos por Clasificar\' y orden 0.
+DTO para una sección (tier) de una Tier List, incluyendo sus ítems.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**internal_id** | **number** |  | [optional] [default to undefined]
-**name** | **string** |  | [optional] [default to undefined]
-**order** | **number** |  | [optional] [default to undefined]
-**is_default_unclassified** | **boolean** |  | [optional] [default to undefined]
-**items** | [**Array&lt;TierListItemGameInfoDTO&gt;**](TierListItemGameInfoDTO.md) |  | [optional] [default to undefined]
+**internal_id** | **number** | ID interno de la sección. | [optional] [default to undefined]
+**name** | **string** | Nombre de la sección. | [optional] [default to undefined]
+**order** | **number** | Orden de la sección dentro de la Tier List. | [optional] [default to undefined]
+**is_default_unclassified** | **boolean** | Indica si es la sección por defecto para ítems sin clasificar. | [optional] [default to undefined]
+**items** | [**Array&lt;TierListItemGameInfoDTO&gt;**](TierListItemGameInfoDTO.md) | Lista de ítems (juegos) en esta sección. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { TierSectionResponseDTO } from './api';
+import { TierSectionResponseDTO } from '@mycheckpoint/api-client';
 
 const instance: TierSectionResponseDTO = {
     internal_id,

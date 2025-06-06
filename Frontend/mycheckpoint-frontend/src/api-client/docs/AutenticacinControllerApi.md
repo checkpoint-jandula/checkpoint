@@ -21,7 +21,7 @@ import {
     AutenticacinControllerApi,
     Configuration,
     LoginRequestDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AutenticacinControllerApi(configuration);
@@ -46,7 +46,7 @@ const { status, data } = await apiInstance.authenticateUser(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -57,12 +57,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Autenticación exitosa. Devuelve el token JWT. |  -  |
 |**400** | Datos de entrada inválidos. El identificador o la contraseña no cumplen los requisitos de formato o están vacíos. |  -  |
-|**401** | No autorizado. Credenciales incorrectas o fallo general de autenticación. |  -  |
-|**403** | Prohibido. La cuenta está deshabilitada (ej. email no verificado) o la cuenta ha sido eliminada porque su fecha de eliminación programada ya pasó. |  -  |
-|**404** | No encontrado. El usuario autenticado no se pudo encontrar en la base de datos (error interno anómalo durante la cancelación de eliminación). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Autenticación exitosa. Devuelve el token JWT. |  -  |
+|**401** | No autorizado. Credenciales incorrectas o fallo general de autenticación. |  -  |
+|**404** | No encontrado. El usuario autenticado no se pudo encontrar en la base de datos (error interno anómalo durante la cancelación de eliminación). |  -  |
+|**403** | Prohibido. La cuenta está deshabilitada (ej. email no verificado) o la cuenta ha sido eliminada porque su fecha de eliminación programada ya pasó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -77,7 +77,7 @@ Valida un token de verificación enviado al correo electrónico del usuario tras
 import {
     AutenticacinControllerApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AutenticacinControllerApi(configuration);
@@ -102,21 +102,21 @@ const { status, data } = await apiInstance.confirmUserAccount(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: text/plain, application/json
+ - **Accept**: application/json, text/plain
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Correo electrónico verificado exitosamente. |  -  |
-|**400** | Solicitud incorrecta. El token es inválido (ej. ya fue usado, ha expirado, o el correo ya estaba verificado). |  -  |
-|**404** | No encontrado. El token de verificación proporcionado no existe o es inválido. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Correo electrónico verificado exitosamente. |  -  |
+|**404** | No encontrado. El token de verificación proporcionado no existe o es inválido. |  -  |
+|**400** | Solicitud incorrecta. El token es inválido (ej. ya fue usado, ha expirado, o el correo ya estaba verificado). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -132,7 +132,7 @@ import {
     AutenticacinControllerApi,
     Configuration,
     ForgotPasswordDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AutenticacinControllerApi(configuration);
@@ -157,7 +157,7 @@ const { status, data } = await apiInstance.forgotPassword(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -185,7 +185,7 @@ import {
     AutenticacinControllerApi,
     Configuration,
     ResetPasswordDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new AutenticacinControllerApi(configuration);
@@ -210,7 +210,7 @@ const { status, data } = await apiInstance.resetPassword(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -221,10 +221,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**500** | Error interno del servidor. |  -  |
+|**404** | No encontrado. El token de restablecimiento proporcionado no existe o es inválido. |  -  |
 |**200** | Contraseña restablecida exitosamente. |  -  |
 |**400** | Solicitud incorrecta. Los datos proporcionados en &#x60;ResetPasswordDTO&#x60; no son válidos (ej. token vacío, contraseña nueva no cumple requisitos), el token ya fue usado, ha expirado, o la nueva contraseña es la misma que la actual. |  -  |
-|**404** | No encontrado. El token de restablecimiento proporcionado no existe o es inválido. |  -  |
-|**500** | Error interno del servidor. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

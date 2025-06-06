@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { TierListUpdateRequestDTO } from './api';
+import { TierListUpdateRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: TierListUpdateRequestDTO = {
     name,

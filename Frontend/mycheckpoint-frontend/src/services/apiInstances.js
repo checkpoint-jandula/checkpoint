@@ -82,6 +82,11 @@ export const searchUsers = (username) => {
   return usersApi.searchUsersByUsername(username); //
 };
 
+//Amistades
+export const getMyFriends = () => {
+  return friendshipApi.getMyFriends(); // OperationId: getMyFriends
+};
+
 //Bibliotecas / Buscar Juego
 export const fetchGameDetailsByIgdbId = (igdbId) => {
   return userGameLibraryApi.getGameDetails(igdbId); //
@@ -90,6 +95,10 @@ export const fetchGameDetailsByIgdbId = (igdbId) => {
 export const getMyUserGameLibrary = () => {
   return userGameLibraryApi.getMyGameLibrary(); //
 };
+
+export const getPublicUserLibrary = (publicId) => {
+  return userGameLibraryApi.getPublicUserLibrary(publicId); //
+}
 
 export const addOrUpdateGameInUserLibrary = (igdbId, userGameDataDTO) => {
   return userGameLibraryApi.addOrUpdateGameInMyLibrary(igdbId, userGameDataDTO); //

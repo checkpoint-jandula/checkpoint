@@ -24,6 +24,7 @@ import mp.tfg.mycheckpoint.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -56,6 +57,10 @@ public class AuthenticationController {
     private final UserService userService;
     private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
+    @Value("${app.frontend.base-url}")
+    private String frontendBaseUrl;
+    @Value("${app.api.base-url}")
+    private String backendBaseUrl;
 
     /**
      * Constructor para {@code AuthenticationController}.
@@ -220,7 +225,7 @@ public class AuthenticationController {
         // Para producción, esta debería ser la URL pública de tu frontend.
         // Hacerla configurable a través de application.properties.
         //Fichero de configuracion.
-        String frontendLoginUrl = "http://localhost:5173/login";
+        String frontendLoginUrl = frontendBaseUrl + "login";
 
         try {
             userService.confirmEmailVerification(token);

@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { AccountDeleteDTO } from './api';
+import { AccountDeleteDTO } from '@mycheckpoint/api-client';
 
 const instance: AccountDeleteDTO = {
     contrasea_actual,

@@ -1,17 +1,18 @@
 # CompanyInfoDto
 
+DTO con información básica de una compañía (desarrolladora, editora).
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre de la compañía. | [optional] [default to undefined]
+**id** | **number** | ID de la compañía desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { CompanyInfoDto } from './api';
+import { CompanyInfoDto } from '@mycheckpoint/api-client';
 
 const instance: CompanyInfoDto = {
     name,

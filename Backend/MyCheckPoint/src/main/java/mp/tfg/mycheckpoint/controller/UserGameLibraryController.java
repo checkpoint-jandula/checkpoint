@@ -25,6 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Controlador API para gestionar la biblioteca de juegos personal de un usuario.
@@ -263,5 +264,40 @@ public class UserGameLibraryController {
             @PathVariable Long igdbId) {
         userGameLibraryService.removeGameFromLibrary(currentUser.getEmail(), igdbId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     *  Obtiene la biblioteca de juegos pública de un usuario específico por su ID público.
+     *
+     *  @param publicId El ID público (UUID) del usuario.
+     *  @return ResponseEntity con una lista de {@link UserGameResponseDTO} representando la biblioteca pública del usuario.
+     *
+     */
+    @GetMapping("/users/public/{publicId}/library")
+    @Operation(summary = "Obtener la biblioteca de un usuario por su ID público",
+            description = "Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). " +
+                    "Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.",
+            operationId = "getPublicUserLibrary")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Biblioteca recuperada exitosamente.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = UserGameResponseDTO.class)))),
+            @ApiResponse(responseCode = "403", description = "Prohibido. La biblioteca del usuario es privada o solo para amigos y no eres amigo.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
+            @ApiResponse(responseCode = "404", description = "No encontrado. El usuario con el ID público especificado no existe.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public ResponseEntity<List<UserGameResponseDTO>> getPublicUserLibrary(
+            @Parameter(name = "publicId", description = "ID público (UUID) del usuario cuya biblioteca se desea obtener.", required = true, in = ParameterIn.PATH, example = "123e4567-e89b-12d3-a456-426614174000", schema = @Schema(type = "string", format = "uuid"))
+            @PathVariable UUID publicId,
+            Authentication authentication) {
+        String currentUserEmail = null;
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetailsImpl) {
+            currentUserEmail = ((UserDetailsImpl) authentication.getPrincipal()).getEmail();
+        }
+        List<UserGameResponseDTO> library = userGameLibraryService.getPublicUserGameLibrary(publicId, currentUserEmail);
+        return ResponseEntity.ok(library);
     }
 }

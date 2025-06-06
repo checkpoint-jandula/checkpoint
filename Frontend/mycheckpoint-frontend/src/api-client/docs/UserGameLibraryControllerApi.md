@@ -7,6 +7,7 @@ All URIs are relative to *http://localhost:8080*
 |[**addOrUpdateGameInMyLibrary**](#addorupdategameinmylibrary) | **POST** /api/v1/users/me/library/games/{igdbId} | Añadir o actualizar un juego en la biblioteca del usuario autenticado|
 |[**getGameDetails**](#getgamedetails) | **GET** /api/v1/games/{igdbId}/details | Obtener detalles completos de un juego|
 |[**getMyGameLibrary**](#getmygamelibrary) | **GET** /api/v1/users/me/library/games | Obtener la biblioteca completa de juegos del usuario autenticado|
+|[**getPublicUserLibrary**](#getpublicuserlibrary) | **GET** /api/v1/users/public/{publicId}/library | Obtener la biblioteca de un usuario por su ID público|
 |[**getSpecificGameFromMyLibrary**](#getspecificgamefrommylibrary) | **GET** /api/v1/users/me/library/games/{igdbId} | Obtener un juego específico de la biblioteca del usuario autenticado|
 |[**removeGameFromMyLibrary**](#removegamefrommylibrary) | **DELETE** /api/v1/users/me/library/games/{igdbId} | Eliminar un juego de la biblioteca del usuario autenticado|
 
@@ -22,7 +23,7 @@ import {
     UserGameLibraryControllerApi,
     Configuration,
     UserGameDataDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UserGameLibraryControllerApi(configuration);
@@ -50,7 +51,7 @@ const { status, data } = await apiInstance.addOrUpdateGameInMyLibrary(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -61,11 +62,11 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**200** | Juego añadido o actualizado en la biblioteca exitosamente. Devuelve la entrada de la biblioteca actualizada. |  -  |
 |**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;UserGameDataDTO&#x60; no pasan las validaciones (ej. puntuación fuera de rango). |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado, o el juego con el &#x60;igdbId&#x60; proporcionado no se encontró en IGDB. |  -  |
 |**500** | Error interno del servidor. Podría ocurrir si hay problemas al contactar IGDB o al guardar los datos. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado, o el juego con el &#x60;igdbId&#x60; proporcionado no se encontró en IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -80,7 +81,7 @@ Recupera información detallada sobre un juego específico, identificado por su 
 import {
     UserGameLibraryControllerApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UserGameLibraryControllerApi(configuration);
@@ -105,7 +106,7 @@ const { status, data } = await apiInstance.getGameDetails(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -133,7 +134,7 @@ Recupera todas las entradas de juegos que el usuario actualmente autenticado tie
 import {
     UserGameLibraryControllerApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UserGameLibraryControllerApi(configuration);
@@ -151,7 +152,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -162,10 +163,63 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Biblioteca de juegos recuperada exitosamente. La lista puede estar vacía si el usuario no tiene juegos añadidos. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Biblioteca de juegos recuperada exitosamente. La lista puede estar vacía si el usuario no tiene juegos añadidos. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getPublicUserLibrary**
+> Array<UserGameResponseDTO> getPublicUserLibrary()
+
+Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+
+### Example
+
+```typescript
+import {
+    UserGameLibraryControllerApi,
+    Configuration
+} from '@mycheckpoint/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new UserGameLibraryControllerApi(configuration);
+
+let publicId: string; //ID público (UUID) del usuario cuya biblioteca se desea obtener. (default to undefined)
+
+const { status, data } = await apiInstance.getPublicUserLibrary(
+    publicId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **publicId** | [**string**] | ID público (UUID) del usuario cuya biblioteca se desea obtener. | defaults to undefined|
+
+
+### Return type
+
+**Array<UserGameResponseDTO>**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**404** | No encontrado. El usuario con el ID público especificado no existe. |  -  |
+|**200** | Biblioteca recuperada exitosamente. |  -  |
+|**403** | Prohibido. La biblioteca del usuario es privada o solo para amigos y no eres amigo. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -180,7 +234,7 @@ Recupera los detalles de un juego específico (identificado por su IGDB ID) tal 
 import {
     UserGameLibraryControllerApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UserGameLibraryControllerApi(configuration);
@@ -205,7 +259,7 @@ const { status, data } = await apiInstance.getSpecificGameFromMyLibrary(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -216,10 +270,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Juego específico de la biblioteca recuperado exitosamente. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El juego con el IGDB ID especificado no se encontró en la biblioteca del usuario, o el usuario autenticado no pudo ser verificado. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**404** | No encontrado. El juego con el IGDB ID especificado no se encontró en la biblioteca del usuario, o el usuario autenticado no pudo ser verificado. |  -  |
+|**200** | Juego específico de la biblioteca recuperado exitosamente. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -234,7 +288,7 @@ Permite al usuario autenticado eliminar un juego específico (identificado por s
 import {
     UserGameLibraryControllerApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UserGameLibraryControllerApi(configuration);
@@ -259,7 +313,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -270,10 +324,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**204** | Juego eliminado de la biblioteca exitosamente. No hay contenido en la respuesta. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El juego con el IGDB ID especificado no se encontró en la biblioteca del usuario para eliminar, o el usuario autenticado no pudo ser verificado. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**404** | No encontrado. El juego con el IGDB ID especificado no se encontró en la biblioteca del usuario para eliminar, o el usuario autenticado no pudo ser verificado. |  -  |
+|**204** | Juego eliminado de la biblioteca exitosamente. No hay contenido en la respuesta. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { GameListRequestDTO } from './api';
+import { GameListRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: GameListRequestDTO = {
     name,

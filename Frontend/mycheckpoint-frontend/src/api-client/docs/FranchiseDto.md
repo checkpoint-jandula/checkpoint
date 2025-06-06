@@ -1,18 +1,18 @@
 # FranchiseDto
 
-Franquicias a las que pertenece el juego.
+DTO para una franquicia de videojuegos.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre de la franquicia. | [optional] [default to undefined]
+**id** | **number** | ID de la franquicia desde IGDB. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { FranchiseDto } from './api';
+import { FranchiseDto } from '@mycheckpoint/api-client';
 
 const instance: FranchiseDto = {
     name,

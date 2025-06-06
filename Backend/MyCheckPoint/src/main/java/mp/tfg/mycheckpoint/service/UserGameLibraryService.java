@@ -5,6 +5,7 @@ import mp.tfg.mycheckpoint.dto.usergame.UserGameDataDTO;
 import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Interfaz para el servicio de gestión de la biblioteca de juegos personal de un usuario.
@@ -60,6 +61,18 @@ public interface UserGameLibraryService {
      * o si el {@code userEmail} es proporcionado pero el usuario no se encuentra.
      */
     GameDetailDTO getGameDetailsForUser(Long igdbId, String userEmail);
+
+    /**
+     * Obtiene la biblioteca de juegos pública de un usuario específico.
+     * La visibilidad se comprueba contra el usuario actual que realiza la solicitud.
+     *
+     * @param publicId El ID público del usuario cuya biblioteca se va a recuperar.
+     * @param currentUserEmail El email del usuario que realiza la consulta (puede ser nulo si es anónimo).
+     * @return Una lista de {@link UserGameResponseDTO} representando la biblioteca pública del usuario.
+     * @throws mp.tfg.mycheckpoint.exception.ResourceNotFoundException Si el usuario no se encuentra.
+     * @throws mp.tfg.mycheckpoint.exception.UnauthorizedOperationException Si la biblioteca del usuario no es pública o visible para el usuario actual.
+     */
+    List<UserGameResponseDTO> getPublicUserGameLibrary(UUID publicId, String currentUserEmail);
 
     /**
      * Elimina un juego de la biblioteca personal del usuario.

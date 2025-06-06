@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UserCreateDTO } from './api';
+import { UserCreateDTO } from '@mycheckpoint/api-client';
 
 const instance: UserCreateDTO = {
     nombre_usuario,

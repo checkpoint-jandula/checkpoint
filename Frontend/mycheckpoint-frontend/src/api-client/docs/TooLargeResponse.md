@@ -1,17 +1,17 @@
 # TooLargeResponse
 
-Respuesta específica para errores de validación de campos (HTTP 413).
+Respuesta específica para errores de tamaño de payload excedido (HTTP 413).
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**errors** | **Array&lt;string&gt;** | Mensaje de error para imagenes | [optional] [default to undefined]
+**errors** | **Array&lt;string&gt;** | Mensaje de error para archivos que exceden el tamaño permitido. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { TooLargeResponse } from './api';
+import { TooLargeResponse } from '@mycheckpoint/api-client';
 
 const instance: TooLargeResponse = {
     errors,

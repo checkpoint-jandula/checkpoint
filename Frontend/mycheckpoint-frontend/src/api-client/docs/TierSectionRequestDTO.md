@@ -1,6 +1,6 @@
 # TierSectionRequestDTO
 
-DTO para solicitar la creación de una nueva sección (tier) dentro de una Tier List.
+DTO para solicitar la creación o actualización del nombre de una nueva sección (tier) dentro de una Tier List.
 
 ## Properties
 
@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { TierSectionRequestDTO } from './api';
+import { TierSectionRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: TierSectionRequestDTO = {
     name,

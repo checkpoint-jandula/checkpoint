@@ -8,6 +8,7 @@ All URIs are relative to *http://localhost:8080*
 |[**deleteMyAccount**](#deletemyaccount) | **DELETE** /api/v1/usuarios/me | Programar la eliminación de la cuenta del usuario autenticado|
 |[**getCurrentAuthenticatedUser**](#getcurrentauthenticateduser) | **GET** /api/v1/usuarios/me | Obtener los datos del usuario autenticado actualmente|
 |[**getUsuarioByPublicId**](#getusuariobypublicid) | **GET** /api/v1/usuarios/public/{publicId} | Obtener un usuario por su ID público|
+|[**getUsuarioSummaryByPublicId**](#getusuariosummarybypublicid) | **GET** /api/v1/usuarios/public/summary/{publicId} | Obtener un resumen de usuario por su ID público|
 |[**registrarUsuario**](#registrarusuario) | **POST** /api/v1/usuarios | Registrar un nuevo usuario|
 |[**searchUsersByUsername**](#searchusersbyusername) | **GET** /api/v1/usuarios/search | Buscar usuarios por nombre de usuario|
 |[**updateCurrentUserProfile**](#updatecurrentuserprofile) | **PUT** /api/v1/usuarios/me | Actualizar el perfil del usuario autenticado actualmente|
@@ -25,7 +26,7 @@ import {
     UsuariosApi,
     Configuration,
     PasswordChangeDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -50,7 +51,7 @@ const { status, data } = await apiInstance.changeMyPassword(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -61,11 +62,11 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Contraseña actualizada correctamente. |  -  |
-|**400** | Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual). |  -  |
-|**401** | No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado. |  -  |
+|**400** | Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual). |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
+|**200** | Contraseña actualizada correctamente. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -81,7 +82,7 @@ import {
     UsuariosApi,
     Configuration,
     AccountDeleteDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -106,7 +107,7 @@ const { status, data } = await apiInstance.deleteMyAccount(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -117,10 +118,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada. |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**401** | No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado. |  -  |
 |**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
-|**500** | Error interno del servidor. |  -  |
+|**200** | Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -135,7 +136,7 @@ Recupera los detalles del perfil y preferencias del usuario que ha iniciado sesi
 import {
     UsuariosApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -153,7 +154,7 @@ This endpoint does not have any parameters.
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -164,10 +165,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Datos del usuario autenticado devueltos exitosamente. |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó, o el contexto de seguridad no contiene un principal válido. |  -  |
+|**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos. |  -  |
+|**200** | Datos del usuario autenticado devueltos exitosamente. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -182,7 +183,7 @@ Recupera los detalles de un usuario específico utilizando su ID público (UUID)
 import {
     UsuariosApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -207,7 +208,7 @@ const { status, data } = await apiInstance.getUsuarioByPublicId(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -218,9 +219,62 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**500** | Error interno del servidor. |  -  |
 |**200** | Usuario encontrado y devuelto exitosamente. |  -  |
 |**404** | No encontrado. No existe ningún usuario con el ID público proporcionado. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getUsuarioSummaryByPublicId**
+> UserSearchResultDTO getUsuarioSummaryByPublicId()
+
+Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+
+### Example
+
+```typescript
+import {
+    UsuariosApi,
+    Configuration
+} from '@mycheckpoint/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new UsuariosApi(configuration);
+
+let publicId: string; //ID público (UUID) del usuario a obtener. (default to undefined)
+
+const { status, data } = await apiInstance.getUsuarioSummaryByPublicId(
+    publicId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **publicId** | [**string**] | ID público (UUID) del usuario a obtener. | defaults to undefined|
+
+
+### Return type
+
+**UserSearchResultDTO**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
 |**500** | Error interno del servidor. |  -  |
+|**200** | Resumen de usuario encontrado y devuelto exitosamente. |  -  |
+|**404** | No encontrado. No existe ningún usuario con el ID público proporcionado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -236,7 +290,7 @@ import {
     UsuariosApi,
     Configuration,
     UserCreateDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -261,7 +315,7 @@ const { status, data } = await apiInstance.registrarUsuario(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -272,10 +326,10 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Usuario creado exitosamente. Devuelve los datos del usuario recién creado. |  -  |
-|**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserCreateDTO&#x60; no pasan las validaciones (ej. email no válido, contraseña corta). |  -  |
-|**409** | Conflicto. El email o el nombre de usuario proporcionado ya se encuentra registrado en el sistema. |  -  |
 |**500** | Error interno del servidor. Ocurrió un problema inesperado durante el proceso de registro. |  -  |
+|**201** | Usuario creado exitosamente. Devuelve los datos del usuario recién creado. |  -  |
+|**409** | Conflicto. El email o el nombre de usuario proporcionado ya se encuentra registrado en el sistema. |  -  |
+|**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserCreateDTO&#x60; no pasan las validaciones (ej. email no válido, contraseña corta). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -290,7 +344,7 @@ Permite a un usuario autenticado buscar otros usuarios en el sistema por su nomb
 import {
     UsuariosApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -315,7 +369,7 @@ const { status, data } = await apiInstance.searchUsersByUsername(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -326,11 +380,11 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio. |  -  |
-|**400** | Solicitud incorrecta. El parámetro \&#39;username\&#39; es obligatorio y debe tener al menos 2 caracteres. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. No se encontraron usuarios con el nombre de usuario proporcionado |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio. |  -  |
+|**404** | No encontrado. No se encontraron usuarios con el nombre de usuario proporcionado |  -  |
+|**400** | Solicitud incorrecta. El parámetro \&#39;username\&#39; es obligatorio y debe tener al menos 2 caracteres. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -346,7 +400,7 @@ import {
     UsuariosApi,
     Configuration,
     UserProfileUpdateDTO
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -371,7 +425,7 @@ const { status, data } = await apiInstance.updateCurrentUserProfile(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -382,12 +436,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**200** | Perfil de usuario actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
 |**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserProfileUpdateDTO&#x60; no pasan las validaciones (ej. nombre de usuario demasiado corto/largo). |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos para la actualización. |  -  |
 |**409** | Conflicto. El nuevo nombre de usuario elegido ya está en uso por otro usuario. |  -  |
-|**500** | Error interno del servidor. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -402,7 +456,7 @@ Permite al usuario autenticado subir un nuevo archivo de imagen para su foto de 
 import {
     UsuariosApi,
     Configuration
-} from './api';
+} from '@mycheckpoint/api-client';
 
 const configuration = new Configuration();
 const apiInstance = new UsuariosApi(configuration);
@@ -427,7 +481,7 @@ const { status, data } = await apiInstance.uploadProfilePicture(
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -438,12 +492,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Foto de perfil subida y perfil actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
-|**400** | Solicitud incorrecta. El archivo proporcionado está vacío, tiene un formato no permitido, o hay un problema con el nombre del archivo. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 |**413** | Payload Too Large. El archivo excede el tamaño máximo permitido para fotos de perfil o el límite general de subida. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 |**500** | Error interno del servidor. No se pudo crear el directorio de almacenamiento, guardar el archivo, o ocurrió otro error inesperado. |  -  |
+|**400** | Solicitud incorrecta. El archivo proporcionado está vacío, tiene un formato no permitido, o hay un problema con el nombre del archivo. |  -  |
+|**200** | Foto de perfil subida y perfil actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

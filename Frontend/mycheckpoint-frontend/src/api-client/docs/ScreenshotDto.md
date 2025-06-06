@@ -1,18 +1,18 @@
 # ScreenshotDto
 
-Capturas de pantalla del juego.
+DTO para una captura de pantalla de un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**url** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**url** | **string** | URL de la imagen de la captura de pantalla. | [optional] [default to undefined]
+**id** | **number** | ID de la captura de pantalla desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ScreenshotDto } from './api';
+import { ScreenshotDto } from '@mycheckpoint/api-client';
 
 const instance: ScreenshotDto = {
     url,

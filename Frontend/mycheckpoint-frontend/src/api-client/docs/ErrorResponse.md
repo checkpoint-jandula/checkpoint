@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ErrorResponse } from './api';
+import { ErrorResponse } from '@mycheckpoint/api-client';
 
 const instance: ErrorResponse = {
     error,

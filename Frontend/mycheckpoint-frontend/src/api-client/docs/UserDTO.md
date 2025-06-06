@@ -18,7 +18,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UserDTO } from './api';
+import { UserDTO } from '@mycheckpoint/api-client';
 
 const instance: UserDTO = {
     public_id,

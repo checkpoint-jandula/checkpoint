@@ -50,64 +50,64 @@ export interface AddGameToCustomListRequestDTO {
     'user_game_id': number;
 }
 /**
- * Información de los artes del juego.
+ * DTO para una obra de arte (artwork) de un juego.
  * @export
  * @interface ArtworkDto
  */
 export interface ArtworkDto {
     /**
-     * 
+     * URL de la imagen de la obra de arte.
      * @type {string}
      * @memberof ArtworkDto
      */
     'url'?: string;
     /**
-     * 
+     * ID de la obra de arte desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof ArtworkDto
      */
     'id'?: number;
 }
 /**
- * 
+ * DTO con información básica de una compañía (desarrolladora, editora).
  * @export
  * @interface CompanyInfoDto
  */
 export interface CompanyInfoDto {
     /**
-     * 
+     * Nombre de la compañía.
      * @type {string}
      * @memberof CompanyInfoDto
      */
     'name'?: string;
     /**
-     * 
+     * ID de la compañía desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof CompanyInfoDto
      */
     'id'?: number;
 }
 /**
- * 
+ * DTO para la información de la carátula de un juego.
  * @export
  * @interface CoverDto
  */
 export interface CoverDto {
     /**
-     * 
+     * URL de la imagen de la carátula.
      * @type {string}
      * @memberof CoverDto
      */
     'url'?: string;
     /**
-     * 
+     * ID de la carátula desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof CoverDto
      */
     'id'?: number;
 }
 /**
- * Lista de remasters de este juego.
+ * DTO con información resumida de un DLC, expansión o juego relacionado.
  * @export
  * @interface DlcInfoDto
  */
@@ -119,31 +119,31 @@ export interface DlcInfoDto {
      */
     'cover'?: CoverDto;
     /**
-     * 
+     * Nombre del DLC/expansión/juego relacionado.
      * @type {string}
      * @memberof DlcInfoDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del DLC/expansión/juego relacionado desde IGDB.
      * @type {number}
      * @memberof DlcInfoDto
      */
     'id'?: number;
     /**
-     * 
+     * Calificación total del DLC/expansión/juego relacionado.
      * @type {number}
      * @memberof DlcInfoDto
      */
-    'total_rating'?: number;
+    'total_rating'?: number | null;
     /**
-     * 
+     * Tipo de juego (ej. DLC, EXPANSION).
      * @type {string}
      * @memberof DlcInfoDto
      */
     'game_type'?: DlcInfoDtoGameTypeEnum;
     /**
-     * 
+     * Slug del DLC/expansión/juego relacionado.
      * @type {string}
      * @memberof DlcInfoDto
      */
@@ -211,19 +211,19 @@ export interface ForgotPasswordDTO {
     'email': string;
 }
 /**
- * Franquicias a las que pertenece el juego.
+ * DTO para una franquicia de videojuegos.
  * @export
  * @interface FranchiseDto
  */
 export interface FranchiseDto {
     /**
-     * 
+     * Nombre de la franquicia.
      * @type {string}
      * @memberof FranchiseDto
      */
     'name'?: string;
     /**
-     * 
+     * ID de la franquicia desde IGDB.
      * @type {number}
      * @memberof FranchiseDto
      */
@@ -324,7 +324,7 @@ export interface GameDetailDTO {
     'public_comments'?: Array<PublicGameCommentDTO> | null;
 }
 /**
- * 
+ * DTO completo para un videojuego, incluyendo todos sus detalles y relaciones.
  * @export
  * @interface GameDto
  */
@@ -558,19 +558,19 @@ export const GameDtoGameTypeEnum = {
 export type GameDtoGameTypeEnum = typeof GameDtoGameTypeEnum[keyof typeof GameDtoGameTypeEnum];
 
 /**
- * Motores de juego utilizados.
+ * DTO para un motor de videojuego (Game Engine).
  * @export
  * @interface GameEngineDto
  */
 export interface GameEngineDto {
     /**
-     * 
+     * Nombre del motor de juego.
      * @type {string}
      * @memberof GameEngineDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del motor de juego desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof GameEngineDto
      */
@@ -663,58 +663,58 @@ export interface GameListResponseDTO {
     'updated_at'?: string;
 }
 /**
- * Modos de juego disponibles (ej. Un jugador, Multijugador).
+ * DTO para un modo de juego.
  * @export
  * @interface GameModeDto
  */
 export interface GameModeDto {
     /**
-     * 
+     * Nombre del modo de juego.
      * @type {string}
      * @memberof GameModeDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del modo de juego desde IGDB.
      * @type {number}
      * @memberof GameModeDto
      */
     'id'?: number;
 }
 /**
- * Estado numérico del juego según IGDB (mapeado a ReleaseStatus).
+ * DTO para el estado de lanzamiento de un juego (ID numérico de IGDB).
  * @export
  * @interface GameStatusDto
  */
 export interface GameStatusDto {
     /**
-     * 
+     * ID numérico del estado del juego según IGDB.
      * @type {number}
      * @memberof GameStatusDto
      */
     'id'?: number;
 }
 /**
- * Géneros a los que pertenece el juego (ej. RPG, Acción).
+ * DTO para un género de videojuego.
  * @export
  * @interface GenreDto
  */
 export interface GenreDto {
     /**
-     * 
+     * Nombre del género.
      * @type {string}
      * @memberof GenreDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del género desde IGDB.
      * @type {number}
      * @memberof GenreDto
      */
     'id'?: number;
 }
 /**
- * Compañías involucradas en el desarrollo/publicación del juego.
+ * DTO para la relación de una compañía con un juego y su rol.
  * @export
  * @interface InvolvedCompanyDto
  */
@@ -726,31 +726,31 @@ export interface InvolvedCompanyDto {
      */
     'company'?: CompanyInfoDto;
     /**
-     * 
+     * True si la compañía es desarrolladora.
      * @type {boolean}
      * @memberof InvolvedCompanyDto
      */
     'developer'?: boolean;
     /**
-     * 
+     * True si la compañía realizó la portabilidad del juego.
      * @type {boolean}
      * @memberof InvolvedCompanyDto
      */
     'porting'?: boolean;
     /**
-     * 
+     * True si la compañía es editora.
      * @type {boolean}
      * @memberof InvolvedCompanyDto
      */
     'publisher'?: boolean;
     /**
-     * 
+     * True si la compañía dio soporte al desarrollo.
      * @type {boolean}
      * @memberof InvolvedCompanyDto
      */
     'supporting'?: boolean;
     /**
-     * 
+     * ID de la relación de involucramiento desde IGDB.
      * @type {number}
      * @memberof InvolvedCompanyDto
      */
@@ -776,19 +776,19 @@ export interface JwtResponseDTO {
     'tipo_token'?: string;
 }
 /**
- * Palabras clave asociadas al juego.
+ * DTO para una palabra clave asociada a un juego.
  * @export
  * @interface KeywordDto
  */
 export interface KeywordDto {
     /**
-     * 
+     * Nombre de la palabra clave.
      * @type {string}
      * @memberof KeywordDto
      */
     'name'?: string;
     /**
-     * 
+     * ID de la palabra clave desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof KeywordDto
      */
@@ -833,29 +833,29 @@ export interface PasswordChangeDTO {
     'nueva_contraseña': string;
 }
 /**
- * Plataformas en las que el juego está disponible.
+ * DTO para una plataforma de videojuegos.
  * @export
  * @interface PlatformDto
  */
 export interface PlatformDto {
     /**
-     * 
+     * Nombre principal de la plataforma.
      * @type {string}
      * @memberof PlatformDto
      */
     'name'?: string;
     /**
-     * 
+     * ID de la plataforma desde IGDB.
      * @type {number}
      * @memberof PlatformDto
      */
     'id'?: number;
     /**
-     * 
+     * Nombre alternativo de la plataforma.
      * @type {string}
      * @memberof PlatformDto
      */
-    'alternative_name'?: string;
+    'alternative_name'?: string | null;
     /**
      * 
      * @type {PlatformLogoDto}
@@ -864,63 +864,63 @@ export interface PlatformDto {
     'platform_logo'?: PlatformLogoDto;
 }
 /**
- * 
+ * DTO para el logo de una plataforma de videojuegos.
  * @export
  * @interface PlatformLogoDto
  */
 export interface PlatformLogoDto {
     /**
-     * 
+     * URL de la imagen del logo de la plataforma.
      * @type {string}
      * @memberof PlatformLogoDto
      */
     'url'?: string;
     /**
-     * 
+     * ID del logo desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof PlatformLogoDto
      */
     'id'?: number;
 }
 /**
- * Lista de comentarios públicos realizados por otros usuarios sobre este juego. Puede estar vacía si no hay comentarios o si el juego no existe en la base de datos local para asociar comentarios.
+ * DTO que representa un comentario público sobre un juego.
  * @export
  * @interface PublicGameCommentDTO
  */
 export interface PublicGameCommentDTO {
     /**
-     * 
+     * Nombre de usuario del autor del comentario.
      * @type {string}
      * @memberof PublicGameCommentDTO
      */
     'username'?: string;
     /**
-     * 
+     * ID público del usuario autor del comentario.
      * @type {string}
      * @memberof PublicGameCommentDTO
      */
     'user_public_id'?: string;
     /**
-     * 
+     * Texto del comentario.
      * @type {string}
      * @memberof PublicGameCommentDTO
      */
     'comment_text'?: string;
     /**
-     * 
+     * Fecha y hora de la última actualización del comentario (proveniente de UserGame.updatedAt).
      * @type {string}
      * @memberof PublicGameCommentDTO
      */
     'comment_date'?: string;
 }
 /**
- * Respuesta específica para errores de validación de campos (HTTP 400).
+ * Respuesta específica para errores de validación de campos obligatorios (HTTP 400).
  * @export
  * @interface RequiredErrorResponse
  */
 export interface RequiredErrorResponse {
     /**
-     * Mensaje de error generico
+     * Mensaje de error genérico para campos obligatorios.
      * @type {Array<string>}
      * @memberof RequiredErrorResponse
      */
@@ -946,26 +946,26 @@ export interface ResetPasswordDTO {
     'nueva_contraseña': string;
 }
 /**
- * Capturas de pantalla del juego.
+ * DTO para una captura de pantalla de un juego.
  * @export
  * @interface ScreenshotDto
  */
 export interface ScreenshotDto {
     /**
-     * 
+     * URL de la imagen de la captura de pantalla.
      * @type {string}
      * @memberof ScreenshotDto
      */
     'url'?: string;
     /**
-     * 
+     * ID de la captura de pantalla desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof ScreenshotDto
      */
     'id'?: number;
 }
 /**
- * Lista de juegos similares a este.
+ * DTO con información resumida de un juego similar.
  * @export
  * @interface SimilarGameInfoDto
  */
@@ -977,50 +977,50 @@ export interface SimilarGameInfoDto {
      */
     'cover'?: CoverDto;
     /**
-     * 
+     * Nombre del juego similar.
      * @type {string}
      * @memberof SimilarGameInfoDto
      */
     'name'?: string;
     /**
-     * 
+     * Slug del juego similar.
      * @type {string}
      * @memberof SimilarGameInfoDto
      */
     'slug'?: string;
     /**
-     * 
+     * Resumen del juego similar.
      * @type {string}
      * @memberof SimilarGameInfoDto
      */
-    'summary'?: string;
+    'summary'?: string | null;
     /**
-     * 
+     * ID del juego similar desde IGDB.
      * @type {number}
      * @memberof SimilarGameInfoDto
      */
     'id'?: number;
     /**
-     * 
+     * Calificación total del juego similar.
      * @type {number}
      * @memberof SimilarGameInfoDto
      */
-    'total_rating'?: number;
+    'total_rating'?: number | null;
 }
 /**
- * Temas principales del juego (ej. Fantasía, Ciencia Ficción).
+ * DTO para un tema asociado a un videojuego.
  * @export
  * @interface ThemeDto
  */
 export interface ThemeDto {
     /**
-     * 
+     * Nombre del tema.
      * @type {string}
      * @memberof ThemeDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del tema desde IGDB.
      * @type {number}
      * @memberof ThemeDto
      */
@@ -1071,43 +1071,43 @@ export interface TierListItemAddRequestDTO {
     'order'?: number | null;
 }
 /**
- * 
+ * DTO con información de un juego para un ítem de Tier List.
  * @export
  * @interface TierListItemGameInfoDTO
  */
 export interface TierListItemGameInfoDTO {
     /**
-     * 
+     * ID interno del ítem en la Tier List.
      * @type {number}
      * @memberof TierListItemGameInfoDTO
      */
     'tier_list_item_id'?: number;
     /**
-     * 
+     * ID interno de la entrada UserGame asociada.
      * @type {number}
      * @memberof TierListItemGameInfoDTO
      */
     'user_game_id'?: number;
     /**
-     * 
+     * ID de IGDB del juego.
      * @type {number}
      * @memberof TierListItemGameInfoDTO
      */
     'game_igdb_id'?: number;
     /**
-     * 
+     * Nombre del juego.
      * @type {string}
      * @memberof TierListItemGameInfoDTO
      */
     'game_name'?: string;
     /**
-     * 
+     * URL de la carátula del juego.
      * @type {string}
      * @memberof TierListItemGameInfoDTO
      */
-    'game_cover_url'?: string;
+    'game_cover_url'?: string | null;
     /**
-     * 
+     * Orden del ítem dentro de su sección.
      * @type {number}
      * @memberof TierListItemGameInfoDTO
      */
@@ -1239,7 +1239,7 @@ export interface TierListUpdateRequestDTO {
     'is_public'?: boolean | null;
 }
 /**
- * DTO para solicitar la creación de una nueva sección (tier) dentro de una Tier List.
+ * DTO para solicitar la creación o actualización del nombre de una nueva sección (tier) dentro de una Tier List.
  * @export
  * @interface TierSectionRequestDTO
  */
@@ -1252,50 +1252,50 @@ export interface TierSectionRequestDTO {
     'name': string;
 }
 /**
- * Sección especial para ítems (juegos) que aún no han sido clasificados en ninguna tier. Contiene el nombre \'Juegos por Clasificar\' y orden 0.
+ * DTO para una sección (tier) de una Tier List, incluyendo sus ítems.
  * @export
  * @interface TierSectionResponseDTO
  */
 export interface TierSectionResponseDTO {
     /**
-     * 
+     * ID interno de la sección.
      * @type {number}
      * @memberof TierSectionResponseDTO
      */
     'internal_id'?: number;
     /**
-     * 
+     * Nombre de la sección.
      * @type {string}
      * @memberof TierSectionResponseDTO
      */
     'name'?: string;
     /**
-     * 
+     * Orden de la sección dentro de la Tier List.
      * @type {number}
      * @memberof TierSectionResponseDTO
      */
     'order'?: number;
     /**
-     * 
+     * Indica si es la sección por defecto para ítems sin clasificar.
      * @type {boolean}
      * @memberof TierSectionResponseDTO
      */
     'is_default_unclassified'?: boolean;
     /**
-     * 
+     * Lista de ítems (juegos) en esta sección.
      * @type {Array<TierListItemGameInfoDTO>}
      * @memberof TierSectionResponseDTO
      */
     'items'?: Array<TierListItemGameInfoDTO>;
 }
 /**
- * Respuesta específica para errores de validación de campos (HTTP 413).
+ * Respuesta específica para errores de tamaño de payload excedido (HTTP 413).
  * @export
  * @interface TooLargeResponse
  */
 export interface TooLargeResponse {
     /**
-     * Mensaje de error para imagenes
+     * Mensaje de error para archivos que exceden el tamaño permitido.
      * @type {Array<string>}
      * @memberof TooLargeResponse
      */
@@ -1525,11 +1525,29 @@ export type UserGameDataDTOPersonalPlatformEnum = typeof UserGameDataDTOPersonal
  */
 export interface UserGameResponseDTO {
     /**
+     * 
+     * @type {number}
+     * @memberof UserGameResponseDTO
+     */
+    'internal_id'?: number;
+    /**
      * ID de IGDB del juego al que se refiere esta entrada de la biblioteca.
      * @type {number}
      * @memberof UserGameResponseDTO
      */
     'game_igdb_id'?: number;
+    /**
+     * Nombre del juego.
+     * @type {string}
+     * @memberof UserGameResponseDTO
+     */
+    'game_name'?: string;
+    /**
+     * 
+     * @type {CoverDto}
+     * @memberof UserGameResponseDTO
+     */
+    'game_cover'?: CoverDto;
     /**
      * Estado actual del juego en la biblioteca del usuario.
      * @type {string}
@@ -1736,7 +1754,7 @@ export interface ValidationErrorResponse {
     'errors'?: Array<string>;
 }
 /**
- * Respuesta específica para errores de validación de campos (HTTP 400).
+ * Respuesta específica para errores de validación de campos relacionados con contraseñas (HTTP 400).
  * @export
  * @interface ValidationPasswordErrorResponse
  */
@@ -1749,44 +1767,44 @@ export interface ValidationPasswordErrorResponse {
     'errors'?: Array<string>;
 }
 /**
- * Vídeos relacionados con el juego.
+ * DTO para un vídeo asociado a un juego.
  * @export
  * @interface VideoDto
  */
 export interface VideoDto {
     /**
-     * 
+     * Nombre o título del vídeo.
      * @type {string}
      * @memberof VideoDto
      */
     'name'?: string;
     /**
-     * 
+     * ID del vídeo desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof VideoDto
      */
     'id'?: number;
     /**
-     * 
+     * Identificador del vídeo en la plataforma de origen (ej. ID de YouTube).
      * @type {string}
      * @memberof VideoDto
      */
     'video_id'?: string;
 }
 /**
- * Sitios web relacionados con el juego.
+ * DTO para un sitio web asociado a un juego.
  * @export
  * @interface WebsiteDto
  */
 export interface WebsiteDto {
     /**
-     * 
+     * URL completa del sitio web.
      * @type {string}
      * @memberof WebsiteDto
      */
     'url'?: string;
     /**
-     * 
+     * ID del sitio web desde la fuente externa (ej. IGDB).
      * @type {number}
      * @memberof WebsiteDto
      */
@@ -1820,6 +1838,10 @@ export const AutenticacinControllerApiAxiosParamCreator = function (configuratio
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -1856,6 +1878,10 @@ export const AutenticacinControllerApiAxiosParamCreator = function (configuratio
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (token !== undefined) {
                 localVarQueryParameter['token'] = token;
@@ -1894,6 +1920,10 @@ export const AutenticacinControllerApiAxiosParamCreator = function (configuratio
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -1929,6 +1959,10 @@ export const AutenticacinControllerApiAxiosParamCreator = function (configuratio
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2060,12 +2094,60 @@ export const AutenticacinControllerApiFactory = function (configuration?: Config
 };
 
 /**
+ * AutenticacinControllerApi - interface
+ * @export
+ * @interface AutenticacinControllerApi
+ */
+export interface AutenticacinControllerApiInterface {
+    /**
+     * Permite a un usuario iniciar sesión proporcionando su identificador (email o nombre de usuario) y contraseña. Si las credenciales son válidas y la cuenta está activa, se devuelve un token JWT. Si el usuario tenía una eliminación de cuenta programada y la fecha aún no ha pasado, esta se cancela.
+     * @summary Autenticar usuario y obtener token JWT
+     * @param {LoginRequestDTO} loginRequestDTO Credenciales del usuario para iniciar sesión.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AutenticacinControllerApiInterface
+     */
+    authenticateUser(loginRequestDTO: LoginRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<JwtResponseDTO>;
+
+    /**
+     * Valida un token de verificación enviado al correo electrónico del usuario tras el registro. Si el token es válido y no ha expirado, la cuenta del usuario se marca como verificada. Este endpoint es público y se accede a través del enlace en el correo de verificación.
+     * @summary Confirmar la dirección de correo electrónico de un usuario
+     * @param {string} token El token de verificación único enviado al correo electrónico del usuario.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AutenticacinControllerApiInterface
+     */
+    confirmUserAccount(token: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+    /**
+     * Inicia el proceso para restablecer la contraseña de un usuario. El usuario proporciona su dirección de correo electrónico. Si el correo está registrado, se enviará un email con un token e instrucciones para restablecer la contraseña. Para no revelar si un email existe en el sistema, este endpoint siempre devuelve una respuesta genérica de éxito, independientemente de si el email fue encontrado o no. Este endpoint es público.
+     * @summary Solicitar restablecimiento de contraseña
+     * @param {ForgotPasswordDTO} forgotPasswordDTO DTO que contiene el correo electrónico del usuario que ha olvidado su contraseña.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AutenticacinControllerApiInterface
+     */
+    forgotPassword(forgotPasswordDTO: ForgotPasswordDTO, options?: RawAxiosRequestConfig): AxiosPromise<object>;
+
+    /**
+     * Permite a un usuario establecer una nueva contraseña utilizando el token de restablecimiento que recibió por correo electrónico. El token debe ser válido y no haber expirado. Este endpoint es público.
+     * @summary Restablecer la contraseña del usuario utilizando un token
+     * @param {ResetPasswordDTO} resetPasswordDTO DTO que contiene el token de restablecimiento y la nueva contraseña deseada.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AutenticacinControllerApiInterface
+     */
+    resetPassword(resetPasswordDTO: ResetPasswordDTO, options?: RawAxiosRequestConfig): AxiosPromise<object>;
+
+}
+
+/**
  * AutenticacinControllerApi - object-oriented interface
  * @export
  * @class AutenticacinControllerApi
  * @extends {BaseAPI}
  */
-export class AutenticacinControllerApi extends BaseAPI {
+export class AutenticacinControllerApi extends BaseAPI implements AutenticacinControllerApiInterface {
     /**
      * Permite a un usuario iniciar sesión proporcionando su identificador (email o nombre de usuario) y contraseña. Si las credenciales son válidas y la cuenta está activa, se devuelve un token JWT. Si el usuario tenía una eliminación de cuenta programada y la fecha aún no ha pasado, esta se cancela.
      * @summary Autenticar usuario y obtener token JWT
@@ -2146,6 +2228,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2180,6 +2266,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2209,6 +2299,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2240,6 +2334,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2269,6 +2367,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2304,6 +2406,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2337,6 +2443,10 @@ export const FriendshipControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2528,12 +2638,87 @@ export const FriendshipControllerApiFactory = function (configuration?: Configur
 };
 
 /**
+ * FriendshipControllerApi - interface
+ * @export
+ * @interface FriendshipControllerApi
+ */
+export interface FriendshipControllerApiInterface {
+    /**
+     * Permite al usuario autenticado (que es el receptor de la solicitud) aceptar una solicitud de amistad pendiente de otro usuario. La solicitud debe estar en estado PENDIENTE. Requiere autenticación.
+     * @summary Aceptar una solicitud de amistad pendiente
+     * @param {string} requesterUserPublicId ID público (UUID) del usuario que envió la solicitud de amistad.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    acceptFriendRequest(requesterUserPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<FriendshipResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado (que es el receptor de la solicitud) rechazar una solicitud de amistad pendiente. Alternativamente, si el usuario autenticado fue quien envió la solicitud y esta aún está pendiente, puede usar este endpoint para cancelarla (aunque semánticamente esto último podría ser un endpoint diferente, la lógica actual del servicio elimina la solicitud PENDIENTE). La solicitud de amistad es eliminada de la base de datos. Requiere autenticación.
+     * @summary Rechazar o cancelar una solicitud de amistad pendiente
+     * @param {string} requesterUserPublicId ID público (UUID) del usuario que originalmente envió la solicitud de amistad que se desea rechazar/cancelar.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    declineOrCancelFriendRequest(requesterUserPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Recupera una lista de todos los usuarios que son amigos del usuario actualmente autenticado (es decir, aquellas relaciones con estado \'ACCEPTED\'). Requiere autenticación.
+     * @summary Obtener la lista de amigos del usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    getMyFriends(options?: RawAxiosRequestConfig): AxiosPromise<Array<FriendshipResponseDTO>>;
+
+    /**
+     * Recupera una lista de todas las solicitudes de amistad que el usuario actualmente autenticado ha recibido y aún están pendientes de acción (aceptar o rechazar). Requiere autenticación.
+     * @summary Obtener las solicitudes de amistad pendientes recibidas por el usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    getPendingRequestsReceived(options?: RawAxiosRequestConfig): AxiosPromise<Array<FriendshipResponseDTO>>;
+
+    /**
+     * Recupera una lista de todas las solicitudes de amistad que el usuario actualmente autenticado ha enviado y que aún están pendientes de respuesta por parte de los destinatarios. Requiere autenticación.
+     * @summary Obtener las solicitudes de amistad pendientes enviadas por el usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    getPendingRequestsSent(options?: RawAxiosRequestConfig): AxiosPromise<Array<FriendshipResponseDTO>>;
+
+    /**
+     * Permite al usuario autenticado eliminar una amistad existente con otro usuario, especificado por su ID público. La relación de amistad es eliminada de la base de datos. Requiere autenticación.
+     * @summary Eliminar un amigo
+     * @param {string} friendUserPublicId ID público (UUID) del amigo que se desea eliminar.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    removeFriend(friendUserPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Permite al usuario autenticado enviar una solicitud de amistad a otro usuario especificado por su ID público. Si ya existe una solicitud pendiente del receptor hacia el emisor, la amistad se aceptará automáticamente. Requiere autenticación.
+     * @summary Enviar una solicitud de amistad
+     * @param {string} receiverUserPublicId ID público (UUID) del usuario al que se le envía la solicitud de amistad.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof FriendshipControllerApiInterface
+     */
+    sendFriendRequest(receiverUserPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<FriendshipResponseDTO>;
+
+}
+
+/**
  * FriendshipControllerApi - object-oriented interface
  * @export
  * @class FriendshipControllerApi
  * @extends {BaseAPI}
  */
-export class FriendshipControllerApi extends BaseAPI {
+export class FriendshipControllerApi extends BaseAPI implements FriendshipControllerApiInterface {
     /**
      * Permite al usuario autenticado (que es el receptor de la solicitud) aceptar una solicitud de amistad pendiente de otro usuario. La solicitud debe estar en estado PENDIENTE. Requiere autenticación.
      * @summary Aceptar una solicitud de amistad pendiente
@@ -2646,6 +2831,10 @@ export const GameControllerApiAxiosParamCreator = function (configuration?: Conf
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
             if (nombre !== undefined) {
                 localVarQueryParameter['nombre'] = nombre;
             }
@@ -2685,6 +2874,10 @@ export const GameControllerApiAxiosParamCreator = function (configuration?: Conf
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (fechaInicio !== undefined) {
                 localVarQueryParameter['fecha_inicio'] = fechaInicio;
@@ -2801,12 +2994,45 @@ export const GameControllerApiFactory = function (configuration?: Configuration,
 };
 
 /**
+ * GameControllerApi - interface
+ * @export
+ * @interface GameControllerApi
+ */
+export interface GameControllerApiInterface {
+    /**
+     * Realiza una búsqueda de juegos en la base de datos de IGDB utilizando un término de búsqueda para el nombre. Devuelve un flujo (o lista) de juegos que coinciden, con un conjunto limitado de campos (nombre, calificación, carátula, fecha de lanzamiento, tipo, resumen, ID). Este endpoint es público.
+     * @summary Buscar juegos en IGDB por nombre
+     * @param {string} nombre Término de búsqueda para el nombre del juego.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    buscarJuegosEnIgdb(nombre: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Permite buscar juegos en IGDB aplicando filtros opcionales como rango de fechas de lanzamiento, ID de género, ID de tema, y ID de modo de juego. Devuelve un flujo (o lista) de juegos que coinciden, con un conjunto limitado de campos. Este endpoint es público.
+     * @summary Filtrar juegos en IGDB por múltiples criterios
+     * @param {number} [fechaInicio] Fecha de inicio del rango de lanzamiento (timestamp Unix en segundos). Opcional.
+     * @param {number} [fechaFin] Fecha de fin del rango de lanzamiento (timestamp Unix en segundos). Opcional.
+     * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
+     * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
+     * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
+     * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+}
+
+/**
  * GameControllerApi - object-oriented interface
  * @export
  * @class GameControllerApi
  * @extends {BaseAPI}
  */
-export class GameControllerApi extends BaseAPI {
+export class GameControllerApi extends BaseAPI implements GameControllerApiInterface {
     /**
      * Realiza una búsqueda de juegos en la base de datos de IGDB utilizando un término de búsqueda para el nombre. Devuelve un flujo (o lista) de juegos que coinciden, con un conjunto limitado de campos (nombre, calificación, carátula, fecha de lanzamiento, tipo, resumen, ID). Este endpoint es público.
      * @summary Buscar juegos en IGDB por nombre
@@ -2871,6 +3097,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -2906,6 +3136,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -2944,6 +3178,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -2973,6 +3211,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3007,6 +3249,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3046,6 +3292,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -3083,6 +3333,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3115,6 +3369,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3149,6 +3407,10 @@ export const GameListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3394,12 +3656,111 @@ export const GameListControllerApiFactory = function (configuration?: Configurat
 };
 
 /**
+ * GameListControllerApi - interface
+ * @export
+ * @interface GameListControllerApi
+ */
+export interface GameListControllerApiInterface {
+    /**
+     * Permite al usuario autenticado añadir una entrada de juego existente en su biblioteca personal (identificada por su `user_game_id` interno) a una de sus listas de juegos personalizadas (identificada por `listPublicId`). El juego no se añade si ya está presente en la lista. Requiere autenticación.
+     * @summary Añadir un juego de la biblioteca del usuario a una de sus listas de juegos
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos a la que se añadirá el juego.
+     * @param {AddGameToCustomListRequestDTO} addGameToCustomListRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    addGameToMyCustomList(listPublicId: string, addGameToCustomListRequestDTO: AddGameToCustomListRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<GameListResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado crear una nueva lista de juegos personalizada. Se requiere un nombre para la lista y se puede especificar si es pública o privada. Requiere autenticación.
+     * @summary Crear una nueva lista de juegos para el usuario autenticado
+     * @param {GameListRequestDTO} gameListRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    createMyGameList(gameListRequestDTO: GameListRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<GameListResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado eliminar una de sus listas de juegos existentes, identificada por su ID público (UUID). Esto no elimina los juegos de la biblioteca del usuario, solo la lista en sí. Requiere autenticación.
+     * @summary Eliminar una lista de juegos del usuario autenticado
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos a eliminar.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    deleteMyGameList(listPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Recupera una lista de todas las listas de juegos personalizadas creadas por el usuario actualmente autenticado. Las listas se devuelven ordenadas por la fecha de última actualización de forma descendente. Requiere autenticación.
+     * @summary Obtener todas las listas de juegos del usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    getMyGameLists(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameListResponseDTO>>;
+
+    /**
+     * Recupera los detalles y los juegos contenidos en una lista de juegos específica, identificada por su ID público (UUID), que pertenezca al usuario actualmente autenticado. Requiere autenticación.
+     * @summary Obtener una lista de juegos específica del usuario autenticado por su ID público
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    getMySpecificGameList(listPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<GameListResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado eliminar un juego específico (identificado por su `userGameInternalId`) de una de sus listas de juegos (identificada por `listPublicId`). Esto no elimina el juego de la biblioteca general del usuario, solo de esta lista en particular. Requiere autenticación.
+     * @summary Eliminar un juego de una lista de juegos personalizada del usuario autenticado
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos de la cual se eliminará el juego.
+     * @param {number} userGameInternalId ID interno de la entrada \&#39;UserGame\&#39; (juego en la biblioteca del usuario) a eliminar de la lista.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    removeGameFromMyCustomList(listPublicId: string, userGameInternalId: number, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Permite al usuario autenticado modificar los detalles (nombre, descripción, visibilidad) de una de sus listas de juegos existentes, identificada por su ID público (UUID). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación.
+     * @summary Actualizar una lista de juegos existente del usuario autenticado
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos a actualizar.
+     * @param {GameListRequestDTO} gameListRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    updateMyGameList(listPublicId: string, gameListRequestDTO: GameListRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<GameListResponseDTO>;
+
+    /**
+     * Recupera una lista de todas las listas de juegos que han sido marcadas como públicas por sus creadores. Las listas se devuelven ordenadas por la fecha de última actualización de forma descendente. Este endpoint es público y no requiere autenticación.
+     * @summary Obtener todas las listas de juegos públicas
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    viewAllPublicGameLists(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameListResponseDTO>>;
+
+    /**
+     * Recupera los detalles y los juegos contenidos en una lista de juegos específica que haya sido marcada como pública, identificada por su ID público (UUID). Este endpoint es público y no requiere autenticación.
+     * @summary Obtener una lista de juegos pública específica por su ID público
+     * @param {string} listPublicId ID público (UUID) de la lista de juegos pública a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameListControllerApiInterface
+     */
+    viewPublicGameList(listPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<GameListResponseDTO>;
+
+}
+
+/**
  * GameListControllerApi - object-oriented interface
  * @export
  * @class GameListControllerApi
  * @extends {BaseAPI}
  */
-export class GameListControllerApi extends BaseAPI {
+export class GameListControllerApi extends BaseAPI implements GameListControllerApiInterface {
     /**
      * Permite al usuario autenticado añadir una entrada de juego existente en su biblioteca personal (identificada por su `user_game_id` interno) a una de sus listas de juegos personalizadas (identificada por `listPublicId`). El juego no se añade si ya está presente en la lista. Requiere autenticación.
      * @summary Añadir un juego de la biblioteca del usuario a una de sus listas de juegos
@@ -3548,6 +3909,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3587,6 +3952,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3628,6 +3997,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3663,6 +4036,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3701,6 +4078,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -3731,6 +4112,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -3760,6 +4145,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3795,6 +4184,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -3828,6 +4221,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3870,6 +4267,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3911,6 +4312,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -3948,6 +4353,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -3990,6 +4399,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -4029,6 +4442,10 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -4408,12 +4825,169 @@ export const TierListControllerApiFactory = function (configuration?: Configurat
 };
 
 /**
+ * TierListControllerApi - interface
+ * @export
+ * @interface TierListControllerApi
+ */
+export interface TierListControllerApiInterface {
+    /**
+     * Permite al propietario autenticado añadir un juego de su biblioteca (UserGame) a una sección específica de una Tier List de tipo \'PROFILE_GLOBAL\'. Si el juego ya está en otra sección de esta Tier List, se moverá a la nueva sección y posición. No se puede usar este endpoint para Tier Lists de tipo \'FROM_GAMELIST\' ni para añadir a la sección \'Juegos por Clasificar\'. Se puede especificar el orden del ítem dentro de la sección. Requiere autenticación y ser propietario.
+     * @summary Añadir o mover un ítem (juego) a una sección específica de una Tier List de perfil
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a la que se añadirá el ítem.
+     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) destino dentro de la Tier List.
+     * @param {TierListItemAddRequestDTO} tierListItemAddRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    addItemToTierListSection(tierListPublicId: string, sectionInternalId: number, tierListItemAddRequestDTO: TierListItemAddRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado añadir un juego de su biblioteca (UserGame) directamente a la sección \'Juegos por Clasificar\' de una Tier List de tipo \'PROFILE_GLOBAL\'. Si el juego ya está en otra sección de esta Tier List, se moverá a la sección \'Juegos por Clasificar\'. No se puede usar este endpoint para Tier Lists de tipo \'FROM_GAMELIST\'. Se puede especificar el orden del ítem dentro de la sección. Requiere autenticación y ser propietario.
+     * @summary Añadir o mover un ítem (juego) a la sección \'Sin Clasificar\' de una Tier List de perfil
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a la que se añadirá el ítem en la sección \&#39;Sin Clasificar\&#39;.
+     * @param {TierListItemAddRequestDTO} tierListItemAddRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    addItemToUnclassifiedSection(tierListPublicId: string, tierListItemAddRequestDTO: TierListItemAddRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List añadir una nueva sección personalizada. Existe un límite en la cantidad de secciones personalizables que se pueden añadir. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Añadir una nueva sección (tier) a una Tier List existente
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a la que se añadirá la nueva sección.
+     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    addSectionToTierList(tierListPublicId: string, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado crear una nueva Tier List de tipo \'PROFILE_GLOBAL\'. Se requiere un nombre para la lista y opcionalmente una descripción y si es pública. Se crearán secciones por defecto (S, A, B, C, D y \'Juegos por Clasificar\'). Requiere autenticación.
+     * @summary Crear una nueva Tier List de perfil para el usuario autenticado
+     * @param {TierListCreateRequestDTO} tierListCreateRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    createProfileTierList(tierListCreateRequestDTO: TierListCreateRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List eliminarla permanentemente. Esto también eliminará todas las secciones y los ítems contenidos en ella. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Eliminar una Tier List existente
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a eliminar.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    deleteTierList(tierListPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * Recupera una lista de todas las Tier Lists de tipo \'PROFILE_GLOBAL\' creadas por el usuario actualmente autenticado. Cada Tier List incluye sus secciones y los ítems clasificados. Requiere autenticación.
+     * @summary Obtener todas las Tier Lists de perfil del usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    getAllProfileTierListsForCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<Array<TierListResponseDTO>>;
+
+    /**
+     * Recupera una lista de todas las Tier Lists que han sido marcadas como públicas por sus creadores. Cada Tier List incluye sus secciones y los ítems clasificados. Las listas se devuelven ordenadas por la fecha de última actualización. Este endpoint es público y no requiere autenticación.
+     * @summary Obtener todas las Tier Lists públicas
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    getAllPublicTierLists(options?: RawAxiosRequestConfig): AxiosPromise<Array<TierListResponseDTO>>;
+
+    /**
+     * Recupera la Tier List de tipo \'FROM_GAMELIST\' asociada a la GameList especificada por su ID público. Si no existe una Tier List para esa GameList, se crea una nueva automáticamente con secciones por defecto y se sincroniza con los juegos de la GameList (añadiéndolos a la sección \'Sin Clasificar\'). Este endpoint es público si la GameList y la TierList resultante son públicas. Si la GameList es privada, se requiere autenticación y ser el propietario para acceder o crear la TierList asociada. Si se proporciona un token JWT válido, la respuesta puede incluir información adicional si el usuario es el propietario.
+     * @summary Obtener o crear la Tier List asociada a una GameList específica
+     * @param {string} gameListPublicId ID público (UUID) de la GameList para la cual se obtendrá o creará la Tier List.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    getOrCreateTierListForGameList(gameListPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Recupera los detalles completos de una Tier List (incluyendo secciones e ítems) utilizando su ID público (UUID). Si la Tier List es pública, cualquiera puede acceder a ella. Si la Tier List es privada, solo el propietario autenticado puede acceder. La autenticación (JWT) es opcional; si se proporciona un token válido y la lista es privada, se verificará la propiedad.
+     * @summary Obtener una Tier List específica por su ID público
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    getTierListByPublicId(tierListPublicId: string, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado mover un ítem existente (identificado por `tierListItemInternalId`) a una nueva sección (`target_section_internal_id`) y/o a una nueva posición (`new_order`) dentro de esa sección en una Tier List específica. Para Tier Lists de tipo \'FROM_GAMELIST\', se verifica que el juego del ítem aún pertenezca a la GameList origen. Requiere autenticación y ser propietario de la Tier List.
+     * @summary Mover un ítem (juego) dentro de una Tier List
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene el ítem a mover.
+     * @param {number} tierListItemInternalId ID interno (Long) del TierListItem a mover.
+     * @param {TierListItemMoveRequestDTO} tierListItemMoveRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    moveItemInTierList(tierListPublicId: string, tierListItemInternalId: number, tierListItemMoveRequestDTO: TierListItemMoveRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado eliminar un ítem específico (identificado por `tierListItemInternalId`) de una de sus Tier Lists de tipo \'PROFILE_GLOBAL\'. Esto no elimina el juego de la biblioteca general del usuario, solo de esta Tier List. No se puede usar este endpoint para Tier Lists de tipo \'FROM_GAMELIST\'. Requiere autenticación y ser propietario.
+     * @summary Eliminar un ítem (juego) de una Tier List de perfil
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List de la cual se eliminará el ítem.
+     * @param {number} tierListItemInternalId ID interno (Long) del TierListItem a eliminar de la Tier List.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    removeItemFromTierList(tierListPublicId: string, tierListItemInternalId: number, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List eliminar una de sus secciones personalizadas. La sección por defecto \'Juegos por Clasificar\' no puede ser eliminada. Debe quedar al menos una sección personalizable tras la eliminación. Si la sección eliminada contenía ítems (juegos), estos serán movidos a la sección \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Eliminar una sección (tier) de una Tier List
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List de la cual se eliminará la sección.
+     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) a eliminar.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    removeSectionFromTierList(tierListPublicId: string, sectionInternalId: number, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    updateSectionName(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Actualizar los metadatos de una Tier List existente
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
+     * @param {TierListUpdateRequestDTO} tierListUpdateRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    updateTierListMetadata(tierListPublicId: string, tierListUpdateRequestDTO: TierListUpdateRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+}
+
+/**
  * TierListControllerApi - object-oriented interface
  * @export
  * @class TierListControllerApi
  * @extends {BaseAPI}
  */
-export class TierListControllerApi extends BaseAPI {
+export class TierListControllerApi extends BaseAPI implements TierListControllerApiInterface {
     /**
      * Permite al propietario autenticado añadir un juego de su biblioteca (UserGame) a una sección específica de una Tier List de tipo \'PROFILE_GLOBAL\'. Si el juego ya está en otra sección de esta Tier List, se moverá a la nueva sección y posición. No se puede usar este endpoint para Tier Lists de tipo \'FROM_GAMELIST\' ni para añadir a la sección \'Juegos por Clasificar\'. Se puede especificar el orden del ítem dentro de la sección. Requiere autenticación y ser propietario.
      * @summary Añadir o mover un ítem (juego) a una sección específica de una Tier List de perfil
@@ -4626,6 +5200,10 @@ export const UserGameLibraryControllerApiAxiosParamCreator = function (configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -4663,6 +5241,10 @@ export const UserGameLibraryControllerApiAxiosParamCreator = function (configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -4692,6 +5274,48 @@ export const UserGameLibraryControllerApiAxiosParamCreator = function (configura
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+         * @summary Obtener la biblioteca de un usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario cuya biblioteca se desea obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getPublicUserLibrary: async (publicId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'publicId' is not null or undefined
+            assertParamExists('getPublicUserLibrary', 'publicId', publicId)
+            const localVarPath = `/api/v1/users/public/{publicId}/library`
+                .replace(`{${"publicId"}}`, encodeURIComponent(String(publicId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -4727,6 +5351,10 @@ export const UserGameLibraryControllerApiAxiosParamCreator = function (configura
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -4760,6 +5388,10 @@ export const UserGameLibraryControllerApiAxiosParamCreator = function (configura
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -4819,6 +5451,19 @@ export const UserGameLibraryControllerApiFp = function(configuration?: Configura
             const localVarAxiosArgs = await localVarAxiosParamCreator.getMyGameLibrary(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UserGameLibraryControllerApi.getMyGameLibrary']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+         * @summary Obtener la biblioteca de un usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario cuya biblioteca se desea obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getPublicUserLibrary(publicId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<UserGameResponseDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getPublicUserLibrary(publicId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UserGameLibraryControllerApi.getPublicUserLibrary']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -4888,6 +5533,16 @@ export const UserGameLibraryControllerApiFactory = function (configuration?: Con
             return localVarFp.getMyGameLibrary(options).then((request) => request(axios, basePath));
         },
         /**
+         * Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+         * @summary Obtener la biblioteca de un usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario cuya biblioteca se desea obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getPublicUserLibrary(publicId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<UserGameResponseDTO>> {
+            return localVarFp.getPublicUserLibrary(publicId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Recupera los detalles de un juego específico (identificado por su IGDB ID) tal como existe en la biblioteca personal del usuario autenticado. Esto incluye el estado, puntuación, y otros datos que el usuario haya registrado para ese juego. Requiere autenticación.
          * @summary Obtener un juego específico de la biblioteca del usuario autenticado
          * @param {number} igdbId ID de IGDB del juego a obtener de la biblioteca del usuario.
@@ -4911,12 +5566,80 @@ export const UserGameLibraryControllerApiFactory = function (configuration?: Con
 };
 
 /**
+ * UserGameLibraryControllerApi - interface
+ * @export
+ * @interface UserGameLibraryControllerApi
+ */
+export interface UserGameLibraryControllerApiInterface {
+    /**
+     * Permite al usuario autenticado añadir un juego (identificado por su IGDB ID) a su biblioteca personal o actualizar una entrada existente. Si el juego no existe en la base de datos local, se intentará obtener de IGDB. Se proporcionan datos específicos del usuario para este juego (estado, puntuación, plataforma, etc.). Requiere autenticación.
+     * @summary Añadir o actualizar un juego en la biblioteca del usuario autenticado
+     * @param {number} igdbId ID de IGDB del juego a añadir o actualizar en la biblioteca.
+     * @param {UserGameDataDTO} userGameDataDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    addOrUpdateGameInMyLibrary(igdbId: number, userGameDataDTO: UserGameDataDTO, options?: RawAxiosRequestConfig): AxiosPromise<UserGameResponseDTO>;
+
+    /**
+     * Recupera información detallada sobre un juego específico, identificado por su IGDB ID. Este endpoint es público. Si se proporciona un token JWT de autenticación válido, la respuesta incluirá adicionalmente los datos específicos del usuario para ese juego (si existen en su biblioteca), como su estado, puntuación, etc. Si no se proporciona autenticación o el token es inválido, solo se devolverá la información pública del juego y los comentarios públicos.
+     * @summary Obtener detalles completos de un juego
+     * @param {number} igdbId ID de IGDB del juego para el cual se solicitan los detalles.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    getGameDetails(igdbId: number, options?: RawAxiosRequestConfig): AxiosPromise<GameDetailDTO>;
+
+    /**
+     * Recupera todas las entradas de juegos que el usuario actualmente autenticado tiene en su biblioteca personal, incluyendo el estado, puntuación, plataforma y otros datos específicos del usuario para cada juego. Requiere autenticación.
+     * @summary Obtener la biblioteca completa de juegos del usuario autenticado
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    getMyGameLibrary(options?: RawAxiosRequestConfig): AxiosPromise<Array<UserGameResponseDTO>>;
+
+    /**
+     * Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+     * @summary Obtener la biblioteca de un usuario por su ID público
+     * @param {string} publicId ID público (UUID) del usuario cuya biblioteca se desea obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    getPublicUserLibrary(publicId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<UserGameResponseDTO>>;
+
+    /**
+     * Recupera los detalles de un juego específico (identificado por su IGDB ID) tal como existe en la biblioteca personal del usuario autenticado. Esto incluye el estado, puntuación, y otros datos que el usuario haya registrado para ese juego. Requiere autenticación.
+     * @summary Obtener un juego específico de la biblioteca del usuario autenticado
+     * @param {number} igdbId ID de IGDB del juego a obtener de la biblioteca del usuario.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    getSpecificGameFromMyLibrary(igdbId: number, options?: RawAxiosRequestConfig): AxiosPromise<UserGameResponseDTO>;
+
+    /**
+     * Permite al usuario autenticado eliminar un juego específico (identificado por su IGDB ID) de su biblioteca personal. Requiere autenticación.
+     * @summary Eliminar un juego de la biblioteca del usuario autenticado
+     * @param {number} igdbId ID de IGDB del juego a eliminar de la biblioteca del usuario.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApiInterface
+     */
+    removeGameFromMyLibrary(igdbId: number, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+}
+
+/**
  * UserGameLibraryControllerApi - object-oriented interface
  * @export
  * @class UserGameLibraryControllerApi
  * @extends {BaseAPI}
  */
-export class UserGameLibraryControllerApi extends BaseAPI {
+export class UserGameLibraryControllerApi extends BaseAPI implements UserGameLibraryControllerApiInterface {
     /**
      * Permite al usuario autenticado añadir un juego (identificado por su IGDB ID) a su biblioteca personal o actualizar una entrada existente. Si el juego no existe en la base de datos local, se intentará obtener de IGDB. Se proporcionan datos específicos del usuario para este juego (estado, puntuación, plataforma, etc.). Requiere autenticación.
      * @summary Añadir o actualizar un juego en la biblioteca del usuario autenticado
@@ -4951,6 +5674,18 @@ export class UserGameLibraryControllerApi extends BaseAPI {
      */
     public getMyGameLibrary(options?: RawAxiosRequestConfig) {
         return UserGameLibraryControllerApiFp(this.configuration).getMyGameLibrary(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera la biblioteca de juegos de un usuario específico, sujeto a los permisos de visibilidad del perfil (PÚBLICO o SOLO_AMIGOS). Si el perfil es SOLO_AMIGOS, se requiere autenticación para verificar la amistad. Este endpoint es público.
+     * @summary Obtener la biblioteca de un usuario por su ID público
+     * @param {string} publicId ID público (UUID) del usuario cuya biblioteca se desea obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UserGameLibraryControllerApi
+     */
+    public getPublicUserLibrary(publicId: string, options?: RawAxiosRequestConfig) {
+        return UserGameLibraryControllerApiFp(this.configuration).getPublicUserLibrary(publicId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5008,6 +5743,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -5044,6 +5783,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -5076,6 +5819,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -5111,6 +5858,48 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+         * @summary Obtener un resumen de usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario a obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getUsuarioSummaryByPublicId: async (publicId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'publicId' is not null or undefined
+            assertParamExists('getUsuarioSummaryByPublicId', 'publicId', publicId)
+            const localVarPath = `/api/v1/usuarios/public/summary/{publicId}`
+                .replace(`{${"publicId"}}`, encodeURIComponent(String(publicId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -5143,6 +5932,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -5179,6 +5972,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (username !== undefined) {
                 localVarQueryParameter['username'] = username;
@@ -5217,6 +6014,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -5253,6 +6054,10 @@ export const UsuariosApiAxiosParamCreator = function (configuration?: Configurat
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
             const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
             if (file !== undefined) { 
@@ -5331,6 +6136,19 @@ export const UsuariosApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getUsuarioByPublicId(publicId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['UsuariosApi.getUsuarioByPublicId']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+         * @summary Obtener un resumen de usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario a obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getUsuarioSummaryByPublicId(publicId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserSearchResultDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getUsuarioSummaryByPublicId(publicId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['UsuariosApi.getUsuarioSummaryByPublicId']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -5435,6 +6253,16 @@ export const UsuariosApiFactory = function (configuration?: Configuration, baseP
             return localVarFp.getUsuarioByPublicId(publicId, options).then((request) => request(axios, basePath));
         },
         /**
+         * Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+         * @summary Obtener un resumen de usuario por su ID público
+         * @param {string} publicId ID público (UUID) del usuario a obtener.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getUsuarioSummaryByPublicId(publicId: string, options?: RawAxiosRequestConfig): AxiosPromise<UserSearchResultDTO> {
+            return localVarFp.getUsuarioSummaryByPublicId(publicId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Crea una nueva cuenta de usuario en el sistema. Tras el registro exitoso, se enviará un correo electrónico de verificación a la dirección proporcionada para activar la cuenta.
          * @summary Registrar un nuevo usuario
          * @param {UserCreateDTO} userCreateDTO Datos del nuevo usuario a registrar. Todos los campos son obligatorios.
@@ -5478,12 +6306,109 @@ export const UsuariosApiFactory = function (configuration?: Configuration, baseP
 };
 
 /**
+ * UsuariosApi - interface
+ * @export
+ * @interface UsuariosApi
+ */
+export interface UsuariosApiInterface {
+    /**
+     * Permite al usuario autenticado cambiar su contraseña actual por una nueva. Se requiere la contraseña actual para la verificación. Requiere un token JWT válido.
+     * @summary Cambiar la contraseña del usuario autenticado actualmente
+     * @param {PasswordChangeDTO} passwordChangeDTO DTO con la contraseña actual y la nueva contraseña.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    changeMyPassword(passwordChangeDTO: PasswordChangeDTO, options?: RawAxiosRequestConfig): AxiosPromise<object>;
+
+    /**
+     * Permite al usuario autenticado solicitar la eliminación de su cuenta. Se requiere la contraseña actual para confirmación. La cuenta se marcará para eliminación y se borrará permanentemente después de un período de gracia. Tras esta operación, la sesión actual del usuario se invalidará. Requiere un token JWT válido.
+     * @summary Programar la eliminación de la cuenta del usuario autenticado
+     * @param {AccountDeleteDTO} accountDeleteDTO DTO que contiene la contraseña actual del usuario para confirmar la eliminación de la cuenta.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    deleteMyAccount(accountDeleteDTO: AccountDeleteDTO, options?: RawAxiosRequestConfig): AxiosPromise<object>;
+
+    /**
+     * Recupera los detalles del perfil y preferencias del usuario que ha iniciado sesión. Requiere un token JWT válido en la cabecera de autorización.
+     * @summary Obtener los datos del usuario autenticado actualmente
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    getCurrentAuthenticatedUser(options?: RawAxiosRequestConfig): AxiosPromise<UserDTO>;
+
+    /**
+     * Recupera los detalles de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+     * @summary Obtener un usuario por su ID público
+     * @param {string} publicId ID público (UUID) del usuario a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    getUsuarioByPublicId(publicId: string, options?: RawAxiosRequestConfig): AxiosPromise<UserDTO>;
+
+    /**
+     * Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+     * @summary Obtener un resumen de usuario por su ID público
+     * @param {string} publicId ID público (UUID) del usuario a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    getUsuarioSummaryByPublicId(publicId: string, options?: RawAxiosRequestConfig): AxiosPromise<UserSearchResultDTO>;
+
+    /**
+     * Crea una nueva cuenta de usuario en el sistema. Tras el registro exitoso, se enviará un correo electrónico de verificación a la dirección proporcionada para activar la cuenta.
+     * @summary Registrar un nuevo usuario
+     * @param {UserCreateDTO} userCreateDTO Datos del nuevo usuario a registrar. Todos los campos son obligatorios.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    registrarUsuario(userCreateDTO: UserCreateDTO, options?: RawAxiosRequestConfig): AxiosPromise<UserDTO>;
+
+    /**
+     * Permite a un usuario autenticado buscar otros usuarios en el sistema por su nombre de usuario. La búsqueda es parcial (contiene) e ignora mayúsculas/minúsculas. El propio usuario que realiza la búsqueda será excluido de los resultados. Se requiere un término de búsqueda de al menos 2 caracteres. Requiere autenticación.
+     * @summary Buscar usuarios por nombre de usuario
+     * @param {string} username Término de búsqueda para el nombre de usuario. Debe tener al menos 2 caracteres.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    searchUsersByUsername(username: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<UserSearchResultDTO>>;
+
+    /**
+     * Permite al usuario autenticado modificar los detalles de su perfil, como el nombre de usuario, tema, foto de perfil, preferencias de notificación y visibilidad del perfil. Requiere un token JWT válido.
+     * @summary Actualizar el perfil del usuario autenticado actualmente
+     * @param {UserProfileUpdateDTO} userProfileUpdateDTO Datos del perfil del usuario a actualizar. Solo se actualizarán los campos proporcionados.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    updateCurrentUserProfile(userProfileUpdateDTO: UserProfileUpdateDTO, options?: RawAxiosRequestConfig): AxiosPromise<UserDTO>;
+
+    /**
+     * Permite al usuario autenticado subir un nuevo archivo de imagen para su foto de perfil. El archivo debe ser de un formato permitido (JPEG, PNG, GIF) y no exceder el tamaño máximo configurado. Si ya existe una foto de perfil, será reemplazada. Requiere autenticación.
+     * @summary Subir o actualizar la foto de perfil del usuario autenticado
+     * @param {File} file El archivo de imagen a subir como foto de perfil.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApiInterface
+     */
+    uploadProfilePicture(file: File, options?: RawAxiosRequestConfig): AxiosPromise<UserDTO>;
+
+}
+
+/**
  * UsuariosApi - object-oriented interface
  * @export
  * @class UsuariosApi
  * @extends {BaseAPI}
  */
-export class UsuariosApi extends BaseAPI {
+export class UsuariosApi extends BaseAPI implements UsuariosApiInterface {
     /**
      * Permite al usuario autenticado cambiar su contraseña actual por una nueva. Se requiere la contraseña actual para la verificación. Requiere un token JWT válido.
      * @summary Cambiar la contraseña del usuario autenticado actualmente
@@ -5529,6 +6454,18 @@ export class UsuariosApi extends BaseAPI {
      */
     public getUsuarioByPublicId(publicId: string, options?: RawAxiosRequestConfig) {
         return UsuariosApiFp(this.configuration).getUsuarioByPublicId(publicId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera un resumen de información pública de un usuario específico utilizando su ID público (UUID). Este endpoint es público y no requiere autenticación.
+     * @summary Obtener un resumen de usuario por su ID público
+     * @param {string} publicId ID público (UUID) del usuario a obtener.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof UsuariosApi
+     */
+    public getUsuarioSummaryByPublicId(publicId: string, options?: RawAxiosRequestConfig) {
+        return UsuariosApiFp(this.configuration).getUsuarioSummaryByPublicId(publicId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

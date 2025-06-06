@@ -1,5 +1,6 @@
 # GameDto
 
+DTO completo para un videojuego, incluyendo todos sus detalles y relaciones.
 
 ## Properties
 
@@ -41,7 +42,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { GameDto } from './api';
+import { GameDto } from '@mycheckpoint/api-client';
 
 const instance: GameDto = {
     cover,

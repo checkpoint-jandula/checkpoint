@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UnauthorizedResponse } from './api';
+import { UnauthorizedResponse } from '@mycheckpoint/api-client';
 
 const instance: UnauthorizedResponse = {
     message,

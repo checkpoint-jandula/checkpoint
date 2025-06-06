@@ -1,18 +1,18 @@
 # GameEngineDto
 
-Motores de juego utilizados.
+DTO para un motor de videojuego (Game Engine).
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre del motor de juego. | [optional] [default to undefined]
+**id** | **number** | ID del motor de juego desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { GameEngineDto } from './api';
+import { GameEngineDto } from '@mycheckpoint/api-client';
 
 const instance: GameEngineDto = {
     name,

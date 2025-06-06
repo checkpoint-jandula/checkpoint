@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DuplicatedResourceResponse } from './api';
+import { DuplicatedResourceResponse } from '@mycheckpoint/api-client';
 
 const instance: DuplicatedResourceResponse = {
     message,

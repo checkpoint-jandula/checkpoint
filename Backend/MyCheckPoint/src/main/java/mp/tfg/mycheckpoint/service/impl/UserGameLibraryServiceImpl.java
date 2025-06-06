@@ -1,6 +1,7 @@
 package mp.tfg.mycheckpoint.service.impl;
 
 import mp.tfg.mycheckpoint.dto.comment.PublicGameCommentDTO; // IMPORTACIÓN ACTUALIZADA
+import mp.tfg.mycheckpoint.dto.enums.FriendshipStatus;
 import mp.tfg.mycheckpoint.dto.enums.TierListType;
 import mp.tfg.mycheckpoint.dto.enums.VisibilidadEnum;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
@@ -66,6 +67,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     private final GameListRepository gameListRepository;
     private final TierListRepository tierListRepository;
     private final TierListItemRepository tierListItemRepository;
+    private final FriendshipRepository friendshipRepository;
 
     /**
      * Constructor para UserGameLibraryServiceImpl.
@@ -91,7 +93,8 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                                       TierListService tierListService,
                                       GameListRepository gameListRepository,
                                       TierListRepository tierListRepository,
-                                      TierListItemRepository tierListItemRepository) {
+                                      TierListItemRepository tierListItemRepository,
+                                      FriendshipRepository friendshipRepository){
         this.userRepository = userRepository;
         this.gameRepository = gameRepository;
         this.userGameRepository = userGameRepository;
@@ -104,6 +107,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
         this.gameListRepository = gameListRepository;
         this.tierListRepository = tierListRepository;
         this.tierListItemRepository = tierListItemRepository;
+        this.friendshipRepository = friendshipRepository;
     }
 
     /**
@@ -486,5 +490,45 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             userGameRepository.delete(userGameToRemove);
             logger.info("ÉXITO FINAL: Usuario {} eliminó el juego con IGDB ID {} (UserGame ID: {}) de su biblioteca y todas sus referencias asociadas.", userEmail, igdbId, userGameInternalId);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserGameResponseDTO> getPublicUserGameLibrary(UUID publicId, String currentUserEmail) {
+        User targetUser = userRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con Public ID: " + publicId));
+
+        VisibilidadEnum visibility = targetUser.getVisibilidadPerfil();
+
+        switch (visibility) {
+            case PUBLICO:
+                // Acceso permitido para todos
+                break;
+
+            case PRIVADO:
+                throw new UnauthorizedOperationException("La biblioteca de este usuario es privada.");
+
+            case SOLO_AMIGOS:
+                if (currentUserEmail == null) {
+                    throw new UnauthorizedOperationException("Esta biblioteca solo es visible para amigos. Debes iniciar sesión para verla.");
+                }
+                User currentUser = getUserByEmail(currentUserEmail); // Reutilizamos el método privado existente
+                if (currentUser.getId().equals(targetUser.getId())) {
+                    // El usuario está viendo su propio perfil, lo permitimos siempre
+                    break;
+                }
+                // Comprobamos si son amigos
+                boolean areFriends = friendshipRepository
+                        .findFriendshipBetweenUsersWithStatus(currentUser, targetUser, FriendshipStatus.ACCEPTED)
+                        .isPresent();
+                if (!areFriends) {
+                    throw new UnauthorizedOperationException("Esta biblioteca solo es visible para amigos.");
+                }
+                break;
+        }
+
+        return userGameRepository.findByUser(targetUser).stream()
+                .map(userGameMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 }

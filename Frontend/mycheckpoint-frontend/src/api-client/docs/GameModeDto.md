@@ -1,18 +1,18 @@
 # GameModeDto
 
-Modos de juego disponibles (ej. Un jugador, Multijugador).
+DTO para un modo de juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre del modo de juego. | [optional] [default to undefined]
+**id** | **number** | ID del modo de juego desde IGDB. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { GameModeDto } from './api';
+import { GameModeDto } from '@mycheckpoint/api-client';
 
 const instance: GameModeDto = {
     name,

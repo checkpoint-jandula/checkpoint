@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// (Opcional) Interceptor de respuesta para manejar errores comunes como 401
+//Interceptor de respuesta para manejar errores comunes como 401
 apiClient.interceptors.response.use(
   (response) => {
     return response;

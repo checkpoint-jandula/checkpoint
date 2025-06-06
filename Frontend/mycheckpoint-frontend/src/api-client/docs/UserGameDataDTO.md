@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UserGameDataDTO } from './api';
+import { UserGameDataDTO } from '@mycheckpoint/api-client';
 
 const instance: UserGameDataDTO = {
     status,

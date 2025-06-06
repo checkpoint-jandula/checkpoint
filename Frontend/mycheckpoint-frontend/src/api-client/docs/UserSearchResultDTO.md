@@ -13,7 +13,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UserSearchResultDTO } from './api';
+import { UserSearchResultDTO } from '@mycheckpoint/api-client';
 
 const instance: UserSearchResultDTO = {
     public_id,

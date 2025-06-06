@@ -1,18 +1,18 @@
 # WebsiteDto
 
-Sitios web relacionados con el juego.
+DTO para un sitio web asociado a un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**url** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**url** | **string** | URL completa del sitio web. | [optional] [default to undefined]
+**id** | **number** | ID del sitio web desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { WebsiteDto } from './api';
+import { WebsiteDto } from '@mycheckpoint/api-client';
 
 const instance: WebsiteDto = {
     url,

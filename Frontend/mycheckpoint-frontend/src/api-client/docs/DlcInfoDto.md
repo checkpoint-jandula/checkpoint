@@ -1,22 +1,22 @@
 # DlcInfoDto
 
-Lista de remasters de este juego.
+DTO con información resumida de un DLC, expansión o juego relacionado.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **cover** | [**CoverDto**](CoverDto.md) |  | [optional] [default to undefined]
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
-**total_rating** | **number** |  | [optional] [default to undefined]
-**game_type** | **string** |  | [optional] [default to undefined]
-**slug** | **string** |  | [optional] [default to undefined]
+**name** | **string** | Nombre del DLC/expansión/juego relacionado. | [optional] [default to undefined]
+**id** | **number** | ID del DLC/expansión/juego relacionado desde IGDB. | [optional] [default to undefined]
+**total_rating** | **number** | Calificación total del DLC/expansión/juego relacionado. | [optional] [default to undefined]
+**game_type** | **string** | Tipo de juego (ej. DLC, EXPANSION). | [optional] [default to undefined]
+**slug** | **string** | Slug del DLC/expansión/juego relacionado. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { DlcInfoDto } from './api';
+import { DlcInfoDto } from '@mycheckpoint/api-client';
 
 const instance: DlcInfoDto = {
     cover,

@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { PasswordChangeDTO } from './api';
+import { PasswordChangeDTO } from '@mycheckpoint/api-client';
 
 const instance: PasswordChangeDTO = {
     contrasea_actual,

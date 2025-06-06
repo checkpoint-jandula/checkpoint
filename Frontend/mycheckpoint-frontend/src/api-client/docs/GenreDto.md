@@ -1,18 +1,18 @@
 # GenreDto
 
-Géneros a los que pertenece el juego (ej. RPG, Acción).
+DTO para un género de videojuego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre del género. | [optional] [default to undefined]
+**id** | **number** | ID del género desde IGDB. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { GenreDto } from './api';
+import { GenreDto } from '@mycheckpoint/api-client';
 
 const instance: GenreDto = {
     name,

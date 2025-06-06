@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { TierListItemMoveRequestDTO } from './api';
+import { TierListItemMoveRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: TierListItemMoveRequestDTO = {
     target_section_internal_id,

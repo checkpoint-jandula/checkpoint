@@ -21,7 +21,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { TierListResponseDTO } from './api';
+import { TierListResponseDTO } from '@mycheckpoint/api-client';
 
 const instance: TierListResponseDTO = {
     public_id,

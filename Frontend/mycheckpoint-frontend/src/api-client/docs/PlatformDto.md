@@ -1,20 +1,20 @@
 # PlatformDto
 
-Plataformas en las que el juego está disponible.
+DTO para una plataforma de videojuegos.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
-**alternative_name** | **string** |  | [optional] [default to undefined]
+**name** | **string** | Nombre principal de la plataforma. | [optional] [default to undefined]
+**id** | **number** | ID de la plataforma desde IGDB. | [optional] [default to undefined]
+**alternative_name** | **string** | Nombre alternativo de la plataforma. | [optional] [default to undefined]
 **platform_logo** | [**PlatformLogoDto**](PlatformLogoDto.md) |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { PlatformDto } from './api';
+import { PlatformDto } from '@mycheckpoint/api-client';
 
 const instance: PlatformDto = {
     name,

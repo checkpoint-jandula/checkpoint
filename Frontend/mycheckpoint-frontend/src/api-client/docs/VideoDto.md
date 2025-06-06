@@ -1,19 +1,19 @@
 # VideoDto
 
-Vídeos relacionados con el juego.
+DTO para un vídeo asociado a un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
-**video_id** | **string** |  | [optional] [default to undefined]
+**name** | **string** | Nombre o título del vídeo. | [optional] [default to undefined]
+**id** | **number** | ID del vídeo desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
+**video_id** | **string** | Identificador del vídeo en la plataforma de origen (ej. ID de YouTube). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { VideoDto } from './api';
+import { VideoDto } from '@mycheckpoint/api-client';
 
 const instance: VideoDto = {
     name,

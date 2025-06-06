@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { AddGameToCustomListRequestDTO } from './api';
+import { AddGameToCustomListRequestDTO } from '@mycheckpoint/api-client';
 
 const instance: AddGameToCustomListRequestDTO = {
     user_game_id,

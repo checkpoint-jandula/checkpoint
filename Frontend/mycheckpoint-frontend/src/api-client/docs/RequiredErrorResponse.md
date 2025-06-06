@@ -1,17 +1,17 @@
 # RequiredErrorResponse
 
-Respuesta específica para errores de validación de campos (HTTP 400).
+Respuesta específica para errores de validación de campos obligatorios (HTTP 400).
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**errors** | **Array&lt;string&gt;** | Mensaje de error generico | [optional] [default to undefined]
+**errors** | **Array&lt;string&gt;** | Mensaje de error genérico para campos obligatorios. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { RequiredErrorResponse } from './api';
+import { RequiredErrorResponse } from '@mycheckpoint/api-client';
 
 const instance: RequiredErrorResponse = {
     errors,

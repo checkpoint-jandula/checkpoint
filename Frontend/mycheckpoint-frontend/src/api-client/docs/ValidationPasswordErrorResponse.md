@@ -1,6 +1,6 @@
 # ValidationPasswordErrorResponse
 
-Respuesta específica para errores de validación de campos (HTTP 400).
+Respuesta específica para errores de validación de campos relacionados con contraseñas (HTTP 400).
 
 ## Properties
 
@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ValidationPasswordErrorResponse } from './api';
+import { ValidationPasswordErrorResponse } from '@mycheckpoint/api-client';
 
 const instance: ValidationPasswordErrorResponse = {
     errors,

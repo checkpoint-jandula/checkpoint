@@ -1,18 +1,18 @@
 # KeywordDto
 
-Palabras clave asociadas al juego.
+DTO para una palabra clave asociada a un juego.
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**name** | **string** |  | [optional] [default to undefined]
-**id** | **number** |  | [optional] [default to undefined]
+**name** | **string** | Nombre de la palabra clave. | [optional] [default to undefined]
+**id** | **number** | ID de la palabra clave desde la fuente externa (ej. IGDB). | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { KeywordDto } from './api';
+import { KeywordDto } from '@mycheckpoint/api-client';
 
 const instance: KeywordDto = {
     name,

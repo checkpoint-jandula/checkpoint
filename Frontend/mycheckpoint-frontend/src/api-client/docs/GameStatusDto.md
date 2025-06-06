@@ -1,17 +1,17 @@
 # GameStatusDto
 
-Estado numérico del juego según IGDB (mapeado a ReleaseStatus).
+DTO para el estado de lanzamiento de un juego (ID numérico de IGDB).
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**id** | **number** |  | [optional] [default to undefined]
+**id** | **number** | ID numérico del estado del juego según IGDB. | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { GameStatusDto } from './api';
+import { GameStatusDto } from '@mycheckpoint/api-client';
 
 const instance: GameStatusDto = {
     id,

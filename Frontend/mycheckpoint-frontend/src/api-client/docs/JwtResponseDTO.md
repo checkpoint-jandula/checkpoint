@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { JwtResponseDTO } from './api';
+import { JwtResponseDTO } from '@mycheckpoint/api-client';
 
 const instance: JwtResponseDTO = {
     token_acceso,

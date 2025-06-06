@@ -11,7 +11,7 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ForgotPasswordDTO } from './api';
+import { ForgotPasswordDTO } from '@mycheckpoint/api-client';
 
 const instance: ForgotPasswordDTO = {
     email,

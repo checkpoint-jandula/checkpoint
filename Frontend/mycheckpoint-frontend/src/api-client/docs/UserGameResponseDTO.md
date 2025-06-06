@@ -6,7 +6,10 @@ DTO que representa una entrada en la biblioteca de juegos de un usuario, incluye
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**internal_id** | **number** |  | [optional] [default to undefined]
 **game_igdb_id** | **number** | ID de IGDB del juego al que se refiere esta entrada de la biblioteca. | [optional] [default to undefined]
+**game_name** | **string** | Nombre del juego. | [optional] [default to undefined]
+**game_cover** | [**CoverDto**](CoverDto.md) |  | [optional] [default to undefined]
 **status** | **string** | Estado actual del juego en la biblioteca del usuario. | [optional] [default to undefined]
 **personal_platform** | **string** | Plataforma personal en la que el usuario juega o posee el juego. | [optional] [default to undefined]
 **has_possession** | **boolean** | Indica si el usuario posee el juego. | [optional] [default to undefined]
@@ -24,10 +27,13 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { UserGameResponseDTO } from './api';
+import { UserGameResponseDTO } from '@mycheckpoint/api-client';
 
 const instance: UserGameResponseDTO = {
+    internal_id,
     game_igdb_id,
+    game_name,
+    game_cover,
     status,
     personal_platform,
     has_possession,
