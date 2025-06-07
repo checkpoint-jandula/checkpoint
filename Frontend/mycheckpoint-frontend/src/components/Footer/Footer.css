@@ -1,0 +1,106 @@
+/* Estilos principales del Footer */
+.main-footer {
+  background-color: var(--color-background-soft); /* Usa tus variables de color */
+  color: var(--color-text);
+  padding: 3rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+/* Contenedor principal para el layout responsive */
+.footer-content {
+  display: flex;
+  flex-wrap: wrap; /* ¡La clave de la responsividad! */
+  justify-content: space-between;
+  gap: 2.5rem; /* Espacio entre las columnas */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Estilo base para cada columna/sección del footer */
+.footer-section {
+  flex: 1; /* Permite que las columnas crezcan */
+  min-width: 220px; /* Ancho mínimo antes de que se apilen */
+}
+
+.footer-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  margin-bottom: 1rem;
+  border-bottom: 2px solid hsla(160, 100%, 37%, 0.5); /* Acento de color */
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.support-title {
+  margin-top: 1.5rem;
+}
+
+/* Estilos específicos para la sección de IGDB */
+.about-section .data-notice {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-mute); /* Un color de texto más suave */
+}
+
+.igdb-logo {
+  max-width: 100px;
+  margin-bottom: 1rem;
+  /* El logo de IGDB es oscuro. Si tu fondo es oscuro, invierte el color */
+  /* filter: invert(1) brightness(2); */
+}
+
+/* Estilos para las listas */
+.tech-list,
+.team-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tech-list li,
+.team-list li {
+  margin-bottom: 0.5rem;
+}
+
+/* Estilos para los enlaces */
+.footer-section a {
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    display: block;
+    text-align: left;
+}
+
+.footer-section a:hover {
+  color: hsla(160, 100%, 37%, 1); /* Tu color de acento al pasar el ratón */
+  text-decoration: underline;
+}
+
+/* Barra inferior del footer */
+.footer-bottom {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  color: var(--color-text-mute);
+}
+
+/* Ajustes para pantallas muy pequeñas (opcional, flex-wrap ya hace la mayor parte del trabajo) */
+@media (max-width: 576px) {
+  .footer-content {
+    flex-direction: column; /* Apila todo en una columna */
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-section a {
+  text-align: center;
+}
+
+  .footer-title {
+    display: block; /* Asegura que el borde ocupe todo el ancho */
+  }
+}
