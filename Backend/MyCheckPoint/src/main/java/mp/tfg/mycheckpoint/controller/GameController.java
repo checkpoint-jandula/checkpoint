@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import mp.tfg.mycheckpoint.dto.games.GameDto;
 
+import mp.tfg.mycheckpoint.dto.games.GameModeDto;
+import mp.tfg.mycheckpoint.dto.games.GenreDto;
+import mp.tfg.mycheckpoint.dto.games.ThemeDto;
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
 import mp.tfg.mycheckpoint.service.games.GameService;
 import mp.tfg.mycheckpoint.service.games.IgdbService;
@@ -173,19 +176,12 @@ public class GameController {
             @RequestParam(name = "id_modo_juego", required = false) Integer gameModeId,
 
             @Parameter(name = "limite",
-                    description = "Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.",
+                    description = "Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.",
                     in = ParameterIn.QUERY,
                     required = false,
                     example = "25",
-                    schema = @Schema(type = "integer", format = "int32", defaultValue = "10", minimum = "1", maximum = "500"))
-            @RequestParam(name = "limite", required = false, defaultValue = "10") Integer limit) {
-
-        if (limit != null && limit > 500) {
-            limit = 500;
-        }
-        if (limit != null && limit <=0) {
-            limit = 10;
-        }
+                    schema = @Schema(type = "integer", format = "int32", minimum = "1", maximum = "500"))
+            @RequestParam(name = "limite", required = false) Integer limit) {
 
         return igdbService.findGamesByCustomFilter(
                 releaseDateStart, releaseDateEnd,
@@ -256,6 +252,54 @@ public class GameController {
     })
     public Flux<GameDto> findUpcomingReleases() {
         return igdbService.findUpcomingReleases();
+    }
+
+    @GetMapping("/igdb/genres")
+    @Operation(summary = "Obtener todos los géneros de IGDB",
+            description = "Recupera una lista de todos los géneros de juegos disponibles en IGDB.",
+            operationId = "findAllGenres")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GenreDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GenreDto> findAllGenres() {
+        return igdbService.findAllGenres();
+    }
+
+    @GetMapping("/igdb/themes")
+    @Operation(summary = "Obtener todos los temas de IGDB",
+            description = "Recupera una lista de todos los temas de juegos disponibles en IGDB.",
+            operationId = "findAllThemes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = ThemeDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<ThemeDto> findAllThemes() {
+        return igdbService.findAllThemes();
+    }
+
+    @GetMapping("/igdb/game-modes")
+    @Operation(summary = "Obtener todos los modos de juego de IGDB",
+            description = "Recupera una lista de todos los modos de juego disponibles en IGDB.",
+            operationId = "findAllGameModes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameModeDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GameModeDto> findAllGameModes() {
+        return igdbService.findAllGameModes();
     }
 
 }

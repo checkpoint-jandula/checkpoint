@@ -64,6 +64,9 @@ Class | Method | HTTP request | Description
 *FriendshipControllerApi* | [**sendFriendRequest**](docs/FriendshipControllerApi.md#sendfriendrequest) | **POST** /api/v1/friends/requests/send/{receiverUserPublicId} | Enviar una solicitud de amistad
 *GameControllerApi* | [**buscarJuegosEnIgdb**](docs/GameControllerApi.md#buscarjuegosenigdb) | **GET** /api/juegos/igdb/buscar | Buscar juegos en IGDB por nombre
 *GameControllerApi* | [**filtrarJuegosEnIgdb**](docs/GameControllerApi.md#filtrarjuegosenigdb) | **GET** /api/juegos/igdb/filtrar | Filtrar juegos en IGDB por múltiples criterios
+*GameControllerApi* | [**findAllGameModes**](docs/GameControllerApi.md#findallgamemodes) | **GET** /api/juegos/igdb/game-modes | Obtener todos los modos de juego de IGDB
+*GameControllerApi* | [**findAllGenres**](docs/GameControllerApi.md#findallgenres) | **GET** /api/juegos/igdb/genres | Obtener todos los géneros de IGDB
+*GameControllerApi* | [**findAllThemes**](docs/GameControllerApi.md#findallthemes) | **GET** /api/juegos/igdb/themes | Obtener todos los temas de IGDB
 *GameControllerApi* | [**findHighlyAnticipatedGames**](docs/GameControllerApi.md#findhighlyanticipatedgames) | **GET** /api/juegos/igdb/highly-anticipated | Obtener los próximos lanzamientos más esperados desde IGDB
 *GameControllerApi* | [**findMostHypedGames**](docs/GameControllerApi.md#findmosthypedgames) | **GET** /api/juegos/igdb/most-hyped | Obtener los juegos más populares (hyped) desde IGDB
 *GameControllerApi* | [**findRecentlyReleasedGames**](docs/GameControllerApi.md#findrecentlyreleasedgames) | **GET** /api/juegos/igdb/recently-released | Obtener juegos lanzados recientemente desde IGDB

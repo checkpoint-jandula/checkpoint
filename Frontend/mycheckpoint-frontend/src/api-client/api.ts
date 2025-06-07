@@ -2915,6 +2915,108 @@ export const GameControllerApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
+         * Recupera una lista de todos los modos de juego disponibles en IGDB.
+         * @summary Obtener todos los modos de juego de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllGameModes: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/game-modes`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+         * @summary Obtener todos los géneros de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllGenres: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/genres`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera una lista de todos los temas de juegos disponibles en IGDB.
+         * @summary Obtener todos los temas de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllThemes: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/themes`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
          * @summary Obtener los próximos lanzamientos más esperados desde IGDB
          * @param {*} [options] Override http request option.
@@ -3092,6 +3194,42 @@ export const GameControllerApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Recupera una lista de todos los modos de juego disponibles en IGDB.
+         * @summary Obtener todos los modos de juego de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findAllGameModes(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GameModeDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findAllGameModes(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findAllGameModes']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+         * @summary Obtener todos los géneros de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findAllGenres(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GenreDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findAllGenres(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findAllGenres']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera una lista de todos los temas de juegos disponibles en IGDB.
+         * @summary Obtener todos los temas de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findAllThemes(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ThemeDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findAllThemes(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findAllThemes']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
          * @summary Obtener los próximos lanzamientos más esperados desde IGDB
          * @param {*} [options] Override http request option.
@@ -3175,6 +3313,33 @@ export const GameControllerApiFactory = function (configuration?: Configuration,
             return localVarFp.filtrarJuegosEnIgdb(fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite, options).then((request) => request(axios, basePath));
         },
         /**
+         * Recupera una lista de todos los modos de juego disponibles en IGDB.
+         * @summary Obtener todos los modos de juego de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllGameModes(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameModeDto>> {
+            return localVarFp.findAllGameModes(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+         * @summary Obtener todos los géneros de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllGenres(options?: RawAxiosRequestConfig): AxiosPromise<Array<GenreDto>> {
+            return localVarFp.findAllGenres(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Recupera una lista de todos los temas de juegos disponibles en IGDB.
+         * @summary Obtener todos los temas de IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findAllThemes(options?: RawAxiosRequestConfig): AxiosPromise<Array<ThemeDto>> {
+            return localVarFp.findAllThemes(options).then((request) => request(axios, basePath));
+        },
+        /**
          * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
          * @summary Obtener los próximos lanzamientos más esperados desde IGDB
          * @param {*} [options] Override http request option.
@@ -3243,6 +3408,33 @@ export interface GameControllerApiInterface {
      * @memberof GameControllerApiInterface
      */
     filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Recupera una lista de todos los modos de juego disponibles en IGDB.
+     * @summary Obtener todos los modos de juego de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findAllGameModes(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameModeDto>>;
+
+    /**
+     * Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+     * @summary Obtener todos los géneros de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findAllGenres(options?: RawAxiosRequestConfig): AxiosPromise<Array<GenreDto>>;
+
+    /**
+     * Recupera una lista de todos los temas de juegos disponibles en IGDB.
+     * @summary Obtener todos los temas de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findAllThemes(options?: RawAxiosRequestConfig): AxiosPromise<Array<ThemeDto>>;
 
     /**
      * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
@@ -3316,6 +3508,39 @@ export class GameControllerApi extends BaseAPI implements GameControllerApiInter
      */
     public filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig) {
         return GameControllerApiFp(this.configuration).filtrarJuegosEnIgdb(fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de todos los modos de juego disponibles en IGDB.
+     * @summary Obtener todos los modos de juego de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findAllGameModes(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findAllGameModes(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+     * @summary Obtener todos los géneros de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findAllGenres(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findAllGenres(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de todos los temas de juegos disponibles en IGDB.
+     * @summary Obtener todos los temas de IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findAllThemes(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findAllThemes(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

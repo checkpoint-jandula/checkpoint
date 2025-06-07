@@ -243,5 +243,23 @@ export const findUpcomingReleases = () => {
   return gamesApi.findUpcomingReleases();
 };
 
+export const buscarJuegosEnIgdb = (query) => {
+  return gamesApi.buscarJuegosEnIgdb(query);
+};
 
+export const filtrarJuegosEnIgdb = (fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite) => {
+  return gamesApi.filtrarJuegosEnIgdb(fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite);
+};
+
+export const findAllGameModes = () => {
+  return gamesApi.findAllGameModes();
+};
+
+export const findAllGenres = () => {
+  return gamesApi.findAllGenres();
+};
+
+export const findAllThemes = () => {
+  return gamesApi.findAllThemes();
+};
 

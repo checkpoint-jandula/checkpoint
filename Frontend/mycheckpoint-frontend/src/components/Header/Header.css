@@ -1,0 +1,258 @@
+.main-header {
+  background-color: var(--color-background-soft);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 0 1.5rem;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  margin-right: 2rem; /* Espacio entre logo y nav */
+}
+
+.logo {
+  height: 40px;
+  width: 40px;
+}
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-grow: 1; /* Permite que la navegación principal ocupe el espacio */
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--color-text);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+  white-space: nowrap;
+}
+nav a:hover,
+nav a.router-link-exact-active {
+  color: hsla(160, 100%, 37%, 1);
+  background-color: var(--color-background);
+}
+
+.actions-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-container {
+  display: flex;
+}
+.search-container input {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  padding: 0.5rem;
+  border-radius: 4px 0 0 4px;
+  width: 200px;
+}
+.search-container button {
+  background: var(--color-background-mute);
+  border: 1px solid var(--color-border);
+  border-left: none;
+  cursor: pointer;
+  padding: 0 0.75rem;
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-container button:hover {
+  background: var(--color-border);
+}
+
+.filter-toggle-button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.filter-toggle-button:hover {
+  background: var(--color-border);
+}
+
+/* --- Iconos con CSS --- */
+.search-bar {
+  display: flex;
+  align-items: center;
+}
+
+.search-bar input {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px 0 0 4px;
+  width: 200px;
+}
+
+.search-bar button {
+  background: var(--color-background-mute);
+  border: 1px solid var(--color-border);
+  border-left: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: var(--color-text-light-2);
+  border-radius: 0 4px 4px 0;
+}
+
+.filter-toggle-button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  color: var(--color-text-light-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-icon {
+  /* Simple filter icon with CSS */
+  width: 16px;
+  height: 16px;
+  border: solid 2px;
+  border-radius: 2px;
+  position: relative;
+}
+.filter-icon:before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  width: 10px;
+  background: currentColor;
+  top: 3px;
+  left: 1px;
+}
+.filter-icon:after {
+  content: "";
+  position: absolute;
+  height: 2px;
+  width: 4px;
+  background: currentColor;
+  top: 9px;
+  left: 4px;
+}
+
+.user-auth-group,
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.user-profile-link {
+  display: flex;
+  align-items: center;
+}
+.user-avatar-header {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+.user-avatar-header:hover {
+  border-color: hsla(160, 100%, 37%, 1);
+}
+.logout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.logout-button:hover {
+  color: hsla(160, 100%, 37%, 1);
+}
+
+/* --- Panel de Filtros --- */
+.filter-panel {
+  padding: 1.5rem;
+  background-color: var(--color-background);
+  border-top: 1px solid var(--color-border-hover);
+}
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 180px;
+}
+.filter-group label {
+  font-size: 0.8rem;
+  color: white; /* Letra blanca */
+}
+.filter-group select,
+.filter-group input[type="date"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+.filter-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+.action-button {
+  padding: 0.6em 1.2em;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.action-button.primary {
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border-color: hsla(160, 100%, 37%, 1);
+}
+.action-button.primary:hover {
+  background-color: hsla(160, 100%, 30%, 1);
+}
+.action-button.secondary {
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+.action-button.secondary:hover {
+  background-color: var(--color-border);
+}

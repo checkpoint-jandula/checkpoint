@@ -6,6 +6,9 @@ All URIs are relative to *http://localhost:8080*
 |------------- | ------------- | -------------|
 |[**buscarJuegosEnIgdb**](#buscarjuegosenigdb) | **GET** /api/juegos/igdb/buscar | Buscar juegos en IGDB por nombre|
 |[**filtrarJuegosEnIgdb**](#filtrarjuegosenigdb) | **GET** /api/juegos/igdb/filtrar | Filtrar juegos en IGDB por múltiples criterios|
+|[**findAllGameModes**](#findallgamemodes) | **GET** /api/juegos/igdb/game-modes | Obtener todos los modos de juego de IGDB|
+|[**findAllGenres**](#findallgenres) | **GET** /api/juegos/igdb/genres | Obtener todos los géneros de IGDB|
+|[**findAllThemes**](#findallthemes) | **GET** /api/juegos/igdb/themes | Obtener todos los temas de IGDB|
 |[**findHighlyAnticipatedGames**](#findhighlyanticipatedgames) | **GET** /api/juegos/igdb/highly-anticipated | Obtener los próximos lanzamientos más esperados desde IGDB|
 |[**findMostHypedGames**](#findmosthypedgames) | **GET** /api/juegos/igdb/most-hyped | Obtener los juegos más populares (hyped) desde IGDB|
 |[**findRecentlyReleasedGames**](#findrecentlyreleasedgames) | **GET** /api/juegos/igdb/recently-released | Obtener juegos lanzados recientemente desde IGDB|
@@ -58,9 +61,9 @@ const { status, data } = await apiInstance.buscarJuegosEnIgdb(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**400** | Solicitud incorrecta. El parámetro \&#39;nombre\&#39; es obligatorio. |  -  |
-|**200** | Búsqueda exitosa. Devuelve una lista de juegos encontrados (puede estar vacía). |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. Devuelve una lista de juegos encontrados (puede estar vacía). |  -  |
+|**400** | Solicitud incorrecta. El parámetro \&#39;nombre\&#39; es obligatorio. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -126,9 +129,144 @@ const { status, data } = await apiInstance.filtrarJuegosEnIgdb(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**400** | Solicitud incorrecta. Ocurre si alguno de los parámetros numéricos no puede ser parseado correctamente (ej. texto en lugar de número). |  -  |
 |**200** | Búsqueda por filtros exitosa. Devuelve una lista de juegos encontrados (puede estar vacía). |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**400** | Solicitud incorrecta. Ocurre si alguno de los parámetros numéricos no puede ser parseado correctamente (ej. texto en lugar de número). |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **findAllGameModes**
+> Array<GameModeDto> findAllGameModes()
+
+Recupera una lista de todos los modos de juego disponibles en IGDB.
+
+### Example
+
+```typescript
+import {
+    GameControllerApi,
+    Configuration
+} from '@mycheckpoint/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new GameControllerApi(configuration);
+
+const { status, data } = await apiInstance.findAllGameModes();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Array<GameModeDto>**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **findAllGenres**
+> Array<GenreDto> findAllGenres()
+
+Recupera una lista de todos los géneros de juegos disponibles en IGDB.
+
+### Example
+
+```typescript
+import {
+    GameControllerApi,
+    Configuration
+} from '@mycheckpoint/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new GameControllerApi(configuration);
+
+const { status, data } = await apiInstance.findAllGenres();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Array<GenreDto>**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **findAllThemes**
+> Array<ThemeDto> findAllThemes()
+
+Recupera una lista de todos los temas de juegos disponibles en IGDB.
+
+### Example
+
+```typescript
+import {
+    GameControllerApi,
+    Configuration
+} from '@mycheckpoint/api-client';
+
+const configuration = new Configuration();
+const apiInstance = new GameControllerApi(configuration);
+
+const { status, data } = await apiInstance.findAllThemes();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Array<ThemeDto>**
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -172,8 +310,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Búsqueda exitosa. |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -217,8 +355,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Búsqueda exitosa. |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -262,8 +400,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Búsqueda exitosa. |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -307,8 +445,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Búsqueda exitosa. |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
+|**200** | Búsqueda exitosa. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

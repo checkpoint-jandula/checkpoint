@@ -2,6 +2,9 @@ package mp.tfg.mycheckpoint.service.games;
 
 
 import mp.tfg.mycheckpoint.dto.games.GameDto;
+import mp.tfg.mycheckpoint.dto.games.GameModeDto;
+import mp.tfg.mycheckpoint.dto.games.GenreDto;
+import mp.tfg.mycheckpoint.dto.games.ThemeDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -157,22 +160,23 @@ public class IgdbService {
             whereClauses.add("first_release_date < " + releaseDateEnd);
         }
         if (genreId != null) {
-            whereClauses.add("genres = (" + genreId + ")");
+            whereClauses.add("genres = [" + genreId + "]");
         }
         if (themeId != null) {
-            whereClauses.add("themes = (" + themeId + ")");
+            whereClauses.add("themes = [" + themeId + "]");
         }
         if (gameModeId != null) {
-            whereClauses.add("game_modes = (" + gameModeId + ")");
+            whereClauses.add("game_modes = [" + gameModeId + "]");
         }
 
         String fields = "fields name, total_rating, cover.url, first_release_date, genres.name, themes.name, game_modes.name, id, slug;";
+        String sortClause = "sort hypes desc;";
         String whereCondition = whereClauses.isEmpty() ? "" : "where " + String.join(" & ", whereClauses) + ";";
 
-        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 10;
+        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 20;
         String limitCondition = "limit " + effectiveLimit + ";";
 
-        String queryBody = fields + " " + whereCondition + " " + limitCondition;
+        String queryBody = fields + " " + sortClause+ " "+ whereCondition + " " + limitCondition;
 
         logger.info("Querying IGDB (findGamesByCustomFilter) with body: {}", queryBody);
 
@@ -193,6 +197,11 @@ public class IgdbService {
                     return gameDto;
                 })
                 .doOnError(error -> logger.error("Error during IGDB custom filter call or deserialization: {}", error.getMessage(), error));
+//        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
+//        String queryBody = String.format(
+//                "%s sort hypes desc; where total_rating != null & total_rating_count > 100; limit 10;",
+//                fields
+//        );
     }
 
     /**
@@ -281,5 +290,53 @@ public class IgdbService {
                 .retrieve()
                 .bodyToFlux(GameDto.class)
                 .doOnError(error -> logger.error("Error during IGDB call (findUpcomingReleases): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca todos los géneros disponibles en IGDB.
+     * @return Un Flux de GenreDto.
+     */
+    public Flux<GenreDto> findAllGenres() {
+        String queryBody = "fields id, name; limit 100;";
+        logger.info("Querying IGDB (findAllGenres) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/genres")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GenreDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findAllGenres): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca todos los temas disponibles en IGDB.
+     * @return Un Flux de ThemeDto.
+     */
+    public Flux<ThemeDto> findAllThemes() {
+        String queryBody = "fields id, name; limit 100;";
+        logger.info("Querying IGDB (findAllThemes) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/themes")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(ThemeDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findAllThemes): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca todos los modos de juego disponibles en IGDB.
+     * @return Un Flux de GameModeDto.
+     */
+    public Flux<GameModeDto> findAllGameModes() {
+        String queryBody = "fields id, name; limit 100;";
+        logger.info("Querying IGDB (findAllGameModes) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/game_modes")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GameModeDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findAllGameModes): {}", error.getMessage(), error));
     }
 }
