@@ -226,6 +226,22 @@ export const moveItemInMyTierList = (tierListPublicId, tierListItemInternalId, t
   return tierListsApi.moveItemInTierList(tierListPublicId, tierListItemInternalId, tierListItemMoveRequestDTO); //
 };
 
+//IGDB
+export const findRecentlyReleasedGames = () => {
+  return gamesApi.findRecentlyReleasedGames();
+};
+
+export const findMostHypedGames = () => {
+  return gamesApi.findMostHypedGames();
+};
+
+export const findHighlyAnticipatedGames = () => {
+  return gamesApi.findHighlyAnticipatedGames();
+};
+
+export const findUpcomingReleases = () => {
+  return gamesApi.findUpcomingReleases();
+};
 
 
 

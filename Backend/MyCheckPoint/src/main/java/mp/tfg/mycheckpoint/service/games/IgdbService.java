@@ -11,6 +11,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -191,5 +193,93 @@ public class IgdbService {
                     return gameDto;
                 })
                 .doOnError(error -> logger.error("Error during IGDB custom filter call or deserialization: {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca los juegos lanzados en los últimos 30 días.
+     * @return Un Flux de GameDto con los juegos lanzados recientemente.
+     */
+    public Flux<GameDto> findRecentlyReleasedGames() {
+        long now = Instant.now().getEpochSecond();
+        long thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS).getEpochSecond();
+        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
+        String queryBody = String.format(
+                "%s sort first_release_date desc; where first_release_date < %d & first_release_date >= %d; limit 10;",
+                fields, now, thirtyDaysAgo
+        );
+
+        logger.info("Querying IGDB (findRecentlyReleasedGames) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GameDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findRecentlyReleasedGames): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca los juegos más populares ("hyped") con un número significativo de calificaciones.
+     * @return Un Flux de GameDto con los juegos más populares.
+     */
+    public Flux<GameDto> findMostHypedGames() {
+        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
+        String queryBody = String.format(
+                "%s sort hypes desc; where total_rating != null & total_rating_count > 100; limit 10;",
+                fields
+        );
+
+        logger.info("Querying IGDB (findMostHypedGames) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GameDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findMostHypedGames): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca los próximos lanzamientos más esperados ("highly anticipated").
+     * @return Un Flux de GameDto con los próximos juegos más esperados.
+     */
+    public Flux<GameDto> findHighlyAnticipatedGames() {
+        long now = Instant.now().getEpochSecond();
+        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
+        String queryBody = String.format(
+                "%s sort hypes desc; where first_release_date > %d & hypes > 50; limit 10;",
+                fields, now
+        );
+
+        logger.info("Querying IGDB (findHighlyAnticipatedGames) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GameDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findHighlyAnticipatedGames): {}", error.getMessage(), error));
+    }
+
+    /**
+     * Busca los próximos 10 lanzamientos ordenados por fecha.
+     * @return Un Flux de GameDto con los próximos lanzamientos.
+     */
+    public Flux<GameDto> findUpcomingReleases() {
+        long now = Instant.now().getEpochSecond();
+        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
+        String queryBody = String.format(
+                "%s sort first_release_date asc; where first_release_date > %d; limit 10;",
+                fields, now
+        );
+
+        logger.info("Querying IGDB (findUpcomingReleases) with body: {}", queryBody);
+        return igdbWebClient.post()
+                .uri("/games")
+                .contentType(MediaType.TEXT_PLAIN)
+                .bodyValue(queryBody)
+                .retrieve()
+                .bodyToFlux(GameDto.class)
+                .doOnError(error -> logger.error("Error during IGDB call (findUpcomingReleases): {}", error.getMessage(), error));
     }
 }

@@ -193,4 +193,69 @@ public class GameController {
                 limit
         );
     }
+
+    @GetMapping("/igdb/recently-released")
+    @Operation(summary = "Obtener juegos lanzados recientemente desde IGDB",
+            description = "Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.",
+            operationId = "findRecentlyReleasedGames")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GameDto> findRecentlyReleasedGames() {
+        return igdbService.findRecentlyReleasedGames();
+    }
+
+    @GetMapping("/igdb/most-hyped")
+    @Operation(summary = "Obtener los juegos más populares (hyped) desde IGDB",
+            description = "Recupera una lista de los 10 juegos más populares basados en su 'hype' y un número significativo de calificaciones.",
+            operationId = "findMostHypedGames")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GameDto> findMostHypedGames() {
+        return igdbService.findMostHypedGames();
+    }
+
+    @GetMapping("/igdb/highly-anticipated")
+    @Operation(summary = "Obtener los próximos lanzamientos más esperados desde IGDB",
+            description = "Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su 'hype'.",
+            operationId = "findHighlyAnticipatedGames")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GameDto> findHighlyAnticipatedGames() {
+        return igdbService.findHighlyAnticipatedGames();
+    }
+
+    @GetMapping("/igdb/upcoming-releases")
+    @Operation(summary = "Obtener los próximos lanzamientos desde IGDB",
+            description = "Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.",
+            operationId = "findUpcomingReleases")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = GameDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor o error al comunicarse con la API de IGDB.",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
+    })
+    public Flux<GameDto> findUpcomingReleases() {
+        return igdbService.findUpcomingReleases();
+    }
+
 }

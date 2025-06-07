@@ -59,11 +59,11 @@ const { status, data } = await apiInstance.acceptFriendRequest(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**403** | Prohibido. El usuario autenticado no es el receptor de la solicitud de amistad pendiente o no tiene permisos para realizar esta acción. |  -  |
-|**200** | Solicitud de amistad aceptada exitosamente. Devuelve el estado actualizado de la amistad. |  -  |
 |**404** | No encontrado. No se encontró una solicitud de amistad pendiente del usuario especificado, o el usuario solicitante/actual no existe. |  -  |
+|**200** | Solicitud de amistad aceptada exitosamente. Devuelve el estado actualizado de la amistad. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**403** | Prohibido. El usuario autenticado no es el receptor de la solicitud de amistad pendiente o no tiene permisos para realizar esta acción. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -114,11 +114,11 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**204** | Solicitud de amistad rechazada/cancelada y eliminada exitosamente. No hay contenido en la respuesta. |  -  |
-|**403** | Prohibido. El usuario autenticado no es el receptor de la solicitud de amistad pendiente que intenta rechazar (o no tiene permisos para cancelarla si fuera el emisor y el endpoint se usara así). |  -  |
 |**404** | No encontrado. No se encontró una solicitud de amistad pendiente del usuario especificado, o el usuario solicitante/actual no existe. |  -  |
+|**204** | Solicitud de amistad rechazada/cancelada y eliminada exitosamente. No hay contenido en la respuesta. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**403** | Prohibido. El usuario autenticado no es el receptor de la solicitud de amistad pendiente que intenta rechazar (o no tiene permisos para cancelarla si fuera el emisor y el endpoint se usara así). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -162,10 +162,10 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**200** | Lista de amigos recuperada exitosamente. La lista puede estar vacía si el usuario no tiene amigos. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -209,9 +209,9 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**200** | Lista de solicitudes pendientes recibidas recuperada exitosamente. La lista puede estar vacía. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -256,10 +256,10 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**200** | Lista de solicitudes pendientes enviadas recuperada exitosamente. La lista puede estar vacía. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -310,9 +310,9 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. No se encontró una amistad con el usuario especificado, o el amigo a eliminar no existe, o el usuario actual no pudo ser verificado. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**204** | Amigo eliminado exitosamente. No hay contenido en la respuesta. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -364,12 +364,12 @@ const { status, data } = await apiInstance.sendFriendRequest(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**409** | Conflicto. Ya existe una amistad o una solicitud de amistad pendiente con este usuario. |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. El usuario receptor especificado por &#x60;receiverUserPublicId&#x60; no existe, o el usuario emisor no pudo ser verificado. |  -  |
-|**200** | Solicitud de amistad enviada o amistad auto-aceptada exitosamente. Devuelve el estado de la amistad/solicitud. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**400** | Solicitud incorrecta. El usuario no puede enviarse una solicitud a sí mismo. |  -  |
+|**200** | Solicitud de amistad enviada o amistad auto-aceptada exitosamente. Devuelve el estado de la amistad/solicitud. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

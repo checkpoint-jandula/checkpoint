@@ -62,11 +62,11 @@ const { status, data } = await apiInstance.changeMyPassword(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**400** | Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual). |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**401** | No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado. |  -  |
-|**400** | Datos de entrada inválidos o solicitud incorrecta (ej. nueva contraseña igual a la actual). |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 |**200** | Contraseña actualizada correctamente. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -118,10 +118,10 @@ const { status, data } = await apiInstance.deleteMyAccount(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**200** | Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**401** | No autorizado. La contraseña actual proporcionada es incorrecta, o el token JWT es inválido/expirado. |  -  |
 |**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
-|**200** | Solicitud de eliminación de cuenta procesada. La cuenta ha sido programada para eliminación y la sesión actual invalidada. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -165,9 +165,9 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó, o el contexto de seguridad no contiene un principal válido. |  -  |
-|**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos. |  -  |
 |**200** | Datos del usuario autenticado devueltos exitosamente. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -219,9 +219,9 @@ const { status, data } = await apiInstance.getUsuarioByPublicId(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**404** | No encontrado. No existe ningún usuario con el ID público proporcionado. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**200** | Usuario encontrado y devuelto exitosamente. |  -  |
-|**404** | No encontrado. No existe ningún usuario con el ID público proporcionado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -272,9 +272,9 @@ const { status, data } = await apiInstance.getUsuarioSummaryByPublicId(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor. |  -  |
-|**200** | Resumen de usuario encontrado y devuelto exitosamente. |  -  |
 |**404** | No encontrado. No existe ningún usuario con el ID público proporcionado. |  -  |
+|**200** | Resumen de usuario encontrado y devuelto exitosamente. |  -  |
+|**500** | Error interno del servidor. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -326,10 +326,10 @@ const { status, data } = await apiInstance.registrarUsuario(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor. Ocurrió un problema inesperado durante el proceso de registro. |  -  |
-|**201** | Usuario creado exitosamente. Devuelve los datos del usuario recién creado. |  -  |
-|**409** | Conflicto. El email o el nombre de usuario proporcionado ya se encuentra registrado en el sistema. |  -  |
 |**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserCreateDTO&#x60; no pasan las validaciones (ej. email no válido, contraseña corta). |  -  |
+|**409** | Conflicto. El email o el nombre de usuario proporcionado ya se encuentra registrado en el sistema. |  -  |
+|**201** | Usuario creado exitosamente. Devuelve los datos del usuario recién creado. |  -  |
+|**500** | Error interno del servidor. Ocurrió un problema inesperado durante el proceso de registro. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -380,11 +380,11 @@ const { status, data } = await apiInstance.searchUsersByUsername(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**200** | Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio. |  -  |
 |**404** | No encontrado. No se encontraron usuarios con el nombre de usuario proporcionado |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**400** | Solicitud incorrecta. El parámetro \&#39;username\&#39; es obligatorio y debe tener al menos 2 caracteres. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**200** | Búsqueda exitosa. Devuelve una lista de usuarios que coinciden con el criterio. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -436,11 +436,11 @@ const { status, data } = await apiInstance.updateCurrentUserProfile(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**200** | Perfil de usuario actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
-|**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserProfileUpdateDTO&#x60; no pasan las validaciones (ej. nombre de usuario demasiado corto/largo). |  -  |
 |**404** | No encontrado. El usuario autenticado (identificado por el token) no pudo ser encontrado en la base de datos para la actualización. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**400** | Datos de entrada inválidos. Ocurre si los datos proporcionados en &#x60;UserProfileUpdateDTO&#x60; no pasan las validaciones (ej. nombre de usuario demasiado corto/largo). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**200** | Perfil de usuario actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
 |**409** | Conflicto. El nuevo nombre de usuario elegido ya está en uso por otro usuario. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -492,12 +492,12 @@ const { status, data } = await apiInstance.uploadProfilePicture(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**200** | Foto de perfil subida y perfil actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
+|**500** | Error interno del servidor. No se pudo crear el directorio de almacenamiento, guardar el archivo, o ocurrió otro error inesperado. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**413** | Payload Too Large. El archivo excede el tamaño máximo permitido para fotos de perfil o el límite general de subida. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser encontrado en la base de datos (caso anómalo). |  -  |
-|**500** | Error interno del servidor. No se pudo crear el directorio de almacenamiento, guardar el archivo, o ocurrió otro error inesperado. |  -  |
 |**400** | Solicitud incorrecta. El archivo proporcionado está vacío, tiene un formato no permitido, o hay un problema con el nombre del archivo. |  -  |
-|**200** | Foto de perfil subida y perfil actualizado exitosamente. Devuelve los datos actualizados del usuario. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

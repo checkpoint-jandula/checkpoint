@@ -2914,6 +2914,142 @@ export const GameControllerApiAxiosParamCreator = function (configuration?: Conf
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
+         * @summary Obtener los próximos lanzamientos más esperados desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findHighlyAnticipatedGames: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/highly-anticipated`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera una lista de los 10 juegos más populares basados en su \'hype\' y un número significativo de calificaciones.
+         * @summary Obtener los juegos más populares (hyped) desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findMostHypedGames: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/most-hyped`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.
+         * @summary Obtener juegos lanzados recientemente desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findRecentlyReleasedGames: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/recently-released`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.
+         * @summary Obtener los próximos lanzamientos desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findUpcomingReleases: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/juegos/igdb/upcoming-releases`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -2955,6 +3091,54 @@ export const GameControllerApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['GameControllerApi.filtrarJuegosEnIgdb']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
+         * @summary Obtener los próximos lanzamientos más esperados desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findHighlyAnticipatedGames(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GameDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findHighlyAnticipatedGames(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findHighlyAnticipatedGames']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera una lista de los 10 juegos más populares basados en su \'hype\' y un número significativo de calificaciones.
+         * @summary Obtener los juegos más populares (hyped) desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findMostHypedGames(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GameDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findMostHypedGames(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findMostHypedGames']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.
+         * @summary Obtener juegos lanzados recientemente desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findRecentlyReleasedGames(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GameDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findRecentlyReleasedGames(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findRecentlyReleasedGames']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.
+         * @summary Obtener los próximos lanzamientos desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async findUpcomingReleases(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GameDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.findUpcomingReleases(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['GameControllerApi.findUpcomingReleases']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -2990,6 +3174,42 @@ export const GameControllerApiFactory = function (configuration?: Configuration,
         filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>> {
             return localVarFp.filtrarJuegosEnIgdb(fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite, options).then((request) => request(axios, basePath));
         },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
+         * @summary Obtener los próximos lanzamientos más esperados desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findHighlyAnticipatedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>> {
+            return localVarFp.findHighlyAnticipatedGames(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Recupera una lista de los 10 juegos más populares basados en su \'hype\' y un número significativo de calificaciones.
+         * @summary Obtener los juegos más populares (hyped) desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findMostHypedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>> {
+            return localVarFp.findMostHypedGames(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.
+         * @summary Obtener juegos lanzados recientemente desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findRecentlyReleasedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>> {
+            return localVarFp.findRecentlyReleasedGames(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.
+         * @summary Obtener los próximos lanzamientos desde IGDB
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        findUpcomingReleases(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>> {
+            return localVarFp.findUpcomingReleases(options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -3023,6 +3243,42 @@ export interface GameControllerApiInterface {
      * @memberof GameControllerApiInterface
      */
     filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
+     * @summary Obtener los próximos lanzamientos más esperados desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findHighlyAnticipatedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Recupera una lista de los 10 juegos más populares basados en su \'hype\' y un número significativo de calificaciones.
+     * @summary Obtener los juegos más populares (hyped) desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findMostHypedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.
+     * @summary Obtener juegos lanzados recientemente desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findRecentlyReleasedGames(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
+
+    /**
+     * Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.
+     * @summary Obtener los próximos lanzamientos desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApiInterface
+     */
+    findUpcomingReleases(options?: RawAxiosRequestConfig): AxiosPromise<Array<GameDto>>;
 
 }
 
@@ -3060,6 +3316,50 @@ export class GameControllerApi extends BaseAPI implements GameControllerApiInter
      */
     public filtrarJuegosEnIgdb(fechaInicio?: number, fechaFin?: number, idGenero?: number, idTema?: number, idModoJuego?: number, limite?: number, options?: RawAxiosRequestConfig) {
         return GameControllerApiFp(this.configuration).filtrarJuegosEnIgdb(fechaInicio, fechaFin, idGenero, idTema, idModoJuego, limite, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de los 10 próximos lanzamientos más esperados, filtrados por su \'hype\'.
+     * @summary Obtener los próximos lanzamientos más esperados desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findHighlyAnticipatedGames(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findHighlyAnticipatedGames(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de los 10 juegos más populares basados en su \'hype\' y un número significativo de calificaciones.
+     * @summary Obtener los juegos más populares (hyped) desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findMostHypedGames(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findMostHypedGames(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de los 10 juegos lanzados en los últimos 30 días, ordenados por fecha de lanzamiento descendente.
+     * @summary Obtener juegos lanzados recientemente desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findRecentlyReleasedGames(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findRecentlyReleasedGames(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Recupera una lista de los 10 próximos lanzamientos, ordenados por fecha de lanzamiento ascendente.
+     * @summary Obtener los próximos lanzamientos desde IGDB
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof GameControllerApi
+     */
+    public findUpcomingReleases(options?: RawAxiosRequestConfig) {
+        return GameControllerApiFp(this.configuration).findUpcomingReleases(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

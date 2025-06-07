@@ -64,6 +64,10 @@ Class | Method | HTTP request | Description
 *FriendshipControllerApi* | [**sendFriendRequest**](docs/FriendshipControllerApi.md#sendfriendrequest) | **POST** /api/v1/friends/requests/send/{receiverUserPublicId} | Enviar una solicitud de amistad
 *GameControllerApi* | [**buscarJuegosEnIgdb**](docs/GameControllerApi.md#buscarjuegosenigdb) | **GET** /api/juegos/igdb/buscar | Buscar juegos en IGDB por nombre
 *GameControllerApi* | [**filtrarJuegosEnIgdb**](docs/GameControllerApi.md#filtrarjuegosenigdb) | **GET** /api/juegos/igdb/filtrar | Filtrar juegos en IGDB por múltiples criterios
+*GameControllerApi* | [**findHighlyAnticipatedGames**](docs/GameControllerApi.md#findhighlyanticipatedgames) | **GET** /api/juegos/igdb/highly-anticipated | Obtener los próximos lanzamientos más esperados desde IGDB
+*GameControllerApi* | [**findMostHypedGames**](docs/GameControllerApi.md#findmosthypedgames) | **GET** /api/juegos/igdb/most-hyped | Obtener los juegos más populares (hyped) desde IGDB
+*GameControllerApi* | [**findRecentlyReleasedGames**](docs/GameControllerApi.md#findrecentlyreleasedgames) | **GET** /api/juegos/igdb/recently-released | Obtener juegos lanzados recientemente desde IGDB
+*GameControllerApi* | [**findUpcomingReleases**](docs/GameControllerApi.md#findupcomingreleases) | **GET** /api/juegos/igdb/upcoming-releases | Obtener los próximos lanzamientos desde IGDB
 *GameListControllerApi* | [**addGameToMyCustomList**](docs/GameListControllerApi.md#addgametomycustomlist) | **POST** /api/v1/users/me/gamelists/{listPublicId}/games | Añadir un juego de la biblioteca del usuario a una de sus listas de juegos
 *GameListControllerApi* | [**createMyGameList**](docs/GameListControllerApi.md#createmygamelist) | **POST** /api/v1/users/me/gamelists | Crear una nueva lista de juegos para el usuario autenticado
 *GameListControllerApi* | [**deleteMyGameList**](docs/GameListControllerApi.md#deletemygamelist) | **DELETE** /api/v1/users/me/gamelists/{listPublicId} | Eliminar una lista de juegos del usuario autenticado

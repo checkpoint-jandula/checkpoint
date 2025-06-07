@@ -637,7 +637,7 @@ const formatReleaseStatus = (statusCode) => {
   // La documentación de GameDto.md para first_release_status menciona:
   // 0=Released, 2=Alpha, 3=Beta, 4=Early Access, 5=Offline, 6=Cancelled, 7=Rumored, -1=TBD
   const statusMap = {
-    "-1": "Por Determinar (TBD)",
+    "-1": "Lanzado",
     "0": "Lanzado",
     "2": "Alpha",
     "3": "Beta",
@@ -704,6 +704,7 @@ const formatDateSimple = (dateString) => {
 
 // --- NUEVO ESTADO para el formulario de la biblioteca ---
 const showLibraryForm = ref(false);
+const isAddingNewLibraryEntry = ref(false);
 const libraryForm = reactive({
   status: null, //
   personal_platform: null, //

@@ -73,11 +73,11 @@ const { status, data } = await apiInstance.addItemToTierListSection(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**200** | Ítem añadido o movido a la sección exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. La Tier List, la sección especificada o el UserGame a añadir no fueron encontrados, o el usuario no pudo ser verificado. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**400** | Solicitud incorrecta. El &#x60;user_game_id&#x60; es nulo, la Tier List es de tipo \&#39;FROM_GAMELIST\&#39;, o se intenta añadir a la sección \&#39;Sin Clasificar\&#39; usando este endpoint. |  -  |
-|**200** | Ítem añadido o movido a la sección exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List o el UserGame a añadir no le pertenece. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -133,12 +133,12 @@ const { status, data } = await apiInstance.addItemToUnclassifiedSection(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**200** | Ítem añadido o movido a la sección \&#39;Sin Clasificar\&#39; exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
-|**400** | Solicitud incorrecta. El &#x60;user_game_id&#x60; es nulo, o la Tier List es de tipo \&#39;FROM_GAMELIST\&#39;. |  -  |
-|**404** | No encontrado. La Tier List o el UserGame a añadir no fueron encontrados, o el usuario no pudo ser verificado. |  -  |
 |**500** | Error interno del servidor (ej. la sección \&#39;Sin Clasificar\&#39; no se encontró). |  -  |
+|**404** | No encontrado. La Tier List o el UserGame a añadir no fueron encontrados, o el usuario no pudo ser verificado. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List o el UserGame a añadir no le pertenece. |  -  |
+|**400** | Solicitud incorrecta. El &#x60;user_game_id&#x60; es nulo, o la Tier List es de tipo \&#39;FROM_GAMELIST\&#39;. |  -  |
+|**200** | Ítem añadido o movido a la sección \&#39;Sin Clasificar\&#39; exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -193,11 +193,11 @@ const { status, data } = await apiInstance.addSectionToTierList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**404** | No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
-|**400** | Datos de entrada inválidos (ej. nombre de sección vacío o demasiado largo) o se ha alcanzado el límite máximo de secciones personalizables. |  -  |
 |**200** | Sección añadida exitosamente. Devuelve la Tier List completa y actualizada con la nueva sección. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**400** | Datos de entrada inválidos (ej. nombre de sección vacío o demasiado largo) o se ha alcanzado el límite máximo de secciones personalizables. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**404** | No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List a la que intenta añadir una sección. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -250,11 +250,11 @@ const { status, data } = await apiInstance.createProfileTierList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Tier List de perfil creada exitosamente. Devuelve los detalles de la lista recién creada, incluyendo las secciones por defecto. |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 |**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;TierListCreateRequestDTO&#x60; no pasan las validaciones (ej. nombre vacío o demasiado largo). |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**201** | Tier List de perfil creada exitosamente. Devuelve los detalles de la lista recién creada, incluyendo las secciones por defecto. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -305,10 +305,10 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**204** | Tier List eliminada exitosamente. No hay contenido en la respuesta. |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List que intenta eliminar. |  -  |
 |**500** | Error interno del servidor. |  -  |
-|**204** | Tier List eliminada exitosamente. No hay contenido en la respuesta. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**404** | No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -353,10 +353,10 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 |**200** | Tier Lists de perfil recuperadas exitosamente. La lista puede estar vacía si el usuario no ha creado ninguna. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -452,11 +452,11 @@ const { status, data } = await apiInstance.getOrCreateTierListForGameList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. Se proporcionó un token JWT inválido o expirado al intentar acceder a recursos que lo requerían (ej. GameList privada). |  -  |
-|**403** | Prohibido. El usuario autenticado no tiene permiso para acceder a la GameList especificada (si es privada y no es el propietario) o a la TierList resultante. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**404** | No encontrado. La GameList con el ID público especificado no existe, o el usuario (si está autenticado) no pudo ser verificado. |  -  |
 |**200** | Tier List recuperada o creada y sincronizada exitosamente. |  -  |
+|**403** | Prohibido. El usuario autenticado no tiene permiso para acceder a la GameList especificada (si es privada y no es el propietario) o a la TierList resultante. |  -  |
+|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. Se proporcionó un token JWT inválido o expirado al intentar acceder a recursos que lo requerían (ej. GameList privada). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -508,10 +508,10 @@ const { status, data } = await apiInstance.getTierListByPublicId(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**500** | Error interno del servidor. |  -  |
-|**403** | Prohibido. La Tier List es privada y el usuario (autenticado o anónimo) no tiene permiso para accederla. |  -  |
-|**200** | Tier List recuperada exitosamente. |  -  |
-|**404** | No encontrado. La Tier List con el ID público especificado no existe, o el usuario (si está autenticado) no pudo ser verificado. |  -  |
 |**401** | No autorizado. Se proporcionó un token JWT inválido o expirado al intentar acceder a una Tier List privada. |  -  |
+|**200** | Tier List recuperada exitosamente. |  -  |
+|**403** | Prohibido. La Tier List es privada y el usuario (autenticado o anónimo) no tiene permiso para accederla. |  -  |
+|**404** | No encontrado. La Tier List con el ID público especificado no existe, o el usuario (si está autenticado) no pudo ser verificado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -569,12 +569,12 @@ const { status, data } = await apiInstance.moveItemInTierList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**500** | Error interno del servidor. |  -  |
-|**404** | No encontrado. La Tier List, el ítem a mover, o la sección destino no fueron encontrados, o el usuario no pudo ser verificado. |  -  |
-|**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List. |  -  |
-|**400** | Solicitud incorrecta. Los datos en &#x60;TierListItemMoveRequestDTO&#x60; son inválidos (ej. IDs nulos), o la operación es inválida para el tipo de Tier List (ej. juego ya no en GameList origen). |  -  |
 |**200** | Ítem movido exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
+|**400** | Solicitud incorrecta. Los datos en &#x60;TierListItemMoveRequestDTO&#x60; son inválidos (ej. IDs nulos), o la operación es inválida para el tipo de Tier List (ej. juego ya no en GameList origen). |  -  |
+|**404** | No encontrado. La Tier List, el ítem a mover, o la sección destino no fueron encontrados, o el usuario no pudo ser verificado. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -628,12 +628,12 @@ const { status, data } = await apiInstance.removeItemFromTierList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**400** | Solicitud incorrecta. No se pueden eliminar ítems de una Tier List de tipo \&#39;FROM_GAMELIST\&#39; a través de este endpoint. |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**200** | Ítem eliminado exitosamente de la Tier List. Devuelve la Tier List completa y actualizada. |  -  |
-|**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**400** | Solicitud incorrecta. No se pueden eliminar ítems de una Tier List de tipo \&#39;FROM_GAMELIST\&#39; a través de este endpoint. |  -  |
 |**404** | No encontrado. La Tier List, o el ítem específico dentro de ella, no fueron encontrados para el usuario actual, o el usuario no pudo ser verificado. |  -  |
+|**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -687,12 +687,12 @@ const { status, data } = await apiInstance.removeSectionFromTierList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**400** | Solicitud incorrecta. No se puede eliminar la sección por defecto \&#39;Juegos por Clasificar\&#39; o se intenta eliminar la última sección personalizable. |  -  |
+|**404** | No encontrado. La Tier List o la sección especificada no fueron encontradas para el usuario actual, o el usuario no pudo ser verificado. |  -  |
 |**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**200** | Sección eliminada exitosamente (e ítems reubicados si aplicable). Devuelve la Tier List completa y actualizada. |  -  |
 |**500** | Error interno del servidor (ej. la sección \&#39;Sin Clasificar\&#39; no se encontró al intentar mover ítems). |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List. |  -  |
-|**404** | No encontrado. La Tier List o la sección especificada no fueron encontradas para el usuario actual, o el usuario no pudo ser verificado. |  -  |
-|**400** | Solicitud incorrecta. No se puede eliminar la sección por defecto \&#39;Juegos por Clasificar\&#39; o se intenta eliminar la última sección personalizable. |  -  |
+|**200** | Sección eliminada exitosamente (e ítems reubicados si aplicable). Devuelve la Tier List completa y actualizada. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -750,11 +750,11 @@ const { status, data } = await apiInstance.updateSectionName(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**500** | Error interno del servidor. |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List o intenta modificar una sección no permitida (ej. la sección \&#39;Sin Clasificar\&#39; si se implementara tal restricción aquí). |  -  |
-|**200** | Nombre de la sección actualizado exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**400** | Datos de entrada inválidos. El nuevo nombre de la sección no cumple las validaciones (ej. vacío o demasiado largo). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**200** | Nombre de la sección actualizado exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 |**404** | No encontrado. La Tier List con el ID público especificado o la sección con el ID interno no fueron encontradas para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -810,12 +810,12 @@ const { status, data } = await apiInstance.updateTierListMetadata(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**200** | Metadatos de la Tier List actualizados exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 |**500** | Error interno del servidor. |  -  |
 |**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;TierListUpdateRequestDTO&#x60; no pasan las validaciones (ej. nombre demasiado largo). |  -  |
 |**403** | Prohibido. El usuario autenticado no es el propietario de la Tier List que intenta modificar. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**404** | No encontrado. La Tier List con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
-|**200** | Metadatos de la Tier List actualizados exitosamente. Devuelve la Tier List completa y actualizada. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
