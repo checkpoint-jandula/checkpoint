@@ -25,15 +25,15 @@ import Footer from '@/components/Footer/Footer.vue';
 .main-content {
   flex-grow: 1;
   padding: 1.5rem;
-  width: 60%;
-  margin: 0 20%;
+  width: 80%;
+  margin: 0 10%;
   padding: 0 2rem;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1324px) {
   .main-content {
-    width: 100%;
-    margin: 0;
+    width: 90%;
+    margin: 0 5%;
     padding: 1rem;
   }
 }

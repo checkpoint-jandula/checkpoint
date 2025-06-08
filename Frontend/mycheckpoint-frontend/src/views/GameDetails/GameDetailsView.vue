@@ -5,12 +5,12 @@
 
     <div v-if="!isLoading && gameDetail && gameDetail.game_info" class="game-content-wrapper">
       <section class="game-main-header section-block">
-        <img 
-          :src="getCoverUrl(gameDetail.game_info.cover, 't_720p', 'mainCover')"
-          :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" 
-          class="game-cover-main" 
-          @error="onImageError" 
-        />
+
+        <img :src="getCoverUrl(gameDetail.game_info.cover, '720p', 'mainCover')"
+          :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" class="game-cover-main" @error="onImageError" />
+
+
+
         <div class="game-title-meta">
           <h1>{{ gameDetail.game_info.name }}</h1>
           <div class="meta-grid">
@@ -22,16 +22,68 @@
               <strong>Lanzamiento:</strong>
               <span>{{ formatTimestampToDate(gameDetail.game_info.first_release_date) }}</span>
             </div>
-            <div v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined" class="meta-item">
+            <div
+              v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
+              class="meta-item">
               <strong>Estado:</strong>
               <span>{{ formatReleaseStatus(gameDetail.game_info.first_release_status) }}</span>
             </div>
             <div v-if="gameDetail.game_info.total_rating" class="meta-item">
-              <strong>Puntuación IGDB:</strong> 
+              <strong>Puntuación IGDB:</strong>
               <span>{{ Math.round(gameDetail.game_info.total_rating) }}/100</span>
-              <small v-if="gameDetail.game_info.total_rating_count"> ({{ gameDetail.game_info.total_rating_count }} votos)</small>
+              <small v-if="gameDetail.game_info.total_rating_count"> ({{ gameDetail.game_info.total_rating_count }}
+                votos)</small>
             </div>
           </div>
+
+          <section class="user-game-data-section " v-if="authStore.isAuthenticated">
+            <div v-if="gameDetail.user_game_data">
+              <h2>Mis Datos del Juego</h2>
+              <div class="user-data-grid">
+                <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{
+                  formatUserGameStatus(gameDetail.user_game_data.status) }}</div>
+                <div v-if="gameDetail.user_game_data.score !== null && gameDetail.user_game_data.score !== undefined"
+                  class="data-item"><strong>Puntuación:</strong> {{ gameDetail.user_game_data.score }}/10</div>
+                <div v-if="gameDetail.user_game_data.personal_platform" class="data-item"><strong>Plataforma:</strong>
+                  {{ formatPersonalPlatform(gameDetail.user_game_data.personal_platform) }}</div>
+                <div
+                  v-if="gameDetail.user_game_data.has_possession !== null && gameDetail.user_game_data.has_possession !== undefined"
+                  class="data-item"><strong>Lo Tengo:</strong> {{ gameDetail.user_game_data.has_possession ? 'Sí' :
+                    'No' }}</div>
+                <div v-if="gameDetail.user_game_data.start_date" class="data-item"><strong>Empezado:</strong> {{
+                  formatDateSimple(gameDetail.user_game_data.start_date) }}</div>
+                <div v-if="gameDetail.user_game_data.end_date" class="data-item"><strong>Terminado:</strong> {{
+                  formatDateSimple(gameDetail.user_game_data.end_date) }}</div>
+                <div v-if="gameDetail.user_game_data.story_duration_hours" class="data-item"><strong>Horas
+                    (Historia):</strong> {{ gameDetail.user_game_data.story_duration_hours }}h</div>
+                <div v-if="gameDetail.user_game_data.story_secondary_duration_hours" class="data-item"><strong>Horas
+                    (Main+Sides):</strong> {{ gameDetail.user_game_data.story_secondary_duration_hours }}h</div>
+                <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas
+                    (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
+                <div v-if="gameDetail.user_game_data.comment" class="data-item full-width"><strong>Comentario
+                    Público:</strong>
+                  <p class="user-comment">{{ gameDetail.user_game_data.comment }}</p>
+                </div>
+                <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario
+                    Privado:</strong>
+                  <p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="library-actions">
+              <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, !gameDetail.user_game_data)"
+                class="action-button primary">
+                {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
+              </button>
+              <button v-if="!showLibraryForm && gameDetail.user_game_data" @click="handleRemoveFromLibrary"
+                :disabled="isLoadingLibraryAction" class="action-button danger">
+                {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
+              </button>
+            </div>
+          </section>
+
           <div class="tags-container header-tags">
             <span v-for="genre in gameDetail.game_info.genres" :key="genre.id" class="tag genre-tag">
               {{ genre.name }}
@@ -42,303 +94,329 @@
           </div>
         </div>
       </section>
+      <div class="column-right">
+        <nav class="tabs-navigation">
+          <button @click="setActiveTab('details')" :class="{ 'active-tab': activeTab === 'details' }">
+            Detalles
+          </button>
+          <button @click="setActiveTab('multimedia')" :class="{ 'active-tab': activeTab === 'multimedia' }">
+            Multimedia
+          </button>
+          <button @click="setActiveTab('related')" :class="{ 'active-tab': activeTab === 'related' }">
+            Contenido Relacionado
+          </button>
+          <button @click="setActiveTab('community')" :class="{ 'active-tab': activeTab === 'community' }">
+            Comunidad y Mis Datos
+          </button>
+        </nav>
 
-      <nav class="tabs-navigation">
-        <button @click="setActiveTab('details')" :class="{ 'active-tab': activeTab === 'details' }">
-          Detalles
-        </button>
-        <button @click="setActiveTab('multimedia')" :class="{ 'active-tab': activeTab === 'multimedia' }">
-          Multimedia
-        </button>
-        <button @click="setActiveTab('related')" :class="{ 'active-tab': activeTab === 'related' }">
-          Contenido Relacionado
-        </button>
-        <button @click="setActiveTab('community')" :class="{ 'active-tab': activeTab === 'community' }">
-          Comunidad y Mis Datos
-        </button>
-      </nav>
+        <div class="tab-content">
+          <div v-show="activeTab === 'details'" class="tab-pane">
 
-      <div class="tab-content">
-        <div v-show="activeTab === 'details'" class="tab-pane">
-          <section class="game-summary section-block" v-if="gameDetail.game_info.summary">
-            <h2>Resumen</h2>
-            <p>{{ gameDetail.game_info.summary }}</p>
-          </section>
+            <section class="screenshots-section section-block"
+              v-if="gameDetail.game_info.screenshots && gameDetail.game_info.screenshots.length">
 
-          <section class="game-storyline section-block" v-if="gameDetail.game_info.storyline">
-            <h2>Argumento</h2>
-            <p>{{ gameDetail.game_info.storyline }}</p>
-          </section>
 
-          <section class="metadata-lists section-block">
-            <div v-if="gameDetail.game_info.platforms && gameDetail.game_info.platforms.length" class="metadata-group">
-              <h3>Plataformas</h3>
-              <div class="tags-container">
-                <span v-for="platform in gameDetail.game_info.platforms" :key="platform.id" class="tag platform-tag">
-                  {{ platform.name }}
-                </span>
-              </div>
-            </div>
-            <div v-if="gameDetail.game_info.game_modes && gameDetail.game_info.game_modes.length" class="metadata-group">
-              <h3>Modos de Juego</h3>
-              <div class="tags-container">
-                <span v-for="mode in gameDetail.game_info.game_modes" :key="mode.id" class="tag mode-tag">
-                  {{ mode.name }}
-                </span>
-              </div>
-            </div>
-            <div v-if="gameDetail.game_info.game_engines && gameDetail.game_info.game_engines.length" class="metadata-group">
-              <h3>Motores Gráficos</h3>
-              <div class="tags-container">
-                <span v-for="engine in gameDetail.game_info.game_engines" :key="engine.id" class="tag engine-tag">
-                  {{ engine.name }}
-                </span>
-              </div>
-            </div>
-             <div v-if="gameDetail.game_info.franchises && gameDetail.game_info.franchises.length" class="metadata-group">
-              <h3>Franquicias</h3>
-              <div class="tags-container">
-                <span v-for="franchise in gameDetail.game_info.franchises" :key="franchise.id" class="tag franchise-tag">
-                  {{ franchise.name }}
-                </span>
-              </div>
-            </div>
-          </section>
+              <div class="carousel-container">
+                <button v-if="gameDetail.game_info.screenshots && gameDetail.game_info.screenshots.length > 1"
+                  @click="prevScreenshot" class="carousel-arrow prev" aria-label="Anterior">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
 
-          <section class="involved-companies-section section-block" v-if="gameDetail.game_info.involved_companies && gameDetail.game_info.involved_companies.length">
-            <h2>Compañías Involucradas</h2>
-            <ul class="companies-list">
-              <li v-for="involvement in gameDetail.game_info.involved_companies" :key="involvement.id" class="company-item">
-                <span class="company-name">{{ involvement.company.name }}</span>
-                <span v-if="getCompanyRoles(involvement)" class="company-roles"> ({{ getCompanyRoles(involvement) }})</span>
-              </li>
-            </ul>
-          </section>
-
-          <section class="keywords-section section-block" v-if="gameDetail.game_info.keywords && gameDetail.game_info.keywords.length">
-            <h2>Palabras Clave</h2>
-            <div class="tags-container">
-              <span v-for="keyword in gameDetail.game_info.keywords" :key="keyword.id" class="tag keyword-tag">
-                {{ keyword.name }}
-              </span>
-            </div>
-          </section>
-
-          <section class="websites-section section-block" v-if="gameDetail.game_info.websites && gameDetail.game_info.websites.length">
-            <h2>Sitios Web</h2>
-            <ul class="websites-list">
-              <li v-for="website in gameDetail.game_info.websites" :key="website.id">
-                <a :href="website.url" target="_blank" rel="noopener noreferrer" class="website-link">
-                  {{ getWebsiteDisplayName(website.url) }}
-                </a>
-              </li>
-            </ul>
-          </section>
-        </div>
-
-        <div v-show="activeTab === 'multimedia'" class="tab-pane">
-          <section class="artworks-section section-block" v-if="gameDetail.game_info.artworks && gameDetail.game_info.artworks.length">
-            <h2>Ilustraciones</h2>
-            <div class="gallery-grid">
-              <div v-for="artwork in gameDetail.game_info.artworks" :key="artwork.id" class="gallery-item">
-                <a :href="getCoverUrl(artwork, 't_original', 'artwork')" target="_blank" rel="noopener noreferrer">
-                  <img :src="getCoverUrl(artwork, 't_screenshot_med', 'artwork')" :alt="`Artwork ${artwork.id}`" class="gallery-image"/> 
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <section class="screenshots-section section-block" v-if="gameDetail.game_info.screenshots && gameDetail.game_info.screenshots.length">
-            <h2>Capturas de Pantalla</h2>
-            <div class="gallery-grid">
-              <div v-for="screenshot in gameDetail.game_info.screenshots" :key="screenshot.id" class="gallery-item">
-                <a :href="getCoverUrl(screenshot, 't_original', 'screenshot')" target="_blank" rel="noopener noreferrer">
-                  <img :src="getCoverUrl(screenshot, 't_screenshot_med', 'screenshot')" :alt="`Screenshot ${screenshot.id}`" class="gallery-image"/>
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <section class="videos-section section-block" v-if="gameDetail.game_info.videos && gameDetail.game_info.videos.length">
-            <h2>Vídeos</h2>
-            <div class="videos-grid">
-              <div v-for="video in gameDetail.game_info.videos" :key="video.id" class="video-item">
-                <h4 class="video-name" v-if="video.name">{{ video.name }}</h4>
-                <div class="video-embed-container" v-if="video.video_id">
-                  <iframe :src="getYouTubeEmbedUrl(video.video_id)" :title="video.name || 'Vídeo del juego'" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-                <p v-else class="no-video-id">ID de vídeo no disponible.</p>
-              </div>
-            </div>
-          </section>
-        </div>
-        
-        <div v-show="activeTab === 'related'" class="tab-pane">
-          <section class="related-content-section section-block">
-            <div class="related-list" v-if="gameDetail.game_info.parent_game">
-              <h3>Juego Principal</h3>
-              <div class="related-games-grid single-item-grid">
-                  <div class="related-game-card">
-                      <RouterLink :to="{ name: 'game-details', params: { igdbId: gameDetail.game_info.parent_game.id } }">
-                          <img :src="getCoverUrl(gameDetail.game_info.parent_game.cover, 't_cover_small', 'relatedCover')" :alt="gameDetail.game_info.parent_game.name" class="related-game-cover" @error="onImageErrorSmall" />
-                          <span class="related-game-name">{{ gameDetail.game_info.parent_game.name }}</span>
-                      </RouterLink>
+                <div class="carousel-viewport" ref="carouselViewportRef">
+                  <div class="carousel-slider" :style="carouselSliderStyle">
+                    <div v-for="(screenshot, index) in gameDetail.game_info.screenshots" :key="screenshot.id"
+                      class="carousel-item">
+                      <img :src="getCoverUrl(screenshot, 'screenshot_med')" :alt="`Screenshot ${screenshot.id}`"
+                        class="gallery-image clickable"
+                        @click="openLightbox(gameDetail.game_info.screenshots, index)" />
+                    </div>
                   </div>
-              </div>
-            </div>
-            <div class="related-list" v-if="gameDetail.game_info.version_parent">
-              <h3>Versión Principal</h3>
-               <div class="related-games-grid single-item-grid">
-                  <div class="related-game-card">
-                      <RouterLink :to="{ name: 'game-details', params: { igdbId: gameDetail.game_info.version_parent.id } }">
-                          <img :src="getCoverUrl(gameDetail.game_info.version_parent.cover, 't_cover_small', 'relatedCover')" :alt="gameDetail.game_info.version_parent.name" class="related-game-cover" @error="onImageErrorSmall" />
-                          <span class="related-game-name">{{ gameDetail.game_info.version_parent.name }}</span>
-                      </RouterLink>
-                  </div>
-              </div>
-            </div>
-
-            <div class="related-list" v-if="gameDetail.game_info.dlcs && gameDetail.game_info.dlcs.length">
-              <h3>DLCs</h3>
-              <div class="related-games-grid">
-                <div v-for="dlc in gameDetail.game_info.dlcs" :key="dlc.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: dlc.id } }">
-                    <img :src="getCoverUrl(dlc.cover, 't_cover_small', 'relatedCover')" :alt="dlc.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ dlc.name }}</span>
-                  </RouterLink>
                 </div>
-              </div>
-            </div>
-            
-            <div class="related-list" v-if="gameDetail.game_info.expansions && gameDetail.game_info.expansions.length">
-              <h3>Expansiones</h3>
-              <div class="related-games-grid">
-                <div v-for="expansion in gameDetail.game_info.expansions" :key="expansion.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: expansion.id } }">
-                    <img :src="getCoverUrl(expansion.cover, 't_cover_small', 'relatedCover')" :alt="expansion.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ expansion.name }}</span>
-                  </RouterLink>
-                </div>
-              </div>
-            </div>
 
-            <div class="related-list" v-if="gameDetail.game_info.bundles && gameDetail.game_info.bundles.length">
-              <h3>Paquetes (Bundles)</h3>
-              <div class="related-games-grid">
-                <div v-for="bundleItem in gameDetail.game_info.bundles" :key="bundleItem.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: bundleItem.id } }">
-                    <img :src="getCoverUrl(bundleItem.cover, 't_cover_small', 'relatedCover')" :alt="bundleItem.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ bundleItem.name }}</span>
-                  </RouterLink>
-                </div>
+                <button v-if="gameDetail.game_info.screenshots && gameDetail.game_info.screenshots.length > 1"
+                  @click="nextScreenshot" class="carousel-arrow next" aria-label="Siguiente">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
               </div>
-            </div>
-
-            <div class="related-list" v-if="gameDetail.game_info.remakes && gameDetail.game_info.remakes.length">
-              <h3>Remakes</h3>
-              <div class="related-games-grid">
-                <div v-for="remake in gameDetail.game_info.remakes" :key="remake.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: remake.id } }">
-                    <img :src="getCoverUrl(remake.cover, 't_cover_small', 'relatedCover')" :alt="remake.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ remake.name }}</span>
-                  </RouterLink>
-                </div>
-              </div>
-            </div>
-
-            <div class="related-list" v-if="gameDetail.game_info.remasters && gameDetail.game_info.remasters.length">
-              <h3>Remasters</h3>
-              <div class="related-games-grid">
-                <div v-for="remaster in gameDetail.game_info.remasters" :key="remaster.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: remaster.id } }">
-                    <img :src="getCoverUrl(remaster.cover, 't_cover_small', 'relatedCover')" :alt="remaster.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ remaster.name }}</span>
-                  </RouterLink>
-                </div>
-              </div>
-            </div>
-            
-            <div class="related-list" v-if="gameDetail.game_info.similar_games && gameDetail.game_info.similar_games.length">
-              <h3>Juegos Similares</h3>
-              <div class="related-games-grid">
-                <div v-for="similarGame in gameDetail.game_info.similar_games" :key="similarGame.id" class="related-game-card">
-                  <RouterLink :to="{ name: 'game-details', params: { igdbId: similarGame.id } }">
-                    <img :src="getCoverUrl(similarGame.cover, 't_cover_small', 'relatedCover')" :alt="similarGame.name" class="related-game-cover" @error="onImageErrorSmall" />
-                    <span class="related-game-name">{{ similarGame.name }}</span>
-                  </RouterLink>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div v-show="activeTab === 'community'" class="tab-pane">
-          <section 
-            class="user-game-data-section section-block" 
-            v-if="authStore.isAuthenticated"
-          >
-            <div v-if="gameDetail.user_game_data">
-              <h2>Mis Datos del Juego</h2>
-              <div class="user-data-grid">
-                  <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{ formatUserGameStatus(gameDetail.user_game_data.status) }}</div>
-                  <div v-if="gameDetail.user_game_data.score !== null && gameDetail.user_game_data.score !== undefined" class="data-item"><strong>Puntuación:</strong> {{ gameDetail.user_game_data.score }}/10</div>
-                  <div v-if="gameDetail.user_game_data.personal_platform" class="data-item"><strong>Plataforma:</strong> {{ formatPersonalPlatform(gameDetail.user_game_data.personal_platform) }}</div>
-                  <div v-if="gameDetail.user_game_data.has_possession !== null && gameDetail.user_game_data.has_possession !== undefined " class="data-item"><strong>Lo Tengo:</strong> {{ gameDetail.user_game_data.has_possession ? 'Sí' : 'No' }}</div>
-                  <div v-if="gameDetail.user_game_data.start_date" class="data-item"><strong>Empezado:</strong> {{ formatDateSimple(gameDetail.user_game_data.start_date) }}</div>
-                  <div v-if="gameDetail.user_game_data.end_date" class="data-item"><strong>Terminado:</strong> {{ formatDateSimple(gameDetail.user_game_data.end_date) }}</div>
-                  <div v-if="gameDetail.user_game_data.story_duration_hours" class="data-item"><strong>Horas (Historia):</strong> {{ gameDetail.user_game_data.story_duration_hours }}h</div>
-                  <div v-if="gameDetail.user_game_data.story_secondary_duration_hours" class="data-item"><strong>Horas (Main+Sides):</strong> {{ gameDetail.user_game_data.story_secondary_duration_hours }}h</div>
-                  <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
-                  <div v-if="gameDetail.user_game_data.comment" class="data-item full-width"><strong>Comentario Público:</strong><p class="user-comment">{{ gameDetail.user_game_data.comment }}</p></div>
-                  <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario Privado:</strong><p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p></div>
-              </div>
-            </div>
-            <div v-else-if="!showLibraryForm" class="add-to-library-prompt"> <p>Este juego no está en tu biblioteca.</p>
-            </div>
-
-            <div class="library-actions">
-              <button 
-                v-if="!showLibraryForm" 
-                @click="toggleLibraryForm(true, !gameDetail.user_game_data)" 
-                class="action-button primary"
-              >
-                {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
-              </button>
-              <button 
-                v-if="!showLibraryForm && gameDetail.user_game_data" 
-                @click="handleRemoveFromLibrary" 
-                :disabled="isLoadingLibraryAction" 
-                class="action-button danger"
-              >
-                {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
-              </button>
-            </div>
             </section>
 
-          <section class="public-comments-section section-block" v-if="gameDetail.public_comments && gameDetail.public_comments.length">
-            <h2>Comentarios de la Comunidad</h2>
-            <ul class="comments-list">
-              <li v-for="comment in gameDetail.public_comments" :key="comment.username + comment.comment_date" class="comment-item">
-                <strong class="comment-author">{{ comment.username }}</strong>
-                <small class="comment-date"> ({{ formatTimestampToDate(comment.comment_date) }})</small> 
-                <p class="comment-text">{{ comment.comment_text }}</p>
-              </li>
-            </ul>
-          </section>
-          <section v-else class="public-comments-section section-block">
-             <h2>Comentarios de la Comunidad</h2>
-            <p>Aún no hay comentarios para este juego.</p>
-          </section>
+
+            <!--
+            <section class="game-summary section-block" v-if="gameDetail.game_info.summary">
+              <h2>Resumen</h2>
+              <p>{{ gameDetail.game_info.summary }}</p>
+            </section>
+            -->
+
+            <section class="game-storyline section-block" v-if="gameDetail.game_info.storyline">
+              <h2>Argumento</h2>
+              <p>{{ gameDetail.game_info.storyline }}</p>
+            </section>
+
+            <section class="metadata-lists section-block">
+              <div v-if="gameDetail.game_info.platforms && gameDetail.game_info.platforms.length"
+                class="metadata-group">
+                <h3>Plataformas</h3>
+                <div class="tags-container">
+                  <span v-for="platform in gameDetail.game_info.platforms" :key="platform.id" class="tag platform-tag">
+                    {{ platform.name }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="gameDetail.game_info.game_modes && gameDetail.game_info.game_modes.length"
+                class="metadata-group">
+                <h3>Modos de Juego</h3>
+                <div class="tags-container">
+                  <span v-for="mode in gameDetail.game_info.game_modes" :key="mode.id" class="tag mode-tag">
+                    {{ mode.name }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="gameDetail.game_info.game_engines && gameDetail.game_info.game_engines.length"
+                class="metadata-group">
+                <h3>Motores Gráficos</h3>
+                <div class="tags-container">
+                  <span v-for="engine in gameDetail.game_info.game_engines" :key="engine.id" class="tag engine-tag">
+                    {{ engine.name }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="gameDetail.game_info.franchises && gameDetail.game_info.franchises.length"
+                class="metadata-group">
+                <h3>Franquicias</h3>
+                <div class="tags-container">
+                  <span v-for="franchise in gameDetail.game_info.franchises" :key="franchise.id"
+                    class="tag franchise-tag">
+                    {{ franchise.name }}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section class="involved-companies-section section-block"
+              v-if="gameDetail.game_info.involved_companies && gameDetail.game_info.involved_companies.length">
+              <h2>Compañías Involucradas</h2>
+              <ul class="companies-list">
+                <li v-for="involvement in gameDetail.game_info.involved_companies" :key="involvement.id"
+                  class="company-item">
+                  <span class="company-name">{{ involvement.company.name }}</span>
+                  <span v-if="getCompanyRoles(involvement)" class="company-roles"> ({{ getCompanyRoles(involvement)
+                  }})</span>
+                </li>
+              </ul>
+            </section>
+
+            <section class="keywords-section section-block"
+              v-if="gameDetail.game_info.keywords && gameDetail.game_info.keywords.length">
+              <h2>Palabras Clave</h2>
+              <div class="tags-container">
+                <span v-for="keyword in gameDetail.game_info.keywords" :key="keyword.id" class="tag keyword-tag">
+                  {{ keyword.name }}
+                </span>
+              </div>
+            </section>
+
+            <section class="websites-section section-block"
+              v-if="gameDetail.game_info.websites && gameDetail.game_info.websites.length">
+              <h2>Sitios Web</h2>
+              <ul class="websites-list">
+                <li v-for="website in gameDetail.game_info.websites" :key="website.id">
+                  <a :href="website.url" target="_blank" rel="noopener noreferrer" class="website-link">
+                    {{ getWebsiteDisplayName(website.url) }}
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <div v-show="activeTab === 'multimedia'" class="tab-pane">
+            <section class="artworks-section section-block"
+              v-if="gameDetail.game_info.artworks && gameDetail.game_info.artworks.length">
+              <h2>Ilustraciones</h2>
+              <div class="gallery-grid">
+                <div v-for="(artwork, index) in gameDetail.game_info.artworks" :key="artwork.id" class="gallery-item">
+                  <img :src="getCoverUrl(artwork, '720p')" class="gallery-image clickable"
+                    @click="openLightbox(gameDetail.game_info.artworks, index)" />
+                </div>
+              </div>
+            </section>
+
+
+
+            <section class="videos-section section-block"
+              v-if="gameDetail.game_info.videos && gameDetail.game_info.videos.length">
+              <h2>Vídeos</h2>
+              <div class="videos-grid">
+                <div v-for="video in gameDetail.game_info.videos" :key="video.id" class="video-item">
+                  <h4 class="video-name" v-if="video.name">{{ video.name }}</h4>
+                  <div class="video-embed-container" v-if="video.video_id">
+                    <iframe :src="getYouTubeEmbedUrl(video.video_id)" :title="video.name || 'Vídeo del juego'"
+                      frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowfullscreen></iframe>
+                  </div>
+                  <p v-else class="no-video-id">ID de vídeo no disponible.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div v-show="activeTab === 'related'" class="tab-pane">
+            <section class="related-content-section section-block">
+              <div class="related-list" v-if="gameDetail.game_info.parent_game">
+                <h3>Juego Principal</h3>
+                <div class="related-games-grid single-item-grid">
+                  <div class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: gameDetail.game_info.parent_game.id } }">
+                      <img :src="getCoverUrl(gameDetail.game_info.parent_game.cover, '720p', 'relatedCover')"
+                        :alt="gameDetail.game_info.parent_game.name" class="related-game-cover"
+                        @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ gameDetail.game_info.parent_game.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+              <div class="related-list" v-if="gameDetail.game_info.version_parent">
+                <h3>Versión Principal</h3>
+                <div class="related-games-grid single-item-grid">
+                  <div class="related-game-card">
+                    <RouterLink
+                      :to="{ name: 'game-details', params: { igdbId: gameDetail.game_info.version_parent.id } }">
+                      <img :src="getCoverUrl(gameDetail.game_info.version_parent.cover, '720p', 'relatedCover')"
+                        :alt="gameDetail.game_info.version_parent.name" class="related-game-cover"
+                        @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ gameDetail.game_info.version_parent.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list" v-if="gameDetail.game_info.dlcs && gameDetail.game_info.dlcs.length">
+                <h3>DLCs</h3>
+                <div class="related-games-grid">
+                  <div v-for="dlc in gameDetail.game_info.dlcs" :key="dlc.id" class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: dlc.id } }">
+                      <img :src="getCoverUrl(dlc.cover, '720p', 'relatedCover')" :alt="dlc.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ dlc.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list"
+                v-if="gameDetail.game_info.expansions && gameDetail.game_info.expansions.length">
+                <h3>Expansiones</h3>
+                <div class="related-games-grid">
+                  <div v-for="expansion in gameDetail.game_info.expansions" :key="expansion.id"
+                    class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: expansion.id } }">
+                      <img :src="getCoverUrl(expansion.cover, '720p', 'relatedCover')" :alt="expansion.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ expansion.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list" v-if="gameDetail.game_info.bundles && gameDetail.game_info.bundles.length">
+                <h3>Paquetes (Bundles)</h3>
+                <div class="related-games-grid">
+                  <div v-for="bundleItem in gameDetail.game_info.bundles" :key="bundleItem.id"
+                    class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: bundleItem.id } }">
+                      <img :src="getCoverUrl(bundleItem.cover, '720p', 'relatedCover')" :alt="bundleItem.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ bundleItem.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list" v-if="gameDetail.game_info.remakes && gameDetail.game_info.remakes.length">
+                <h3>Remakes</h3>
+                <div class="related-games-grid">
+                  <div v-for="remake in gameDetail.game_info.remakes" :key="remake.id" class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: remake.id } }">
+                      <img :src="getCoverUrl(remake.cover, '720p', 'relatedCover')" :alt="remake.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ remake.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list" v-if="gameDetail.game_info.remasters && gameDetail.game_info.remasters.length">
+                <h3>Remasters</h3>
+                <div class="related-games-grid">
+                  <div v-for="remaster in gameDetail.game_info.remasters" :key="remaster.id" class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: remaster.id } }">
+                      <img :src="getCoverUrl(remaster.cover, '720p', 'relatedCover')" :alt="remaster.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ remaster.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+
+              <div class="related-list"
+                v-if="gameDetail.game_info.similar_games && gameDetail.game_info.similar_games.length">
+                <h3>Juegos Similares</h3>
+                <div class="related-games-grid">
+                  <div v-for="similarGame in gameDetail.game_info.similar_games" :key="similarGame.id"
+                    class="related-game-card">
+                    <RouterLink :to="{ name: 'game-details', params: { igdbId: similarGame.id } }">
+                      <img :src="getCoverUrl(similarGame.cover, '720p', 'relatedCover')" :alt="similarGame.name"
+                        class="related-game-cover" @error="onImageErrorSmall" />
+                      <span class="related-game-name">{{ similarGame.name }}</span>
+                    </RouterLink>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div v-show="activeTab === 'community'" class="tab-pane">
+
+
+            <section class="public-comments-section section-block"
+              v-if="gameDetail.public_comments && gameDetail.public_comments.length">
+              <h2>Comentarios de la Comunidad</h2>
+              <ul class="comments-list">
+                <li v-for="comment in gameDetail.public_comments" :key="comment.username + comment.comment_date"
+                  class="comment-item">
+                  <strong class="comment-author">{{ comment.username }}</strong>
+                  <small class="comment-date"> ({{ formatTimestampToDate(comment.comment_date) }})</small>
+                  <p class="comment-text">{{ comment.comment_text }}</p>
+                </li>
+              </ul>
+            </section>
+            <section v-else class="public-comments-section section-block">
+              <h2>Comentarios de la Comunidad</h2>
+              <p>Aún no hay comentarios para este juego.</p>
+            </section>
+          </div>
         </div>
       </div>
 
-    </div> <div v-if="showLibraryForm" class="modal-overlay" @click.self="toggleLibraryForm(false, false)"> <div class="modal-panel">
+    </div>
+    <div v-if="showLibraryForm" class="modal-overlay" @click.self="toggleLibraryForm(false, false)">
+      <div class="modal-panel">
         <form @submit.prevent="handleSaveToLibrary" class="library-form-modal">
           <div class="modal-header">
-            <h3>{{ isAddingNewLibraryEntry ? 'Añadir a' : 'Editar en' }} Mi Biblioteca: {{ gameDetail?.game_info?.name }}</h3>
-            <button type="button" @click="toggleLibraryForm(false, false)" class="modal-close-button" aria-label="Cerrar">&times;</button>
+            <h3>{{ isAddingNewLibraryEntry ? 'Añadir a' : 'Editar en' }} Mi Biblioteca: {{ gameDetail?.game_info?.name
+            }}</h3>
+            <button type="button" @click="toggleLibraryForm(false, false)" class="modal-close-button"
+              aria-label="Cerrar">&times;</button>
           </div>
-          
+
           <div class="modal-body">
             <div class="form-grid">
               <div class="form-group">
@@ -356,7 +434,8 @@
                 <label for="lib-platform">Plataforma Personal:</label>
                 <select id="lib-platform" v-model="libraryForm.personal_platform">
                   <option :value="null">-- Sin especificar --</option>
-                  <option v-for="opt in personalPlatformOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+                  <option v-for="opt in personalPlatformOptions" :key="opt.value" :value="opt.value">{{ opt.text }}
+                  </option>
                 </select>
               </div>
               <div class="form-group checkbox-group">
@@ -377,11 +456,13 @@
               </div>
               <div class="form-group">
                 <label for="lib-hours-sides">Horas (Main+Sides):</label>
-                <input type="number" id="lib-hours-sides" v-model.number="libraryForm.story_secondary_duration_hours" min="0" />
+                <input type="number" id="lib-hours-sides" v-model.number="libraryForm.story_secondary_duration_hours"
+                  min="0" />
               </div>
               <div class="form-group">
                 <label for="lib-hours-completionist">Horas (Completista):</label>
-                <input type="number" id="lib-hours-completionist" v-model.number="libraryForm.completionist_duration_hours" min="0" />
+                <input type="number" id="lib-hours-completionist"
+                  v-model.number="libraryForm.completionist_duration_hours" min="0" />
               </div>
             </div>
             <div class="form-group full-width-form-group">
@@ -393,12 +474,14 @@
               <textarea id="lib-private-comment" v-model="libraryForm.private_comment" rows="3"></textarea>
             </div>
           </div>
-          
+
           <div class="modal-footer">
-            <div v-if="libraryActionMessage" :class="libraryActionError ? 'error-message' : 'success-message'" class="action-message modal-action-message">
+            <div v-if="libraryActionMessage" :class="libraryActionError ? 'error-message' : 'success-message'"
+              class="action-message modal-action-message">
               {{ libraryActionMessage }}
             </div>
-            <button type="button" @click="toggleLibraryForm(false, false)" class="action-button secondary" :disabled="isLoadingLibraryAction">
+            <button type="button" @click="toggleLibraryForm(false, false)" class="action-button secondary"
+              :disabled="isLoadingLibraryAction">
               Cancelar
             </button>
             <button type="submit" :disabled="isLoadingLibraryAction" class="action-button primary">
@@ -408,20 +491,134 @@
         </form>
       </div>
     </div>
-    
+
+
+
     <div v-if="!isLoading && !gameDetail && !errorMessage" class="no-results-message">
       No se pudieron cargar los detalles del juego.
     </div>
+  </div>
+
+
+  <div v-if="showLightbox && currentImage" class="lightbox-overlay" @click.self="closeLightbox">
+
+    <button v-if="currentGallery.length > 1" @click.stop="prevImage" class="nav-arrow prev"
+      aria-label="Imagen anterior">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+
+    <div class="lightbox-content">
+      <button @click="closeLightbox" class="lightbox-close" aria-label="Cerrar">
+        <p>x</p>
+      </button>
+      <img :src="getCoverUrl(currentImage, '1080p')"
+        :alt="`Imagen ampliada ${currentIndex + 1} de ${currentGallery.length}`" class="lightbox-image" />
+    </div>
+
+    <button v-if="currentGallery.length > 1" @click.stop="nextImage" class="nav-arrow next"
+      aria-label="Siguiente imagen">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
-import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary  } from '@/services/apiInstances.js';
+import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary } from '@/services/apiInstances.js';
 import { useAuthStore } from '@/stores/authStore.js';
 import defaultGameCoverLarge from '@/assets/img/default-game-cover-large.png'; // Placeholder para portada principal
 import defaultRelatedCover from '@/assets/img/default-related-cover.png'; // Placeholder para portadas pequeñas
+
+const screenshotCarouselIndex = ref(0);
+
+
+const nextScreenshot = () => {
+  // Aseguramos que tenemos un array de screenshots con elementos
+  const screenshots = gameDetail.value?.game_info?.screenshots;
+  if (!screenshots || screenshots.length === 0) {
+    return;
+  }
+
+  const totalImages = screenshots.length;
+  // Usamos el operador de módulo (%) para crear el bucle infinito.
+  // Si estamos en la última imagen (índice 4 de 5), (4 + 1) % 5 = 0. Vuelve al inicio.
+  screenshotCarouselIndex.value = (screenshotCarouselIndex.value + 1) % totalImages;
+};
+
+
+const prevScreenshot = () => {
+  // Aseguramos que tenemos un array de screenshots con elementos
+  const screenshots = gameDetail.value?.game_info?.screenshots;
+  if (!screenshots || screenshots.length === 0) {
+    return;
+  }
+
+  const totalImages = screenshots.length;
+  // La fórmula para retroceder es un poco diferente para evitar números negativos.
+  // Si estamos en el inicio (índice 0), (0 - 1 + 5) % 5 = 4. Salta al final.
+  screenshotCarouselIndex.value = (screenshotCarouselIndex.value - 1 + totalImages) % totalImages;
+};
+
+// AÑADE ESTA PROPIEDAD COMPUTADA para calcular el estilo 'transform' dinámicamente
+// Esto es lo que crea el efecto de "desplazamiento"
+const carouselSliderStyle = computed(() => {
+  // Asumimos que cada imagen + margen ocupa 400px. Ajusta este valor si cambias el CSS.
+  const itemWidth = 420; // Corresponde a 400px de ancho + 20px de gap
+  const moveDistance = -screenshotCarouselIndex.value * itemWidth;
+  return {
+    transform: `translateX(${moveDistance}px)`
+  };
+});
+
+const showLightbox = ref(false);
+const currentGallery = ref([]); // Guardará el array de la galería activa (artworks o screenshots)
+const currentIndex = ref(0);
+
+const currentImage = computed(() => {
+  if (currentGallery.value.length > 0) {
+    return currentGallery.value[currentIndex.value];
+  }
+  return null;
+});
+
+const openLightbox = (gallery, index) => {
+  currentGallery.value = gallery;
+  currentIndex.value = index;
+  showLightbox.value = true;
+  document.body.style.overflow = 'hidden';
+};
+
+// MODIFICA tu función 'closeLightbox' para que reinicie el nuevo estado.
+const closeLightbox = () => {
+  showLightbox.value = false;
+  document.body.style.overflow = '';
+  // Reseteamos la galería para liberar memoria
+  currentGallery.value = [];
+  currentIndex.value = 0;
+};
+
+// AÑADE estas dos nuevas funciones para la navegación.
+const nextImage = () => {
+  if (currentGallery.value.length > 0) {
+    // Si es la última imagen, vuelve a la primera (efecto carrusel)
+    currentIndex.value = (currentIndex.value + 1) % currentGallery.value.length;
+  }
+};
+
+const prevImage = () => {
+  if (currentGallery.value.length > 0) {
+    // Si es la primera, va a la última
+    currentIndex.value = (currentIndex.value - 1 + currentGallery.value.length) % currentGallery.value.length;
+  }
+};
+
+
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -446,6 +643,8 @@ const loadGameDetails = async (id) => {
     const response = await fetchGameDetailsByIgdbId(Number(id));
     gameDetail.value = response.data;
     console.log("Detalles del juego recibidos:", gameDetail.value);
+    console.log("DATOS DE ARTWORKS:", gameDetail.value.game_info.artworks);
+    console.log("DATOS DE SCREENSHOTS:", gameDetail.value.game_info.screenshots);
   } catch (error) {
     console.error(`Error cargando detalles del juego (ID: ${id}):`, error);
     if (error.response) {
@@ -477,53 +676,42 @@ watch(() => route.params.igdbId, (newId) => {
   }
 });
 
-const getCoverUrl = (coverInfo, isMainCover = false) => {
-  const placeholder = isMainCover ? defaultGameCoverLarge : defaultRelatedCover;
+const getCoverUrl = (imageInfo, size = 'cover_small') => {
+  // Decide qué placeholder usar basado en el tamaño solicitado.
+  const isSmall = size.includes('small') || size.includes('thumb');
+  const placeholder = isSmall ? defaultRelatedCover : defaultGameCoverLarge;
 
-  if (coverInfo && typeof coverInfo.url === 'string' && coverInfo.url.trim() !== '') {
-    let imageUrl = coverInfo.url;
+  if (imageInfo && typeof imageInfo.url === 'string' && imageInfo.url.trim() !== '') {
+    let imageUrl = imageInfo.url;
 
-    // 1. Asegurar el protocolo HTTPS si la URL empieza con //
+    // 1. Aseguramos el protocolo HTTPS
     if (imageUrl.startsWith('//')) {
       imageUrl = `https:${imageUrl}`;
     }
 
-    // 2. Intentar cambiar el tamaño de la imagen.
-    // Para la portada principal, queremos un tamaño grande.
-    // Para las relacionadas, uno más pequeño.
-    const targetSize = isMainCover ? 't_cover_big' : 't_cover_small'; // O 't_720p' para principal, 't_thumb' o 't_cover_small' para relacionadas.
+    // 2. Lógica central para cambiar el tamaño
+    const sizePattern = /\/t_[a-zA-Z0-9_]+\//;
 
-    // Lista de tamaños pequeños comunes que podríamos querer reemplazar
-    const smallSizes = ['/t_thumb/', '/t_cover_small/', '/t_micro/', '/t_logo_med/'];
-    let replaced = false;
-
-    for (const smallSize of smallSizes) {
-      if (imageUrl.includes(smallSize)) {
-        imageUrl = imageUrl.replace(smallSize, `/${targetSize}/`);
-        replaced = true;
-        break;
-      }
+    // Si pedimos el tamaño original, simplemente quitamos el especificador de tamaño
+    if (size === 'original') {
+      return imageUrl.replace(sizePattern, '/');
     }
 
-    // Si no se reemplazó ningún tamaño pequeño (ej. la URL ya tiene un tamaño grande o es un formato diferente)
-    // y *no* es la imagen principal, podríamos querer forzar un tamaño más pequeño si la URL parece ser de una imagen original muy grande.
-    // Pero esto es más complejo. Por ahora, si no se reemplaza, usamos la URL como está.
-    // Si es la imagen principal y queremos asegurar un tamaño grande específico (y no es ya uno), podríamos añadir lógica,
-    // pero el reemplazo de los pequeños a 't_cover_big' o 't_720p' suele ser suficiente.
-    // Si es la imagen principal y queremos 't_720p' y la original no tenía un especificador de tamaño:
-    if (isMainCover && !replaced && !imageUrl.includes(`/${targetSize}/`) && targetSize === 't_720p') {
-      // Esto es más especulativo: si la URL es de tipo /upload/IMAGE_ID.jpg
-      // podríamos intentar insertar /t_720p/.
-      // Ejemplo: imageUrl.replace('/upload/', '/upload/t_720p/');
-      // Pero por ahora, nos enfocaremos en reemplazar tamaños conocidos.
+    // Si la URL ya tiene un tamaño, lo reemplazamos por el que queremos
+    if (imageUrl.match(sizePattern)) {
+      return imageUrl.replace(sizePattern, `/t_${size}/`);
     }
 
+    // Si no tenía tamaño, intentamos insertarlo (típico de IGDB)
+    if (imageUrl.includes('/upload/')) {
+      return imageUrl.replace('/upload/', `/upload/t_${size}/`);
+    }
 
-    // console.log(`getCoverUrl: URL procesada para ${isMainCover ? 'principal' : 'relacionada'}: ${imageUrl}`);
+    // Si no se pudo modificar, devolvemos la URL tal cual
     return imageUrl;
   }
 
-  // console.warn(`getCoverUrl: Devolviendo placeholder para ${isMainCover ? 'principal' : 'relacionada'}. CoverInfo:`, coverInfo);
+  // Si no hay imageInfo o URL, devolvemos el placeholder correspondiente
   return placeholder;
 };
 
@@ -571,10 +759,22 @@ const getWebsiteDisplayName = (urlString) => {
   }
 };
 
-const getYouTubeEmbedUrl = (videoId) => {
+const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   if (!videoId) return '';
-  return `https://www.youtube.com/embed/${videoId}`;
+  let url = `https://www.youtube.com/embed/${videoId}`;
+  if (autoplay) {
+    url += '?autoplay=1&rel=0';
+  }
+  return url;
 };
+
+
+
+const getYouTubeThumbnailUrl = (videoId, quality = 'hqdefault') => {
+  if (!videoId) return defaultRelatedCover; // Placeholder
+  return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
+};
+
 
 const formatGameType = (gameType) => {
   if (!gameType) return 'No especificado';
@@ -625,7 +825,7 @@ const getCompanyRoles = (involvedCompany) => {
   if (involvedCompany.publisher) roles.push('Editor'); //
   if (involvedCompany.porting) roles.push('Porting'); //
   if (involvedCompany.supporting) roles.push('Soporte'); //
-  
+
   return roles.join(', ');
 };
 
@@ -647,8 +847,8 @@ const formatReleaseStatus = (statusCode) => {
     "7": "Rumoreado",
     // Los valores 1 (Offline IGDB), 8 (Custom/Fanmade) no están en tu DTO para first_release_status,
     // pero los añado por si acaso o para GameStatusDto.id
-    "1": "Offline (IGDB)", 
-    "8": "Custom/Fanmade (No oficial)" 
+    "1": "Offline (IGDB)",
+    "8": "Custom/Fanmade (No oficial)"
   };
 
   return statusMap[String(statusCode)] || `Estado Desconocido (${statusCode})`;
@@ -699,7 +899,7 @@ const formatDateSimple = (dateString) => {
   if (!dateString) return '';
   // Asumiendo que dateString es YYYY-MM-DD
   // Si necesitas un formato diferente, puedes usar new Date(dateString).toLocaleDateString(...)
-  return dateString; 
+  return dateString;
 };
 
 // --- NUEVO ESTADO para el formulario de la biblioteca ---
@@ -788,7 +988,7 @@ const handleSaveToLibrary = async () => {
   });
   if (dto.start_date === '') dto.start_date = null;
   if (dto.end_date === '') dto.end_date = null;
-  
+
   // Crear un objeto DTO limpio solo con los campos que tienen valor o son booleanos
   const cleanDto = {};
   let hasDataToSend = false;
@@ -801,26 +1001,26 @@ const handleSaveToLibrary = async () => {
       // hasDataToSend = true; // Un booleano por sí solo puede no ser un "cambio" si es el default
     } else if (dto[key] === null && gameDetail.value?.user_game_data?.[key] !== undefined) {
       // Si el campo existía y ahora es null, enviamos null para borrarlo en el backend si así se desea.
-      cleanDto[key] = null; 
+      cleanDto[key] = null;
       hasDataToSend = true;
     }
   }
   // Asegurar que has_possession se envíe si es el único campo
-   if (Object.keys(cleanDto).length === 0 && typeof dto.has_possession === 'boolean'){
-       cleanDto.has_possession = dto.has_possession;
-       // No marcamos hasDataToSend = true aquí necesariamente,
-       // el backend debe poder manejar un DTO solo con has_possession.
-       // O, podríamos necesitar al menos un status para crear una nueva entrada.
-   }
-    // Si es una nueva entrada y no se ha especificado nada, ¿qué enviar?
-    // Por ahora, si cleanDto está vacío, podríamos no enviar nada o enviar un DTO por defecto.
-    // Tu UserGameDataDTO tiene todos los campos como opcionales.
+  if (Object.keys(cleanDto).length === 0 && typeof dto.has_possession === 'boolean') {
+    cleanDto.has_possession = dto.has_possession;
+    // No marcamos hasDataToSend = true aquí necesariamente,
+    // el backend debe poder manejar un DTO solo con has_possession.
+    // O, podríamos necesitar al menos un status para crear una nueva entrada.
+  }
+  // Si es una nueva entrada y no se ha especificado nada, ¿qué enviar?
+  // Por ahora, si cleanDto está vacío, podríamos no enviar nada o enviar un DTO por defecto.
+  // Tu UserGameDataDTO tiene todos los campos como opcionales.
 
   try {
     console.log("Enviando a la biblioteca (add/update):", cleanDto, "para igdbId:", igdbId.value);
     const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), cleanDto);
     if (gameDetail.value) {
-        gameDetail.value.user_game_data = response.data;
+      gameDetail.value.user_game_data = response.data;
     }
     libraryActionMessage.value = '¡Juego guardado en tu biblioteca!';
     libraryActionError.value = false;
@@ -858,6 +1058,12 @@ const handleRemoveFromLibrary = async () => {
     isLoadingLibraryAction.value = false;
   }
 };
+
+
+
+
+
+
 
 </script>
 

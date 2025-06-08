@@ -141,12 +141,12 @@
   color: var(--color-text); /* */
 }
 
-.error-message { 
+/*.error-message { 
   color: #d8000c; 
   background-color: #ffbaba; 
   border: 1px solid #d8000c; 
   border-radius: 4px; 
-}
+}*/
 
 .profile-content-wrapper { /* Renombrado desde profile-content para claridad */
   /* Contenedor principal para el contenido del perfil debajo de mensajes de carga/error */

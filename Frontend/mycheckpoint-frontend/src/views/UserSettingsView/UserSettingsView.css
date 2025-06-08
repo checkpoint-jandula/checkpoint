@@ -21,9 +21,9 @@
     padding-bottom: 0.5rem;
 }
 
-.form-group {
+/*.form-group {
     margin-bottom: 1rem;
-}
+}*/
 
 .form-group label {
     display: block;
@@ -88,13 +88,13 @@ button:disabled {
     cursor: not-allowed;
 }
 
-.error-message,
+/*.error-message,
 .success-message {
     margin-top: 1rem;
     padding: 1rem;
     border-radius: 4px;
     text-align: center;
-}
+}*/
 
 .error-message {
     background-color: rgba(255, 0, 0, 0.1);

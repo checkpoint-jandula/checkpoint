@@ -3,16 +3,17 @@
     <h1>Explorar Juegos</h1>
 
     <section class="game-row">
-      <h2>Lanzados Recientemente</h2>
-      <div v-if="isLoading.recently" class="loading-message">Cargando...</div>
-      <div v-if="errors.recently" class="error-message">{{ errors.recently }}</div>
+      <h2>Más Populares</h2>
+      <div v-if="isLoading.hyped" class="loading-message">Cargando...</div>
+      <div v-if="errors.hyped" class="error-message">{{ errors.hyped }}</div>
       <div v-else class="games-carousel">
-        <RouterLink v-for="game in recentlyReleased" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+        <RouterLink v-for="game in mostHyped" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
           <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
           <span class="game-name">{{ game.name }}</span>
         </RouterLink>
       </div>
     </section>
+
 
     <section class="game-row">
       <h2>Próximos Lanzamientos</h2>
@@ -27,11 +28,11 @@
     </section>
 
     <section class="game-row">
-      <h2>Más Populares</h2>
-      <div v-if="isLoading.hyped" class="loading-message">Cargando...</div>
-      <div v-if="errors.hyped" class="error-message">{{ errors.hyped }}</div>
+      <h2>Más Anticipados</h2>
+      <div v-if="isLoading.anticipated" class="loading-message">Cargando...</div>
+      <div v-if="errors.anticipated" class="error-message">{{ errors.anticipated }}</div>
       <div v-else class="games-carousel">
-        <RouterLink v-for="game in mostHyped" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+        <RouterLink v-for="game in highlyAnticipated" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
           <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
           <span class="game-name">{{ game.name }}</span>
         </RouterLink>
@@ -39,11 +40,11 @@
     </section>
 
     <section class="game-row">
-      <h2>Más Anticipados</h2>
-      <div v-if="isLoading.anticipated" class="loading-message">Cargando...</div>
-      <div v-if="errors.anticipated" class="error-message">{{ errors.anticipated }}</div>
+      <h2>Lanzados Recientemente</h2>
+      <div v-if="isLoading.recently" class="loading-message">Cargando...</div>
+      <div v-if="errors.recently" class="error-message">{{ errors.recently }}</div>
       <div v-else class="games-carousel">
-        <RouterLink v-for="game in highlyAnticipated" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+        <RouterLink v-for="game in recentlyReleased" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
           <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
           <span class="game-name">{{ game.name }}</span>
         </RouterLink>

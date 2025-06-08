@@ -14,18 +14,18 @@
   color: var(--color-heading); 
 }
 
-.loading-message, .error-message, .empty-message {
+/*.loading-message, .error-message, .empty-message {
   text-align: center; 
   padding: 2rem; 
   font-size: 1.2rem;
   color: var(--color-text);
-}
-.error-message { 
+}*/
+/*.error-message {
   color: #d8000c; 
   background-color: #ffbaba; 
   border: 1px solid #d8000c; 
   border-radius: 4px;
-}
+}*/
 .empty-message { 
   color: var(--color-text-light-2); 
   background-color: var(--color-background-soft);

@@ -9,6 +9,8 @@
   --vt-c-black-soft: #222222;
   --vt-c-black-mute: #282828;
 
+  --black:#000000;
+
   --vt-c-indigo: #2c3e50;
 
   --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
@@ -57,6 +59,24 @@
   }
 }
 
+
+/*Tema Oled*/
+@media (prefers-color-scheme: oled) {
+  :root {
+    --color-background: var(--black);
+    --color-background-soft: var(--vt-c-black-soft);
+    --color-background-mute: var(--vt-c-black-mute);
+
+    --color-border: var(--vt-c-divider-dark-2);
+    --color-border-hover: var(--vt-c-divider-dark-1); 
+
+    --color-heading: var(--vt-c-text-dark-1);
+    --color-text: var(--vt-c-text-dark-2);
+
+    --section-gap: 160px;
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -89,4 +109,103 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+
+
+
+
+/*-------Mensaje Error-------*/
+/*ViewPublicTierListsView.css, ViewPublicGameListsView.css, UserProfileView.css, GameListDetailView.css, GameDetailsView.css*/
+
+.error-message {
+    color: #d8000c;
+    background-color: #ffbaba;
+    border: 1px solid #d8000c;
+    border-radius: 4px;
+}
+
+/*ViewPublicTierListsView.css, ViewPublicGameListsView.css*/
+
+.empty-message {
+  color: var(--color-text-light-2);
+}
+
+
+/*UserSettingsView.css, ResetPasswordView.css, RequestPasswordResetView.css*/
+
+.error-message,
+.success-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+
+/*-------Mensaje Cargando-------*/
+/*ViewPublicTierListsView.css, ViewPublicGameListsView.css, MyTierListsView.css*/
+
+.loading-message, .error-message, .empty-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: var(--color-text);
+}
+
+
+
+
+
+/*-------Formulario-------*/
+/*UserSettingsView.css, ResetPasswordView.css, RequestPasswordResetView.css, RegisterView.css, LoginView.css*/
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/*RegisterView.css, LoginView.css*/
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-heading);
+}
+
+/*ResetPasswordView.css, RequestPasswordResetView.css, RegisterView.css, LoginView.css*/
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+/*-------Boton RestablecerPassword-------*/
+/*ResetPasswordView.css, RequestPasswordResetView.css*/
+
+button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: hsla(160, 100%, 37%, 1);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+button:disabled {
+    background-color: #ccc;
+}
+
+/*RegisterView.css, LoginView.css*/
+
+button:hover {
+    background-color: hsla(160, 100%, 30%, 1);
 }
