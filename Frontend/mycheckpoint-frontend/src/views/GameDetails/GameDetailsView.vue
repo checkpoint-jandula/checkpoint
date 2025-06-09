@@ -81,10 +81,10 @@
                 <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas
                     (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
 
-                <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario
+                <!--<div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario
                     Privado:</strong>
                   <p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p>
-                </div>
+                </div>-->
               </div>
 
               <div class="library-actions">
@@ -178,6 +178,17 @@
             <section class="game-storyline section-block" v-if="gameDetail.game_info.storyline">
               <h2>Argumento</h2>
               <p>{{ gameDetail.game_info.storyline }}</p>
+            </section>
+
+            <section class="private-notes-section section-block"
+              v-if="gameDetail.user_game_data && gameDetail.user_game_data.private_comment">
+              <h2>Mis Notas Privadas</h2>
+              <blockquote class="private-comment-quote">
+                <p style="white-space: pre-wrap;">{{ displayComment }}</p>
+                <button v-if="commentNeedsTruncation" @click="isExpanded = !isExpanded" class="read-more-button">
+                  {{ isExpanded ? 'Leer menos' : 'Leer más...' }}
+                </button>
+              </blockquote>
             </section>
 
             <section class="metadata-lists section-block">
@@ -417,17 +428,37 @@
 
           <div v-show="activeTab === 'community'" class="tab-pane">
 
-            <section class="user-game-data-section" v-if="authStore.isAuthenticated">
+            <section class="user-game-data-section section-block" v-if="authStore.isAuthenticated">
+              <h2>Mi Comentario Público</h2>
+
               <div v-if="gameDetail.user_game_data && gameDetail.user_game_data.comment">
-
-
                 <div class="user-data-grid">
                   <div class="data-item full-width">
-                    <strong>Mi Comentario:</strong>
                     <p class="user-comment">{{ gameDetail.user_game_data.comment }}</p>
                   </div>
                 </div>
+                <div class="library-actions">
+                  <button @click="openCommentModal" class="action-button secondary">
+                    Editar Comentario
+                  </button>
+                </div>
+              </div>
 
+              <div v-else-if="gameDetail.user_game_data">
+                <div class="add-to-library-prompt">
+                  <p>Aún no has añadido un comentario para este juego. ¡Comparte tu opinión con la comunidad!</p>
+                </div>
+                <div class="library-actions">
+                  <button @click="openCommentModal" class="action-button primary">
+                    Añadir Comentario
+                  </button>
+                </div>
+              </div>
+
+              <div v-else>
+                <div class="add-to-library-prompt">
+                  <p>Debes añadir este juego a tu biblioteca para poder dejar un comentario.</p>
+                </div>
               </div>
             </section>
 
@@ -545,6 +576,40 @@
     </div>
   </div>
 
+  <div v-if="showCommentModal" class="modal-overlay" @click.self="showCommentModal = false">
+    <div class="modal-panel">
+      <form @submit.prevent="handleSaveComment" class="library-form-modal">
+        <div class="modal-header">
+          <h3>Mi Comentario sobre {{ gameDetail?.game_info?.name }}</h3>
+          <button type="button" @click="showCommentModal = false" class="modal-close-button"
+            aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-group full-width-form-group">
+            <label for="public-comment-input">Tu opinión:</label>
+            <textarea id="public-comment-input" v-model="commentFormText" rows="6"
+              placeholder="Escribe aquí tu comentario público..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div v-if="commentActionMessage" :class="commentActionError ? 'error-message' : 'success-message'"
+            class="action-message modal-action-message">
+            {{ commentActionMessage }}
+          </div>
+          <button type="button" @click="showCommentModal = false" class="action-button secondary"
+            :disabled="isSavingComment">
+            Cancelar
+          </button>
+          <button type="submit" :disabled="isSavingComment" class="action-button primary">
+            {{ isSavingComment ? 'Guardando...' : 'Guardar Comentario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <div v-if="showLightbox && currentImage" class="lightbox-overlay" @click.self="closeLightbox">
 
@@ -580,6 +645,98 @@ import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromU
 import { useAuthStore } from '@/stores/authStore.js';
 import defaultGameCoverLarge from '@/assets/img/default-game-cover-large.png'; // Placeholder para portada principal
 import defaultRelatedCover from '@/assets/img/default-related-cover.png'; // Placeholder para portadas pequeñas
+
+
+
+
+
+const isOwner = computed(() => {
+  if (!authStore.isAuthenticated || !authStore.currentUser || !gameListDetails.value) {
+    return false;
+  }
+  return authStore.currentUser.nombre_usuario === gameListDetails.value.owner_username;
+});
+
+
+const showCommentModal = ref(false);
+const commentFormText = ref('');
+const isSavingComment = ref(false);
+const commentActionMessage = ref('');
+const commentActionError = ref(false);
+
+const openCommentModal = () => {
+  // Rellena el textarea con el comentario existente, o con vacío si no hay.
+  commentFormText.value = gameDetail.value?.user_game_data?.comment || '';
+  // Resetea cualquier mensaje de acción anterior
+  commentActionMessage.value = '';
+  commentActionError.value = false;
+  // Muestra el modal
+  showCommentModal.value = true;
+};
+
+const handleSaveComment = async () => {
+  if (!igdbId.value) return;
+  isSavingComment.value = true;
+  commentActionMessage.value = '';
+  commentActionError.value = false;
+
+  // Creamos un DTO (Data Transfer Object) solo con el comentario.
+  // Esto asegura que solo actualizamos este campo.
+  const commentDto = {
+    comment: commentFormText.value
+  };
+
+  try {
+    console.log("Guardando comentario:", commentDto, "para igdbId:", igdbId.value);
+    // Llamamos al mismo servicio de la API, pero solo con la información del comentario.
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), commentDto);
+
+    // Actualizamos los datos locales para que la vista refleje el cambio al instante.
+    if (gameDetail.value) {
+      gameDetail.value.user_game_data = response.data;
+    }
+
+    // Cerramos el modal al guardar con éxito.
+    showCommentModal.value = false;
+
+  } catch (error) {
+    commentActionError.value = true;
+    if (error.response) {
+      commentActionMessage.value = `Error: ${error.response.data.message || 'No se pudo guardar el comentario.'}`;
+    } else {
+      commentActionMessage.value = 'Error de red al guardar el comentario.';
+    }
+    console.error("Error al guardar comentario:", error);
+  } finally {
+    isSavingComment.value = false;
+  }
+};
+
+
+
+
+// --- LÓGICA PARA "LEER MÁS" DEL COMENTARIO PRIVADO ---
+const isExpanded = ref(false);
+const MAX_COMMENT_LENGTH = 350; // Umbral de caracteres para truncar el texto
+
+// Propiedad que determina si el texto es lo suficientemente largo para necesitar el botón
+const commentNeedsTruncation = computed(() => {
+  const comment = gameDetail.value?.user_game_data?.private_comment;
+  return comment && comment.length > MAX_COMMENT_LENGTH;
+});
+
+// Propiedad que devuelve el texto a mostrar (completo o truncado)
+const displayComment = computed(() => {
+  const comment = gameDetail.value?.user_game_data?.private_comment;
+  if (!comment) return '';
+
+  if (commentNeedsTruncation.value && !isExpanded.value) {
+    return comment.substring(0, MAX_COMMENT_LENGTH) + '...';
+  }
+  return comment;
+});
+
+
 
 const screenshotCarouselIndex = ref(0);
 

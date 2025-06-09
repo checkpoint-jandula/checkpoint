@@ -1,4 +1,55 @@
-*
+/* --- Estilos para la sección de Notas Privadas --- */
+
+/* El h2 hereda los estilos de .section-block h2, lo cual es correcto. */
+/* Podemos dejarlo así o añadir estilos específicos si es necesario. */
+.private-notes-section h2 {
+    color: var(--color-heading);
+}
+
+/* Estilo de "cita" para el comentario */
+.private-comment-quote {
+    background-color: var(--color-background); /* Un fondo ligeramente distinto */
+    border-left: 4px solid hsla(160, 100%, 37%, 0.5); /* Borde izquierdo de acento */
+    padding: 1rem 1.5rem;
+    margin: 0; /* Reseteamos el margen por defecto de blockquote */
+    border-radius: 0 6px 6px 0;
+}
+
+.private-comment-quote p {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--color-text-light-2); /* Un color de texto ligeramente más suave */
+    font-style: italic; /* Estilo de cita */
+    overflow-wrap: break-word;
+}
+
+/* Estilo para el botón "Leer más..." */
+.read-more-button {
+    background: none;
+    border: none;
+    padding: 0.5rem 0 0 0;
+    margin-top: 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: hsla(160, 100%, 37%, 1); /* Color de acento */
+    cursor: pointer;
+    text-align: left;
+    display: block; /* Para que ocupe su propia línea */
+}
+
+.read-more-button:hover {
+    color: hsla(160, 100%, 30%, 1);
+    text-decoration: underline;
+}
+
+
+
+
+
+
+
+
 
 /*-----Caratula de Juego-----*/
 .game-main-header .game-cover-container {
