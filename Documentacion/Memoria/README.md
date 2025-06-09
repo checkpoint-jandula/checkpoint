@@ -1,9 +1,7 @@
 
 # MyCheckpoint
 
--MyCheckPoint: Organiza, comparte y vive tu pasión por los videojuegos.  
--MyCheckPoint: El punto de control definitivo para tu vida gamer.  
--MyCheckPoint: Tu biblioteca de juegos y comunidad, al siguiente nivel.
+## MyCheckPoint: Organiza tu progreso, vive tu pasión.
 
 # Resumen (abstract)
 
@@ -12,13 +10,13 @@ Esto es un resumen en un par de párrafos de todo el documento. Os doy instrucci
 
 # Introducción
 
-MyCheckPoint es una plataforma web integral, agrupamos distintas funcionalidades para un fin concreto. Su idea surgió de la necesidad personal de sus creadores, aficionados a los videojuegos, que cada año apuntaban los títulos completados en un documento de texto para luego crear una '_tier list_' de forma manual con herramientas como _Adobe Illustrator_.
+En el panorama actual de la industria del videojuego, caracterizado por una oferta masiva y una distribución fragmentada a través de múltiples plataformas, los jugadores se enfrentan al desafío de organizar eficientemente sus títulos, seguir sus progresos y preservar su historial lúdico. Muchos aficionados no solo buscan gestionar su actividad presente, sino también catalogar sus experiencias pasadas, concibiendo su trayectoria como una valiosa crónica personal.
 
-Al ver que las soluciones existentes no satisfacían del todo su necesidad de organizar, clasificar y compartir estas experiencias de forma integrada, desarrollaron MyCheckPoint. Esta aplicación funciona como un ecosistema digital donde los entusiastas pueden catalogar sus colecciones, seguir su progreso, y además crear y compartir '_tier lists_'. Todo esto, en un entorno conectado y enriquecido con datos de fuentes externas como [IGDB](https://www.igdb.com/about).
+Esta necesidad se nos hizo evidente a nivel personal; nuestra afición por registrar y clasificar los videojuegos que completábamos cada año mediante herramientas manuales y poco integradas nos evidenció una carencia en el mercado. Observamos que las soluciones existentes, a menudo, no satisfacen de forma unificada la necesidad de organizar colecciones, crear clasificaciones subjetivas como las 'tier lists' y compartir estas experiencias en comunidad.
 
-En un contexto donde la oferta de videojuegos es cada vez más extensa y se distribuye a través de múltiples plataformas, los jugadores se enfrentan al desafío de organizar eficientemente sus títulos y recordar sus avances. Muchos anhelan no solo gestionar su presente lúdico, sino también preservar sus experiencias y logros pasados, concibiendo su historial como una valiosa cápsula del tiempo personal que testifica su trayectoria como jugadores. A esto se suma la búsqueda de conexión con otros usuarios que comparten sus mismos intereses. MyCheckPoint satisface estas aspiraciones al proporcionar una herramienta unificada que, además de simplificar la catalogación y el seguimiento detallado de la actividad lúdica, funciona como una auténtica cápsula del tiempo digital, permitiendo a cada usuario atesorar y revisitar su evolución y recuerdos. Complementariamente, fomenta el descubrimiento de nuevos títulos y el intercambio de opiniones dentro de una comunidad, mejorando y perpetuando significativamente la experiencia global del videojugador.
+Para dar respuesta a esta problemática, en este Trabajo de Fin de Grado abordamos el diseño y desarrollo de MyCheckPoint. Concebimos el proyecto como un ecosistema digital donde los usuarios pueden catalogar sus videojuegos, registrar su progreso y crear y compartir listas y 'tier lists' de forma sencilla e intuitiva. Para enriquecer la experiencia, la plataforma se nutre con bases de datos externas como IGDB, proporcionando un entorno conectado y con información actualizada. Con MyCheckPoint no solo buscamos ofrecer una herramienta de gestión, sino también una "cápsula del tiempo" digital que permita a cada jugador atesorar y revisitar su evolución y sus logros.
 
-Este proyecto ha sido impulsado por nuestra profunda afición al mundo de los videojuegos y el firme propósito de aplicar y expandir los conocimientos técnicos y metodológicos adquiridos durante nuestra formación académica en la creación de una solución _software_ robusta y de valor real para la comunidad _gamer_. No obstante, el camino hacia la materialización de MyCheckPoint no ha estado exento de obstáculos significativos; la ambición inicial por desarrollar una aplicación _full-stack_ completa, que abarca desde el intrincado diseño de su arquitectura y la implementación de funcionalidades complejas como la gestión de bibliotecas y las interacciones sociales, hasta la integración con servicios de terceros, conllevó a que el alcance del proyecto escalara rápidamente. Este crecimiento orgánico, si bien reflejo de nuestro entusiasmo, también puso de manifiesto nuestra curva de aprendizaje en la gestión de proyectos de esta magnitud, enfrentándonos a desafíos que demandaron una notable adaptabilidad, incluyendo varias reestructuraciones de diseño y una gestión intensiva de un ciclo de desarrollo que resultó más ajustado de lo inicialmente previsto. A pesar de estas dificultades, nuestra motivación principal siempre ha sido la de construir una plataforma intuitiva, eficiente y que responda a las expectativas de los jugadores más exigentes, superando cada reto como una valiosa lección en nuestro desarrollo profesional.
+Hemos fundamentado la concepción de MyCheckPoint en un análisis exhaustivo del panorama digital actual. En este estudio no nos hemos limitado únicamente a las herramientas para videojugadores, sino que hemos abarcado plataformas de éxito en otros ámbitos del entretenimiento como el cine, la literatura o la música. Nuestro objetivo ha sido identificar y adaptar las mecánicas de catalogación, interacción social y descubrimiento de contenido que han demostrado su validez en dichas comunidades, para así trasladar un modelo de éxito probado a las particularidades y necesidades del ecosistema de los video juegos.
 
 # Revisión de las alternativas
 
@@ -27,8 +25,6 @@ El panorama de las plataformas digitales relacionadas con los videojuegos es amp
 ### **Plataformas del Sector de Videojuegos**
 
 **[IGDB](https://www.igdb.com/) (Internet Games Database)** es una de las mayores base de datos de videojuegos, fue [comprada por Twitch en 2019](https://areajugones.sport.es/videojuegos/twitch-adquiere-la-plataforma-internet-games-database/). Su principal función es la recopilación y organización de metadatos detallados sobre títulos, desarrolladores, distribuidores, plataformas, géneros y calificaciones. Su cobertura de videojuegos es notablemente amplia, aunque su enfoque no reside en la creación de una comunidad de usuarios interactiva dentro de su propia web, sino en la provisión de datos.
-
-**[RAWG](https://rawg.io/) (RAWG Video Games Database)**  Ofrece a los usuarios la capacidad de construir y gestionar su biblioteca personal (registrando juegos pendientes, jugados o deseados), acceder a una vasta base de datos de títulos y publicar sus propias reseñas y puntuaciones.
 
 **[Metacritic](https://www.metacritic.com/)**  opera como un agregador de reseñas para videojuegos, películas, televisión y música, calculando una puntuación media ("_Metascore_") a partir de las valoraciones de críticos profesionales seleccionados. La plataforma también permite a los usuarios publicar sus propias puntuaciones y críticas. La representatividad del _Metascore_ [ha sido objeto de debate](https://youtu.be/QqLGF_ghc8A?feature=shared), por su potencial para simplificar la recepción de una obra o por la influencia que pueden ejercer unas pocas reseñas sobre el valor final. Además, la sección de puntuaciones de usuarios ha demostrado ser vulnerable a campañas coordinadas de _"review bombing"_ donde los usuarios sin consumior el producto le ponen notas, que suele ser extremadamente bajas para afectar a la media de la nota. El sitio se centra en la agregación de valoraciones más que en ofrecer herramientas avanzadas de gestión de colecciones personales o interacción social profunda.
 
@@ -54,9 +50,9 @@ Finalmente, en el mundo literario, **[Goodreads](https://www.goodreads.com/)**, 
 
 ### **Conclusión de la Revisión de Alternativas**
 
-Como se ha podido observar, el ecosistema de plataformas relacionadas con videojuegos presenta una variedad de herramientas especializadas, cada una con sus fortalezas, pero también con ciertas limitaciones que fragmentan la experiencia del usuario. Mientras que bases de datos como IGDB y RAWG ofrecen una amplia cantidad de información —siendo IGDB, de hecho, una fuente de datos crucial para la funcionalidad de MyCheckPoint—, su enfoque principal no reside en la provisión de herramientas avanzadas de gestión personalizada para el usuario final o en la creación de comunidades con interacción social profunda directamente en sus plataformas web. Por otro lado, los medios de comunicación como IGN o Polygon se centran en la difusión de contenido editorial y noticias, sin facilitar la organización de ludotecas personales o la creación de contenido original y estructurado por parte del usuario, como pueden ser las _'tier lists'_. Finalmente, las plataformas de distribución como Steam, si bien integran bibliotecas y funciones sociales, naturalmente limitan su alcance a los títulos adquiridos dentro de su propio ecosistema.
+Como se ha podido observar, el ecosistema de plataformas relacionadas con videojuegos presenta una variedad de herramientas especializadas, cada una con sus fortalezas, pero también con ciertas limitaciones que fragmentan la experiencia del usuario. Mientras que bases de datos como IGDB ofrecen una amplia cantidad de información —siendo IGDB, de hecho, una fuente de datos crucial para la funcionalidad de MyCheckPoint—, su enfoque principal no reside en la provisión de herramientas avanzadas de gestión personalizada para el usuario final o en la creación de comunidades con interacción social profunda directamente en sus plataformas web. Por otro lado, los medios de comunicación como IGN o Polygon se centran en la difusión de contenido editorial y noticias, sin facilitar la organización de ludotecas personales o la creación de contenido original y estructurado por parte del usuario, como pueden ser las _'tier lists'_. Finalmente, las plataformas de distribución como Steam, si bien integran bibliotecas y funciones sociales, naturalmente limitan su alcance a los títulos adquiridos dentro de su propio ecosistema.
 
-En este contexto, MyCheckPoint identifica una oportunidad clara: la de unificar y enriquecer la experiencia del jugador en un solo lugar. El atractivo fundamental de nuestra plataforma radica en la implementación de una amplia gama de funcionalidades en este entorno unificado, ofreciendo la catalogación detallada y personalizable de juegos de múltiples orígenes, herramientas flexibles para la creación de contenido propio —destacando las _'tier lists'_ y clasificaciones personales—, y funcionalidades sociales diseñadas para una interacción significativa entre amigos y la comunidad.  MyCheckPoint no busca reemplazar las bases de datos existentes, sino construir sobre ellas una capa de personalización, organización y comunidad que actualmente el usuario solo puede encontrar de forma dispersa, aspirando a ofrecer un espacio centralizado donde los jugadores puedan gestionar su historial lúdico y compartir su criterio personal, de forma similar a otras plataformas de referencia como Letterboxd o Goodreads lo han conseguido en sus respectivos dominios.
+En este contexto, MyCheckPoint identifica una oportunidad clara: la de unificar y enriquecer la experiencia del jugador en un solo lugar. El atractivo fundamental de nuestra plataforma radica en la implementación de una amplia gama de funcionalidades en este entorno unificado, ofreciendo la catalogación detallada y personalizable de juegos de múltiples orígenes, herramientas flexibles para la creación de contenido propio —destacando las _'tier lists'_ y clasificaciones personales—, y funcionalidades sociales diseñadas para una interacción entre amigos y la comunidad.  MyCheckPoint no busca reemplazar las bases de datos existentes, sino construir sobre ellas una capa de personalización, organización y comunidad que actualmente el usuario solo puede encontrar de forma dispersa, aspirando a ofrecer un espacio centralizado donde los jugadores puedan gestionar su historial lúdico y compartir su criterio personal, de forma similar a otras plataformas de referencia como Letterboxd o Goodreads lo han conseguido en sus respectivos dominios.
 
 ## Objetivos
 
@@ -64,7 +60,7 @@ El presente Trabajo de Fin de Grado se centra en la concepción, diseño, desarr
 
 **Objetivo General:**
 
-- **Desarrollar** una aplicación web integral, denominada MyCheckPoint, que permita a los usuarios catalogar su colección de videojuegos de forma personalizada, realizar un seguimiento detallado de su progreso lúdico, crear y compartir contenido como listas de juegos y _'tier lists'_, y fomentar la interacción social con otros jugadores, utilizando la API de IGDB como fuente principal de información de juegos.
+- **Desarrollar** una aplicación web, denominada MyCheckPoint, que permita a los usuarios catalogar su colección de videojuegos de forma personalizada, realizar un seguimiento detallado de su progreso lúdico, crear y compartir contenido como listas de juegos y _'tier lists'_, y fomentar la interacción social con otros jugadores, utilizando la API de IGDB como fuente principal de información de juegos.
 
 **Objetivos Específicos:**
 
@@ -84,30 +80,32 @@ Esta sección detalla el proceso de desarrollo de la plataforma MyCheckPoint, ab
 
 La planificación del proyecto MyCheckPoint se ha estructurado en varias fases clave, desde la concepción inicial y la investigación hasta el desarrollo iterativo y la documentación final. Para visualizar esta planificación, se ha elaborado un diagrama de Gantt que refleja las principales etapas y su duración estimada.
 
-```mermaid  
-gantt  
- title Plan del proyecto dateFormat  YYYY-MM-DD axisFormat %Y-%m-%d  
- section Planificación e Investigación Definición Inicial y Estado del Arte :crit, a1, 2024-04-03, 14d Definición Detallada de Objetivos y Alcance :a2, 2024-04-03, 14d Diseño de Arquitectura y Modelo de Datos :a3, after a2, 14d  
- section Desarrollo Backend (Iteración 1) Configuración del Entorno y Seguridad Base :b1, after a3, 7d Módulo de Autenticación y Usuarios (CRUD) :b2, after b1, 14d Integración Inicial API IGDB (Búsqueda) :b3, after b2, 10d  
- section Desarrollo Frontend (Iteración 1) Configuración del Proyecto Vue y Enrutador :f1, 2024-05-27, 5d Vistas de Autenticación y Perfil Básico :f2, after f1, 14d Conexión API Backend (Login, Registro) :f3, after f2, 7d  
- section Desarrollo Backend (Iteración 2) Módulo Biblioteca de Juegos (UserGame) :b4, after b3, 14d Módulo Listas de Juegos Personalizadas :b5, after b4, 10d Módulo Amistades :b6, after b5, 10d  
- section Desarrollo Frontend (Iteración 2) Vistas Biblioteca y Listas de Juegos :f4, after f3, 14d Componentes Búsqueda y Detalles de Juego :f5, after f4, 12d Implementación Funcionalidades Sociales :f6, after f5, 10d  
- section Desarrollo Backend (Iteración 3) Módulo Tier Lists (General y de GameList) :b7, after b6, 14d Servicios de Sincronización y Tareas Prog. :b8, after b7, 7d Refinamiento API y Optimización Consultas :b9, after b8, 7d  
- section Desarrollo Frontend (Iteración 3) Vistas y Componentes Tier Lists :f7, after f6, 14d Integración Completa Funcionalidades :f8, after f7, 10d Pulido UI/UX y Pruebas de Usabilidad :f9, after f8, 7d  
- section Pruebas y Despliegue Pruebas Unitarias y de Integración (Continuas) :p1, 2024-10-07, 90d Pruebas Funcionales y de Sistema :p2, after f9, 10d Preparación Entorno de Despliegue :p3, after p2, 5d Despliegue Inicial (si aplica) :p4, after p3, 3d  
- section Documentación Redacción Memoria TFG (Iterativa) :c1, 2025-01-15, 30d Preparación Presentación Final :c2, after c1, 7d  
-```  
+```mermaid
+gantt
+    title Plan del proyecto
+    dateFormat  YYYY-MM-DD
+    section Investigación
+    Estado del arte      :a1, 2025-04-02, 8d
+    Planificacion y Definición de objetivos :a2, after a1, 12d
+    section Desarrollo
+    Backend                :b1, 2025-04-23, 5d
+    Backend                :b1, 2025-04-29, 19d
+    Frontend               :b2, after b1, 9d
+    Ajustes finales       :b3, after b2, 4d
+    section Documentación
+    Redacción del informe :c1, 2025-05-14, 31d
+```
 
 ## Metodología
 
 El desarrollo de MyCheckPoint se ha gestionado siguiendo principios de **metodología ágil**, buscando flexibilidad y capacidad de adaptación ante los desafíos y descubrimientos inherentes a un proyecto de esta envergadura. Aunque no se siguió un framework ágil de manera formal debido a la naturaleza y tamaño del equipo, se adoptaron las siguientes prácticas clave:
 
-- **Desarrollo Iterativo e Incremental:** El proyecto se descompuso en módulos funcionales que se abordaron en sucesivas iteraciones, como se refleja en la temporalización. Cada iteración buscaba entregar un conjunto coherente de funcionalidades, permitiendo una evolución progresiva de la aplicación.
+- **Desarrollo Iterativo e Incremental:** El proyecto se descompuso en módulos funcionales que se abordaron en sucesivas iteraciones. Cada iteración buscaba entregar un conjunto coherente de funcionalidades, permitiendo una evolución progresiva de la aplicación.
 - **Gestión de Tareas basada en** _**Issues**_**:** Se utilizó el sistema de seguimiento de incidencias GitHub Issues para definir, asignar y rastrear el progreso de las tareas de desarrollo, correcciones de errores y nuevas funcionalidades. Esto facilitó la organización del trabajo y la visibilidad del estado del proyecto.
 - **Revisión por Pares (_Peer Review_):** Aunque el equipo es reducido, se fomentó la revisión cruzada del código antes de integrar los cambios (_commits_ y _merge/pull requests_). Esta práctica ayudó a mejorar la calidad del código, detectar errores tempranamente y compartir conocimiento entre los miembros del equipo.
 - **Comunicación Periódica:** A través de reuniones o informes programados regularmente. Esto permitió discutir problemas, proponer soluciones y coordinar esfuerzos de manera consistente, adaptando los planes según fuera necesario en cada intervalo.
 
-Esta aproximación permitió al equipo responder a la naturaleza evolutiva del proyecto, donde la comprensión de los requisitos y la complejidad de ciertas funcionalidades se fue refinando con el tiempo, llevando a las reestructuraciones y ajustes mencionados en la introducción.
+Esta aproximación nos permitío responder a la naturaleza evolutiva del proyecto, donde la comprensión de los requisitos y la complejidad de ciertas funcionalidades se fue refinando con el tiempo, llevando a las reestructuraciones y ajustes mencionados en la introducción.
 
 ## Tecnologías
 
