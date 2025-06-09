@@ -6,9 +6,21 @@
     <div v-if="!isLoading && gameDetail && gameDetail.game_info" class="game-content-wrapper">
       <section class="game-main-header section-block">
 
-        <img :src="getCoverUrl(gameDetail.game_info.cover, '720p', 'mainCover')"
-          :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" class="game-cover-main" @error="onImageError" />
+        <div class="game-cover-container">
 
+          <img :src="getCoverUrl(gameDetail.game_info.cover, '720p', 'mainCover')"
+            :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" class="game-cover-main"
+            @error="onImageError" />
+
+          <div v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
+            class="game-release-status-on-cover meta-item"
+            :class="getReleaseStatusClass(gameDetail.game_info.first_release_status)">
+
+            <span>{{ formatReleaseStatus(gameDetail.game_info.first_release_status) }}</span>
+
+          </div>
+
+        </div>
 
 
         <div class="game-title-meta">
@@ -39,6 +51,15 @@
           <section class="user-game-data-section " v-if="authStore.isAuthenticated">
             <div v-if="gameDetail.user_game_data">
               <h2>Mis Datos del Juego</h2>
+
+              <div class="library-actions">
+                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, !gameDetail.user_game_data)"
+                  class="action-button primary">
+                  {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
+                </button>
+              </div>
+
+
               <div class="user-data-grid">
                 <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{
                   formatUserGameStatus(gameDetail.user_game_data.status) }}</div>
@@ -60,10 +81,7 @@
                     (Main+Sides):</strong> {{ gameDetail.user_game_data.story_secondary_duration_hours }}h</div>
                 <div v-if="gameDetail.user_game_data.completionist_duration_hours" class="data-item"><strong>Horas
                     (Completista):</strong> {{ gameDetail.user_game_data.completionist_duration_hours }}h</div>
-                <div v-if="gameDetail.user_game_data.comment" class="data-item full-width"><strong>Comentario
-                    Público:</strong>
-                  <p class="user-comment">{{ gameDetail.user_game_data.comment }}</p>
-                </div>
+
                 <div v-if="gameDetail.user_game_data.private_comment" class="data-item full-width"><strong>Comentario
                     Privado:</strong>
                   <p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p>
@@ -71,17 +89,13 @@
               </div>
             </div>
 
-
             <div class="library-actions">
-              <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, !gameDetail.user_game_data)"
-                class="action-button primary">
-                {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
-              </button>
               <button v-if="!showLibraryForm && gameDetail.user_game_data" @click="handleRemoveFromLibrary"
                 :disabled="isLoadingLibraryAction" class="action-button danger">
                 {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
               </button>
             </div>
+
           </section>
 
           <div class="tags-container header-tags">
@@ -226,10 +240,22 @@
             <section class="websites-section section-block"
               v-if="gameDetail.game_info.websites && gameDetail.game_info.websites.length">
               <h2>Sitios Web</h2>
-              <ul class="websites-list">
-                <li v-for="website in gameDetail.game_info.websites" :key="website.id">
+              <ul v-if="recognizedWebsites.length > 0" class="websites-list recognized-links">
+                <li v-for="website in recognizedWebsites" :key="website.id">
+                  <a :href="website.url" target="_blank" rel="noopener noreferrer" class="website-link"
+                    :title="getWebsiteDisplayName(website.url)"> <img :src="getIconUrl(getWebsiteIconName(website.url))"
+                      class="website-icon" alt="" />
+                  </a>
+                </li>
+              </ul>
+
+              <ul v-if="otherWebsites.length > 0" class="websites-list other-links">
+                <li v-for="website in otherWebsites" :key="website.id">
                   <a :href="website.url" target="_blank" rel="noopener noreferrer" class="website-link">
-                    {{ getWebsiteDisplayName(website.url) }}
+
+                    <img :src="getIconUrl(getWebsiteIconName(website.url))" class="website-icon" alt="" />
+
+                    <span>{{ getWebsiteDisplayName(website.url) }}</span>
                   </a>
                 </li>
               </ul>
@@ -384,6 +410,20 @@
           </div>
 
           <div v-show="activeTab === 'community'" class="tab-pane">
+
+            <section class="user-game-data-section" v-if="authStore.isAuthenticated">
+              <div v-if="gameDetail.user_game_data && gameDetail.user_game_data.comment">
+
+
+                <div class="user-data-grid">
+                  <div class="data-item full-width">
+                    <strong>Mi Comentario:</strong>
+                    <p class="user-comment">{{ gameDetail.user_game_data.comment }}</p>
+                  </div>
+                </div>
+
+              </div>
+            </section>
 
 
             <section class="public-comments-section section-block"
@@ -630,6 +670,7 @@ const igdbId = ref(null);
 
 const loadGameDetails = async (id) => {
   // ... (lógica existente)
+  
   if (!id) {
     errorMessage.value = "ID del juego no proporcionado.";
     isLoading.value = false;
@@ -641,6 +682,7 @@ const loadGameDetails = async (id) => {
 
   try {
     const response = await fetchGameDetailsByIgdbId(Number(id));
+    console.log("Datos del juego recibido:", response.data); 
     gameDetail.value = response.data;
     console.log("Detalles del juego recibidos:", gameDetail.value);
     console.log("DATOS DE ARTWORKS:", gameDetail.value.game_info.artworks);
@@ -759,6 +801,81 @@ const getWebsiteDisplayName = (urlString) => {
   }
 };
 
+const recognizedWebsites = computed(() => {
+  const websites = gameDetail.value?.game_info?.websites;
+  if (!websites) return [];
+
+  return websites.filter(website => getWebsiteIconName(website.url) !== 'sin-logo.svg');
+});
+
+
+const getWebsiteIconName = (urlString) => {
+  if (!urlString) return 'sin-logo.svg'; // Icono por defecto
+
+  // Mapa de dominios a nombres de icono
+  const domainIconMap = {
+    'steam': 'steam.svg',
+    'gog.com': 'gog.svg',
+    'epicgames.com': 'epicgames.svg',
+    'ubisoft.com': 'ubisoft.svg',
+    'ea.com': 'ea.svg',
+    'battle.net': 'battle.svg',
+    'rockstargames.com': 'rockstargames.svg',
+    'playstation.com': 'playstation.svg',
+    'xbox.com': 'xbox.svg',
+    'youtube.com': 'youtube.svg',
+    'twitch.tv': 'twitch.svg',
+    'wikipedia.org': 'wikipedia.svg',
+    'discord': 'discord.svg', // Cubre .com y .gg
+    'facebook.com': 'facebook.svg',
+    'instagram.com': 'instagram.svg',
+    'x.com': 'x.svg',
+    'twitter.com': 'x.svg', // Twitter ahora es X
+    'reddit.com': 'reddit.svg',
+    'apple.com': 'appstore.svg',
+    'play.google': 'googleplay.svg'
+  };
+
+  try {
+    const url = new URL(urlString);
+    const domain = url.hostname + url.pathname;
+
+    // Busca una coincidencia en el mapa
+    for (const key in domainIconMap) {
+      if (domain.includes(key)) {
+        return domainIconMap[key];
+      }
+    }
+
+    return 'sin-logo.svg'; // Si no encuentra ninguna, devuelve el por defecto
+  } catch (e) {
+    return 'sin-logo.svg'; // En caso de URL inválida
+  }
+};
+
+const getIconUrl = (iconName) => {
+  // Esta sintaxis es la forma correcta en Vite para manejar assets dinámicos.
+  // Le dice a Vite que incluya estos archivos en la compilación final.
+  return new URL(`/src/assets/icons-website/${iconName}`, import.meta.url).href;
+};
+
+const otherWebsites = computed(() => {
+  const websites = gameDetail.value?.game_info?.websites;
+  if (!websites) return [];
+
+  return websites.filter(website => getWebsiteIconName(website.url) === 'sin-logo.svg');
+});
+
+
+
+
+
+
+
+
+
+
+
 const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   if (!videoId) return '';
   let url = `https://www.youtube.com/embed/${videoId}`;
@@ -852,6 +969,23 @@ const formatReleaseStatus = (statusCode) => {
   };
 
   return statusMap[String(statusCode)] || `Estado Desconocido (${statusCode})`;
+};
+
+const getReleaseStatusClass = (statusCode) => {
+  if (statusCode === null || statusCode === undefined) return '';
+
+  const statusMap = {
+    '-1': 'status-released',      // Lanzado (Añadido para consistencia)
+    '0': 'status-released',       // Lanzado
+    '2': 'status-alpha',          // Alpha
+    '3': 'status-beta',           // Beta
+    '4': 'status-early-access',   // Acceso Anticipado
+    '5': 'status-offline',        // Offline
+    '6': 'status-cancelled',      // Cancelado
+    '7': 'status-rumored'         // Rumoreado
+  };
+
+  return statusMap[String(statusCode)] || 'status-other';
 };
 
 const formatPersonalPlatform = (platform) => {

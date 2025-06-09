@@ -1,3 +1,196 @@
+*
+
+/*-----Caratula de Juego-----*/
+.game-main-header .game-cover-container {
+    position: relative;
+    align-self: flex-start;
+    line-height: 0;
+}
+
+/* MODIFICADO: Solo afecta a las etiquetas dentro de .game-main-header */
+.game-main-header .game-release-status-on-cover {
+    position: absolute;
+    z-index: 10;
+
+    bottom: 0;  
+    left: 0;   
+    right: 0;   
+    
+    padding: 0.5em; 
+    text-align: center;
+
+    border-radius: 0 0 8px 8px; 
+    
+    color: white;
+    background-color: rgba(10, 10, 10, 0.85);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
+    backdrop-filter: blur(2px);
+}
+
+/* Colores dinámicos (también con mayor especificidad) */
+.game-main-header .game-release-status-on-cover.status-released {
+    background-color: rgba(39, 112, 57, 0.5); /* Verde */
+}
+.game-main-header .game-release-status-on-cover.status-early-access {
+    background-color: rgba(28, 93, 152, 0.5); /* Azul */
+}
+.game-main-header .game-release-status-on-cover.status-beta {
+    background-color: rgba(140, 53, 156, 0.5); /* Morado */
+}
+.game-main-header .game-release-status-on-cover.status-alpha {
+    background-color: rgba(194, 124, 0, 0.5); /* Naranja */
+}
+.game-main-header .game-release-status-on-cover.status-cancelled {
+    background-color: rgba(184, 39, 39, 0.5); /* Rojo */
+}
+.game-main-header .game-release-status-on-cover.status-rumored,
+.game-main-header .game-release-status-on-cover.status-offline {
+    background-color: rgba(80, 80, 80, 0.5); /* Gris */
+}
+
+
+
+
+
+
+/*------Icons Website------*/
+/* Hacemos que el propio enlace sea un contenedor flex */
+.website-link {
+    display: inline-flex;
+    /* o 'flex' si quieres que ocupe toda la línea */
+    align-items: center;
+    /* Centra verticalmente el icono y el texto */
+    gap: 0.5em;
+    /* Espacio entre el icono y el texto */
+
+    /* --- NUEVO --- */
+    position: relative;
+    /* Necesario para posicionar el fondo deslizante */
+    overflow: hidden;
+    /* Oculta el fondo cuando está fuera del botón */
+    border-radius: 8px;
+    /* Redondea las esquinas como en el ejemplo */
+    background-color: #2a2a2a;
+    /* Un color de fondo para el estado normal (ajústalo a tu gusto) */
+    padding: 0.5rem;
+    /* Añadimos un poco de espacio interno */
+}
+
+/* Icono Generico */
+.website-icon {
+    width: 26px;
+    /* Tamaño del icono (ajústalo a tu gusto) */
+    height: 26px;
+    /* Proporción cuadrada */
+    flex-shrink: 0;
+    /* Evita que el icono se encoja */
+    filter: brightness(0) invert(1);
+    /* Invierte el color del icono a blanco */
+
+    /* --- NUEVO --- */
+    transition: transform 0.3s ease-in-out;
+    /* Transición para el escalado */
+    position: relative;
+    /* Necesario para que el icono... */
+    z-index: 2;
+    /* ...se ponga por encima del fondo deslizante */
+}
+
+
+.recognized-links {
+    display: flex;
+    /* Pone los iconos en una línea horizontal */
+    flex-wrap: wrap;
+    /* Permite que salten de línea si no caben */
+    gap: 0.8rem;
+    /* Espacio entre cada icono */
+    padding-left: 0;
+    /* Quita el padding por defecto de la lista */
+    list-style-type: none;
+    /* Quita los puntos de la lista */
+}
+
+/*
+.website-link:hover .website-icon {
+    scale: 1.4;;
+    filter: invert(65%) sepia(48%) saturate(494%) hue-rotate(108deg) brightness(90%) contrast(88%);
+}
+*/
+
+/* Iconos Encontrados */
+.recognized-links .website-icon {
+    width: 34px;
+    height: 34px;
+    background-color: #ffffff00;
+}
+
+
+/* Estilo para la lista de otros enlaces */
+.other-links {
+    margin-top: 1.5rem;
+    /* Espacio de separación con la lista de iconos de arriba */
+    padding-left: 0;
+    /* Quita el padding por defecto de la lista */
+    list-style-type: none;
+    /* Quita los puntos de la lista */
+}
+
+/* --- NUEVO: Efecto de Hover Deslizante --- */
+
+/* 1. Creamos el elemento de fondo que se deslizará */
+.recognized-links .website-link::before {
+    content: '';
+    position: absolute;
+    width: 130%;
+    /* Más ancho que el botón para cubrirlo al girar */
+    height: 130%;
+    /* Más alto que el botón */
+
+    /* Usamos tu color verde de acento */
+    background: hsla(160, 100%, 37%, 1);
+
+    /* Posición inicial, fuera de la vista (arriba a la izquierda) */
+    left: -110%;
+    top: -110%;
+
+    transform: rotate(45deg);
+    /* Lo giramos */
+}
+
+/* 2. Al pasar el ratón por el enlace, aplicamos la animación al fondo */
+.website-link:hover::before {
+    /* El nombre 'slide' coincide con los keyframes de abajo */
+    animation: slide 0.7s forwards;
+}
+
+/* 3. También, al pasar el ratón, escalamos el icono */
+.website-link:hover .website-icon {
+    transform: scale(1.3);
+    /* Hacemos el icono un poco más grande */
+}
+
+/* 4. Definimos los pasos de la animación 'slide' */
+@keyframes slide {
+
+    /* A la mitad de la animación, está casi en el centro */
+    50% {
+        left: 10%;
+        top: -40%;
+    }
+
+    /* Al final, ha cruzado completamente el botón */
+    100% {
+        top: -15%;
+        left: -15%;
+    }
+}
+
+
+
+
+
 /*------Carrusel de Imágenes------*/
 .carousel-container {
     position: relative;
@@ -206,12 +399,12 @@
     color: var(--color-text);
 }
 
-/*.error-message {
+.error-message {
     color: #d8000c;
     background-color: #ffbaba;
     border: 1px solid #d8000c;
     border-radius: 4px;
-}*/
+}
 
 .no-results-message {
     color: var(--color-text-light-2);
@@ -377,7 +570,7 @@
 .tabs-navigation {
     display: flex;
     gap: 0.2rem;
-    
+
     margin-bottom: 0.5rem;
     background-color: var(--color-background-soft);
     border-bottom: 1px solid var(--color-border-hover);
@@ -1000,7 +1193,7 @@
         right: 10px;
     }
 
-    .videos-grid .video-item{
+    .videos-grid .video-item {
         max-width: 80%;
     }
 }

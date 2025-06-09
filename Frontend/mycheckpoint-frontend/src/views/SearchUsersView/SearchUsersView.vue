@@ -99,6 +99,9 @@ const getProfilePictureUrl = (fotoPerfil) => {
 const onAvatarError = (event) => {
   event.target.src = defaultAvatar;
 };
+
+
+
 </script>
 
 <style src="./SearchUsersView.css" scoped> </style>

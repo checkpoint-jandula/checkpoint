@@ -12,12 +12,12 @@
   font-size: 1.2rem;
 }
 
-/*.error-message {
+.error-message {
   color: #d8000c;
   background-color: #ffbaba;
   border: 1px solid #d8000c;
   border-radius: 4px;
-}*/
+}
 
 .empty-message.list-empty {
   margin-top: 1rem;
