@@ -218,7 +218,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             userGame = UserGame.builder().user(user).game(game).build();
             logger.debug("No se encontró entrada UserGame. Se creará una nueva.");
         }
-        
+
         userGameMapper.updateFromDto(userGameDataDTO, userGame);
         UserGame savedUserGame = userGameRepository.save(userGame);
 
@@ -242,9 +242,23 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     @Transactional(readOnly = true)
     public List<UserGameResponseDTO> getUserGameLibrary(String userEmail) {
         User user = getUserByEmail(userEmail);
-        return userGameRepository.findByUser(user).stream()
-                .map(userGameMapper::toResponseDto)
-                .collect(Collectors.toList());
+
+        // 1. Obtener la lista de entidades desde el repositorio
+        List<UserGame> userGames = userGameRepository.findByUser(user);
+
+        // 2. Crear una nueva lista vacía para los DTOs de respuesta
+        List<UserGameResponseDTO> responseDTOs = new ArrayList<>();
+
+        // 3. Iterar sobre la lista de entidades con un bucle for-each
+        for (UserGame userGame : userGames) {
+            // 4. Convertir cada entidad a su DTO correspondiente
+            UserGameResponseDTO dto = userGameMapper.toResponseDto(userGame);
+            // 5. Añadir el DTO a la lista de respuesta
+            responseDTOs.add(dto);
+        }
+
+        // 6. Devolver la nueva lista de DTOs
+        return responseDTOs;
     }
 
     /**
