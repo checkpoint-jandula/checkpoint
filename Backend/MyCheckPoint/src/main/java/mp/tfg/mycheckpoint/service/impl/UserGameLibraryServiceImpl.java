@@ -274,10 +274,21 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     @Transactional(readOnly = true)
     public UserGameResponseDTO getUserGameFromLibrary(String userEmail, Long igdbId) {
         User user = getUserByEmail(userEmail);
-        return userGameRepository.findByUserAndGame_IgdbId(user, igdbId)
-                .map(userGameMapper::toResponseDto)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Juego con IGDB ID " + igdbId + " no encontrado en la biblioteca del usuario " + userEmail));
+
+        // 1. Buscar la entrada de juego en la biblioteca del usuario.
+        Optional<UserGame> userGameOptional = userGameRepository.findByUserAndGame_IgdbId(user, igdbId);
+
+        // 2. Comprobar explícitamente si la entrada fue encontrada.
+        if (userGameOptional.isPresent()) {
+            // 3. Si se encontró, obtener la entidad.
+            UserGame userGame = userGameOptional.get();
+            // 4. Mapear la entidad a DTO y devolverla.
+            return userGameMapper.toResponseDto(userGame);
+        } else {
+            // 5. Si no se encontró, lanzar la excepción.
+            throw new ResourceNotFoundException(
+                    "Juego con IGDB ID " + igdbId + " no encontrado en la biblioteca del usuario " + userEmail);
+        }
     }
 
     /**
