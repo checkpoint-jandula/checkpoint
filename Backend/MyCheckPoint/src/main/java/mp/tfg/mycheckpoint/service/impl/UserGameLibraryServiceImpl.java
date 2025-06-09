@@ -342,6 +342,17 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             throw new ResourceNotFoundException("No se pudo obtener información del juego con IGDB ID: " + igdbId);
         }
 
+        // --- INICIO DE LA SOLUCIÓN DEFINITIVA ---
+        // Este bloque se ejecuta después de obtener el DTO, sin importar de dónde vino.
+        if (gameInfoDto.getGameStatus() != null && gameInfoDto.getGameStatus().getId() != null) {
+            // Si IGDB nos da un estado, lo mapeamos.
+            gameInfoDto.setFirstReleaseStatus(mp.tfg.mycheckpoint.dto.enums.ReleaseStatus.mapFromIgdbValue(gameInfoDto.getGameStatus().getId()));
+        } else if (gameInfoDto.getFirstReleaseStatus() == null) {
+            // Si IGDB no nos da un estado Y el campo de nuestro DTO es nulo, le asignamos UNKNOWN.
+            gameInfoDto.setFirstReleaseStatus(mp.tfg.mycheckpoint.dto.enums.ReleaseStatus.UNKNOWN);
+        }
+        // --- FIN DE LA SOLUCIÓN DEFINITIVA ---
+
         // --- Lógica para obtener los datos del juego del usuario (UserGameResponseDTO) ---
         UserGameResponseDTO userGameDataDto = null;
         Game gameEntityForUserAndComments = gameEntityOptional.orElse(null);
