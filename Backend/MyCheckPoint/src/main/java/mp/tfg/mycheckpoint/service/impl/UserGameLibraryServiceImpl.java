@@ -295,12 +295,10 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * Obtiene una vista detallada de un juego, combinando su información general,
      * los datos específicos del usuario (si está autenticado y el juego está en su biblioteca),
      * y una lista de comentarios públicos realizados por otros usuarios sobre ese juego.
-     * <p>
      * Si el juego existe localmente y tiene detalles completos, se usa esa información.
      * Si existe localmente pero es parcial, se obtienen los detalles completos de IGDB
      * solo para la respuesta (sin actualizar la entidad local en este flujo).
      * Si no existe localmente, se obtiene de IGDB para la respuesta.
-     * </p>
      *
      * @param igdbId El ID de IGDB del juego para el cual se solicitan los detalles.
      * @param userEmail El email del usuario actualmente autenticado (puede ser {@code null} si el acceso es anónimo).
@@ -312,13 +310,14 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     @Override
     @Transactional(readOnly = true)
     public GameDetailDTO getGameDetailsForUser(Long igdbId, String userEmail) {
+        // --- Lógica para obtener la información general del juego (GameDto) ---
         Optional<Game> gameEntityOptional = gameRepository.findByIgdbId(igdbId);
         GameDto gameInfoDto;
-        Game gameEntityForUserAndComments = gameEntityOptional.orElse(null);
 
         if (gameEntityOptional.isPresent()) {
             Game localGameEntity = gameEntityOptional.get();
             logger.debug("Juego con IGDB ID {} encontrado localmente. FullDetails: {}", igdbId, localGameEntity.isFullDetails());
+
             if (localGameEntity.isFullDetails()) {
                 logger.debug("Usando datos completos locales para gameInfo del juego IGDB ID {}.", igdbId);
                 Game fullyLoadedLocalGame = gameService.getGameByIgdbIdOriginal(igdbId);
@@ -330,49 +329,55 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                 logger.info("Juego IGDB ID {} existe localmente pero es parcial. Obteniendo detalles de IGDB solo para la vista.", igdbId);
                 gameInfoDto = igdbService.findGameByIgdbId(igdbId)
                         .switchIfEmpty(Mono.error(new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId + " al intentar obtener detalles completos para la vista.")))
-                        .block(); // Bloqueante
+                        .block();
             }
         } else {
             logger.info("Juego con IGDB ID {} no encontrado localmente. Obteniendo de IGDB para la vista.", igdbId);
             gameInfoDto = igdbService.findGameByIgdbId(igdbId)
                     .switchIfEmpty(Mono.error(new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId)))
-                    .block(); // Bloqueante
+                    .block();
         }
 
         if (gameInfoDto == null) {
             throw new ResourceNotFoundException("No se pudo obtener información del juego con IGDB ID: " + igdbId);
         }
 
+        // --- Lógica para obtener los datos del juego del usuario (UserGameResponseDTO) ---
         UserGameResponseDTO userGameDataDto = null;
-        if (userEmail != null && gameEntityForUserAndComments != null) {
-            User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuario actual no encontrado con email: " + userEmail)); // Lanza excepción si el usuario autenticado no se encuentra
+        Game gameEntityForUserAndComments = gameEntityOptional.orElse(null);
 
-            // Corrección: Asignar el resultado del mapeo a userGameDataDto
-            userGameDataDto = userGameRepository.findByUserAndGame(user, gameEntityForUserAndComments)
-                    .map(userGameMapper::toResponseDto)
-                    .orElse(null);
-        } else if (userEmail != null) { // userEmail provisto pero gameEntityForUserAndComments es null
+        if (userEmail != null && gameEntityForUserAndComments != null) {
+            User user = getUserByEmail(userEmail); // Reutilizamos el método privado existente
+
+            Optional<UserGame> userGameOptional = userGameRepository.findByUserAndGame(user, gameEntityForUserAndComments);
+            if (userGameOptional.isPresent()) {
+                UserGame userGame = userGameOptional.get();
+                userGameDataDto = userGameMapper.toResponseDto(userGame);
+            }
+        } else if (userEmail != null) {
             logger.debug("Juego con IGDB ID {} no existe en BD local, no se pueden obtener datos de UserGame para el usuario {}.", igdbId, userEmail);
         }
 
-        List<PublicGameCommentDTO> publicComments = Collections.emptyList();
+        // --- Lógica para obtener los comentarios públicos ---
+        List<PublicGameCommentDTO> publicComments = new ArrayList<>();
         if (gameEntityForUserAndComments != null) {
-            // Solo buscar comentarios si el juego tiene una entrada en la BD local.
             List<UserGame> userGamesWithComments = userGameRepository.findPublicCommentsForGame(gameEntityForUserAndComments);
-            publicComments = userGamesWithComments.stream()
-                    .map(ug -> PublicGameCommentDTO.builder()
-                            .username(ug.getUser().getNombreUsuario())
-                            .userPublicId(ug.getUser().getPublicId())
-                            .commentText(ug.getComment())
-                            .commentDate(ug.getUpdatedAt()) // Usar updatedAt de UserGame como fecha del comentario
-                            .build())
-                    .collect(Collectors.toList());
+
+            for (UserGame ug : userGamesWithComments) {
+                PublicGameCommentDTO commentDto = PublicGameCommentDTO.builder()
+                        .username(ug.getUser().getNombreUsuario())
+                        .userPublicId(ug.getUser().getPublicId())
+                        .commentText(ug.getComment())
+                        .commentDate(ug.getUpdatedAt())
+                        .build();
+                publicComments.add(commentDto);
+            }
             logger.debug("Se encontraron {} comentarios públicos para el juego local con IGDB ID {}.", publicComments.size(), igdbId);
         } else {
             logger.debug("Juego con IGDB ID {} no existe en BD local, no se buscan comentarios públicos.", igdbId);
         }
 
+        // --- Construcción del DTO final ---
         return GameDetailDTO.builder()
                 .gameInfo(gameInfoDto)
                 .userGameData(userGameDataDto)
