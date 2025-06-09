@@ -73,14 +73,13 @@ public interface UserGameRepository extends JpaRepository<UserGame, Long> {
      * Los comentarios se ordenan por la fecha de última actualización de forma descendente.
      *
      * @param game El {@link Game} para el cual se buscan comentarios.
-     * @param visibilidad El nivel de visibilidad requerido para el perfil del autor del comentario (debe ser PUBLICO).
      * @return Una lista de {@link UserGame} que contienen comentarios públicos para el juego especificado.
      */
     @Query("SELECT ug FROM UserGame ug JOIN FETCH ug.user u " +
             "WHERE ug.game = :game " +
             "AND ug.comment IS NOT NULL AND ug.comment <> '' " +
-            "AND u.visibilidadPerfil = :visibilidad " +
-            "AND u.fechaEliminacion IS NULL " + // Asegura que el usuario no esté eliminado
+            "AND u.fechaEliminacion IS NULL " +
             "ORDER BY ug.updatedAt DESC")
-    List<UserGame> findPublicCommentsForGame(@Param("game") Game game, @Param("visibilidad") VisibilidadEnum visibilidad);
+
+    List<UserGame> findPublicCommentsForGame(@Param("game") Game game);
 }

@@ -312,10 +312,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new ResourceNotFoundException("Usuario actual no encontrado con email: " + userEmail)); // Lanza excepción si el usuario autenticado no se encuentra
 
-            userGameRepository.findByUserAndGame(user, gameEntityForUserAndComments)
-                    .ifPresent(userGame -> {
-                        // userGameDataDto = userGameMapper.toResponseDto(userGame); // Esta línea estaba comentada en el original
-                    });
             // Corrección: Asignar el resultado del mapeo a userGameDataDto
             userGameDataDto = userGameRepository.findByUserAndGame(user, gameEntityForUserAndComments)
                     .map(userGameMapper::toResponseDto)
@@ -327,7 +323,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
         List<PublicGameCommentDTO> publicComments = Collections.emptyList();
         if (gameEntityForUserAndComments != null) {
             // Solo buscar comentarios si el juego tiene una entrada en la BD local.
-            List<UserGame> userGamesWithComments = userGameRepository.findPublicCommentsForGame(gameEntityForUserAndComments, VisibilidadEnum.PUBLICO);
+            List<UserGame> userGamesWithComments = userGameRepository.findPublicCommentsForGame(gameEntityForUserAndComments);
             publicComments = userGamesWithComments.stream()
                     .map(ug -> PublicGameCommentDTO.builder()
                             .username(ug.getUser().getNombreUsuario())
