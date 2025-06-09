@@ -12,7 +12,8 @@
             :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" class="game-cover-main"
             @error="onImageError" />
 
-          <div v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
+          <div
+            v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
             class="game-release-status-on-cover meta-item"
             :class="getReleaseStatusClass(gameDetail.game_info.first_release_status)">
 
@@ -48,17 +49,15 @@
             </div>
           </div>
 
-          <section class="user-game-data-section " v-if="authStore.isAuthenticated">
+          <section class="user-game-data-section" v-if="authStore.isAuthenticated">
             <div v-if="gameDetail.user_game_data">
               <h2>Mis Datos del Juego</h2>
 
               <div class="library-actions">
-                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, !gameDetail.user_game_data)"
-                  class="action-button primary">
-                  {{ gameDetail.user_game_data ? 'Editar Mis Datos' : 'Añadir a Mi Biblioteca' }}
+                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, false)" class="action-button primary">
+                  Editar Mis Datos
                 </button>
               </div>
-
 
               <div class="user-data-grid">
                 <div v-if="gameDetail.user_game_data.status" class="data-item"><strong>Estado:</strong> {{
@@ -87,15 +86,22 @@
                   <p class="user-comment">{{ gameDetail.user_game_data.private_comment }}</p>
                 </div>
               </div>
+
+              <div class="library-actions">
+                <button v-if="!showLibraryForm" @click="handleRemoveFromLibrary" :disabled="isLoadingLibraryAction"
+                  class="action-button danger">
+                  {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
+                </button>
+              </div>
             </div>
 
-            <div class="library-actions">
-              <button v-if="!showLibraryForm && gameDetail.user_game_data" @click="handleRemoveFromLibrary"
-                :disabled="isLoadingLibraryAction" class="action-button danger">
-                {{ isLoadingLibraryAction ? 'Eliminando...' : 'Eliminar de Mi Biblioteca' }}
-              </button>
+            <div v-else class="add-to-library-prompt">
+              <div class="library-actions">
+                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, true)" class="action-button primary">
+                  Añadir a Mi Biblioteca
+                </button>
+              </div>
             </div>
-
           </section>
 
           <div class="tags-container header-tags">
@@ -670,7 +676,7 @@ const igdbId = ref(null);
 
 const loadGameDetails = async (id) => {
   // ... (lógica existente)
-  
+
   if (!id) {
     errorMessage.value = "ID del juego no proporcionado.";
     isLoading.value = false;
@@ -682,7 +688,7 @@ const loadGameDetails = async (id) => {
 
   try {
     const response = await fetchGameDetailsByIgdbId(Number(id));
-    console.log("Datos del juego recibido:", response.data); 
+    console.log("Datos del juego recibido:", response.data);
     gameDetail.value = response.data;
     console.log("Detalles del juego recibidos:", gameDetail.value);
     console.log("DATOS DE ARTWORKS:", gameDetail.value.game_info.artworks);
