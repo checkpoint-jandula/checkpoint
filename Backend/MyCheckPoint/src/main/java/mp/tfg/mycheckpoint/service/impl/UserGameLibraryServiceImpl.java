@@ -73,13 +73,13 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * Constructor para UserGameLibraryServiceImpl.
      * Inyecta todas las dependencias necesarias para la gestión de la biblioteca de juegos del usuario.
      *
-     * @param userRepository Repositorio para acceder a los datos de los usuarios.
-     * @param gameRepository Repositorio para acceder a los datos de los juegos.
+     * @param userRepository     Repositorio para acceder a los datos de los usuarios.
+     * @param gameRepository     Repositorio para acceder a los datos de los juegos.
      * @param userGameRepository Repositorio para acceder a las entradas de la biblioteca de juegos de los usuarios.
-     * @param userGameMapper Mapper para convertir entre entidades UserGame y sus DTOs.
-     * @param gameGeneralMapper Mapper para convertir entre entidades Game y GameDto.
-     * @param gameService Servicio para la lógica de negocio relacionada con las entidades Game.
-     * @param igdbService Servicio para obtener información de juegos desde la API de IGDB.
+     * @param userGameMapper     Mapper para convertir entre entidades UserGame y sus DTOs.
+     * @param gameGeneralMapper  Mapper para convertir entre entidades Game y GameDto.
+     * @param gameService        Servicio para la lógica de negocio relacionada con las entidades Game.
+     * @param igdbService        Servicio para obtener información de juegos desde la API de IGDB.
      */
     @Autowired
     public UserGameLibraryServiceImpl(UserRepository userRepository,
@@ -94,7 +94,7 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                                       GameListRepository gameListRepository,
                                       TierListRepository tierListRepository,
                                       TierListItemRepository tierListItemRepository,
-                                      FriendshipRepository friendshipRepository){
+                                      FriendshipRepository friendshipRepository) {
         this.userRepository = userRepository;
         this.gameRepository = gameRepository;
         this.userGameRepository = userGameRepository;
@@ -135,8 +135,8 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * @param igdbId El ID de IGDB del juego a asegurar.
      * @return La entidad {@link Game} persistida y con detalles completos (o lo más completos posible).
      * @throws ResourceNotFoundException Si el juego no se encuentra en IGDB al intentar obtenerlo
-     * por primera vez o al intentar completar detalles.
-     * @throws RuntimeException Si ocurre un error durante el guardado o actualización del juego.
+     *                                   por primera vez o al intentar completar detalles.
+     * @throws RuntimeException          Si ocurre un error durante el guardado o actualización del juego.
      */
     private Game ensureGameExists(Long igdbId) {
         Optional<Game> gameOpt = gameRepository.findByIgdbId(igdbId);
@@ -190,13 +190,13 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * Se asegura de que la entidad {@link Game} exista y tenga detalles completos en la base de datos local
      * antes de crear o actualizar la entrada {@link UserGame}.
      *
-     * @param userEmail El email del usuario.
-     * @param igdbId El ID de IGDB del juego.
+     * @param userEmail       El email del usuario.
+     * @param igdbId          El ID de IGDB del juego.
      * @param userGameDataDTO DTO con los datos específicos del usuario para este juego
-     * (estado, puntuación, plataforma, comentarios, etc.).
+     *                        (estado, puntuación, plataforma, comentarios, etc.).
      * @return Un {@link UserGameResponseDTO} que representa la entrada de la biblioteca creada o actualizada.
      * @throws ResourceNotFoundException Si el usuario no se encuentra, o si el juego no se puede
-     * asegurar en la base de datos local (ej. no encontrado en IGDB).
+     *                                   asegurar en la base de datos local (ej. no encontrado en IGDB).
      */
     @Override
     @Transactional
@@ -265,10 +265,10 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * Obtiene una entrada específica de la biblioteca de un usuario, identificada por el ID de IGDB del juego.
      *
      * @param userEmail El email del usuario.
-     * @param igdbId El ID de IGDB del juego a buscar en la biblioteca del usuario.
+     * @param igdbId    El ID de IGDB del juego a buscar en la biblioteca del usuario.
      * @return Un {@link UserGameResponseDTO} con los datos del juego en la biblioteca del usuario.
      * @throws ResourceNotFoundException Si el usuario no se encuentra, o si el juego con el
-     * {@code igdbId} especificado no se encuentra en su biblioteca.
+     *                                   {@code igdbId} especificado no se encuentra en su biblioteca.
      */
     @Override
     @Transactional(readOnly = true)
@@ -300,12 +300,12 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      * solo para la respuesta (sin actualizar la entidad local en este flujo).
      * Si no existe localmente, se obtiene de IGDB para la respuesta.
      *
-     * @param igdbId El ID de IGDB del juego para el cual se solicitan los detalles.
+     * @param igdbId    El ID de IGDB del juego para el cual se solicitan los detalles.
      * @param userEmail El email del usuario actualmente autenticado (puede ser {@code null} si el acceso es anónimo).
-     * Si se proporciona y el usuario existe, se intentarán cargar los datos de {@link UserGame}.
+     *                  Si se proporciona y el usuario existe, se intentarán cargar los datos de {@link UserGame}.
      * @return Un {@link GameDetailDTO} que contiene la información agregada.
      * @throws ResourceNotFoundException Si el juego no se puede encontrar (ni localmente ni en IGDB),
-     * o si se proporciona {@code userEmail} pero el usuario no existe.
+     *                                   o si se proporciona {@code userEmail} pero el usuario no existe.
      */
     @Override
     @Transactional(readOnly = true)
@@ -342,7 +342,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             throw new ResourceNotFoundException("No se pudo obtener información del juego con IGDB ID: " + igdbId);
         }
 
-        // --- INICIO DE LA SOLUCIÓN DEFINITIVA ---
         // Este bloque se ejecuta después de obtener el DTO, sin importar de dónde vino.
         if (gameInfoDto.getGameStatus() != null && gameInfoDto.getGameStatus().getId() != null) {
             // Si IGDB nos da un estado, lo mapeamos.
@@ -351,7 +350,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             // Si IGDB no nos da un estado Y el campo de nuestro DTO es nulo, le asignamos UNKNOWN.
             gameInfoDto.setFirstReleaseStatus(mp.tfg.mycheckpoint.dto.enums.ReleaseStatus.UNKNOWN);
         }
-        // --- FIN DE LA SOLUCIÓN DEFINITIVA ---
 
         // --- Lógica para obtener los datos del juego del usuario (UserGameResponseDTO) ---
         UserGameResponseDTO userGameDataDto = null;
@@ -394,29 +392,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                 .userGameData(userGameDataDto)
                 .publicComments(publicComments)
                 .build();
-    }
-
-    private void initializeTierListDetails(TierList tierList) {
-        if (tierList == null) return;
-        Hibernate.initialize(tierList.getSections());
-        if (tierList.getSections() != null) {
-            for (TierSection section : tierList.getSections()) {
-                Hibernate.initialize(section.getItems());
-                if (section.getItems() != null) {
-                    for (TierListItem item : section.getItems()) {
-                        if (item.getUserGame() != null) {
-                            Hibernate.initialize(item.getUserGame());
-                            if (item.getUserGame().getGame() != null) {
-                                Hibernate.initialize(item.getUserGame().getGame());
-                                if (item.getUserGame().getGame().getCover() != null) {
-                                    Hibernate.initialize(item.getUserGame().getGame().getCover());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     @Override
@@ -511,8 +486,19 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                 break;
         }
 
-        return userGameRepository.findByUser(targetUser).stream()
-                .map(userGameMapper::toResponseDto)
-                .collect(Collectors.toList());
+        //Obtener la lista de entidades UserGame una vez pasados los filtros de visibilidad.
+        List<UserGame> userGames = userGameRepository.findByUser(targetUser);
+
+        //Crear una nueva lista para almacenar los DTOs.
+        List<UserGameResponseDTO> responseDTOs = new ArrayList<>();
+
+        //Iterar sobre las entidades con un bucle 'for-each'.
+        for (UserGame userGame : userGames) {
+            //Mapear cada entidad a su DTO y añadirlo a la lista de respuesta.
+            responseDTOs.add(userGameMapper.toResponseDto(userGame));
+        }
+
+        //Devolver la lista de DTOs construida.
+        return responseDTOs;
     }
 }
