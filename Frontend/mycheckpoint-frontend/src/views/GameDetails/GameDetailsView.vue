@@ -12,15 +12,10 @@
             :alt="`Carátula de ${gameDetail.game_info.name || 'Juego'}`" class="game-cover-main"
             @error="onImageError" />
 
-          <div
-            v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
-            class="game-release-status-on-cover meta-item"
-            :class="getReleaseStatusClass(gameDetail.game_info.first_release_status)">
-
-            <span>{{ formatReleaseStatus(gameDetail.game_info.first_release_status) }}</span>
-
+          <div v-if="gameDetail.game_info.first_release_date || gameDetail.game_info.first_release_status !== null"
+            class="game-release-status-on-cover meta-item" :class="getReleaseStatusClass(gameDetail.game_info)">
+            <span>{{ formatReleaseStatus(gameDetail.game_info) }}</span> 
           </div>
-
         </div>
 
 
@@ -1109,43 +1104,64 @@ const getCompanyRoles = (involvedCompany) => {
   return roles.join(', ');
 };
 
-const formatReleaseStatus = (statusCode) => {
+// Recibe el objeto game_info completo
+const formatReleaseStatus = (gameInfo) => {
+  // --- LÓGICA NUEVA ---
+  // 1. Comprobar si la fecha de lanzamiento es futura
+  if (gameInfo.first_release_date) {
+    // La fecha de la API viene en segundos, Date.now() está en milisegundos
+    const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
+    if (releaseTimestampMs > Date.now()) {
+      return 'Próximamente'; // Forzamos el estado si la fecha es futura
+    }
+  }
+  // --- FIN LÓGICA NUEVA ---
+
+  // 2. Si la fecha no es futura, usamos la lógica de estado que ya tenías
+  const statusCode = gameInfo.first_release_status;
   if (statusCode === null || statusCode === undefined) return 'No especificado';
 
-  // Mapeo de los valores numéricos (como string) a texto legible
-  // Basado en IGDB ReleaseDateStatusEnum (los valores -1 y 15 no son estándar IGDB para este enum específico)
-  // La documentación de GameDto.md para first_release_status menciona:
-  // 0=Released, 2=Alpha, 3=Beta, 4=Early Access, 5=Offline, 6=Cancelled, 7=Rumored, -1=TBD
   const statusMap = {
-    "-1": "Lanzado",
+    "-1": "Lanzado", // Asignamos "Desconocido" al -1 del backend
     "0": "Lanzado",
     "2": "Alpha",
     "3": "Beta",
-    "4": "Acceso Anticipado (Early Access)",
-    "5": "Offline", // (Desconectado/No disponible)
+    "4": "Acceso Anticipado",
+    "5": "Offline",
     "6": "Cancelado",
     "7": "Rumoreado",
-    // Los valores 1 (Offline IGDB), 8 (Custom/Fanmade) no están en tu DTO para first_release_status,
-    // pero los añado por si acaso o para GameStatusDto.id
-    "1": "Offline (IGDB)",
-    "8": "Custom/Fanmade (No oficial)"
+    "9": "Próximamente" // Mantenemos este por si el backend lo envía
   };
 
   return statusMap[String(statusCode)] || `Estado Desconocido (${statusCode})`;
 };
 
-const getReleaseStatusClass = (statusCode) => {
+// Recibe el objeto game_info completo
+const getReleaseStatusClass = (gameInfo) => {
+  // --- LÓGICA NUEVA ---
+  // 1. Comprobar si la fecha de lanzamiento es futura
+  if (gameInfo.first_release_date) {
+    const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
+    if (releaseTimestampMs > Date.now()) {
+      return 'status-upcoming'; // Forzamos la clase CSS
+    }
+  }
+  // --- FIN LÓGICA NUEVA ---
+
+  // 2. Si la fecha no es futura, usamos la lógica de estado que ya tenías
+  const statusCode = gameInfo.first_release_status;
   if (statusCode === null || statusCode === undefined) return '';
 
   const statusMap = {
-    '-1': 'status-released',      // Lanzado (Añadido para consistencia)
-    '0': 'status-released',       // Lanzado
-    '2': 'status-alpha',          // Alpha
-    '3': 'status-beta',           // Beta
-    '4': 'status-early-access',   // Acceso Anticipado
-    '5': 'status-offline',        // Offline
-    '6': 'status-cancelled',      // Cancelado
-    '7': 'status-rumored'         // Rumoreado
+    '-1': 'status-released',        // Clase para "Desconocido"
+    '0': 'status-released',
+    '2': 'status-alpha',
+    '3': 'status-beta',
+    '4': 'status-early-access',
+    '5': 'status-offline',
+    '6': 'status-cancelled',
+    '7': 'status-rumored',
+    '9': 'status-upcoming'      // Mantenemos este por si el backend lo envía
   };
 
   return statusMap[String(statusCode)] || 'status-other';
