@@ -120,21 +120,17 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
      */
     private User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + email));
     }
 
     /**
      * Asegura que un juego con el {@code igdbId} especificado exista en la base de datos local.
-     * <p>
      * Si el juego ya existe localmente:
-     * <ul>
-     * <li>Si está marcado como parcial ({@code isFullDetails = false}), intenta obtener
-     * los detalles completos de IGDB y actualizar la entidad local.</li>
-     * <li>Si ya tiene detalles completos, devuelve la entidad existente.</li>
-     * </ul>
+     * Si está marcado como parcial ({@code isFullDetails = false}), intenta obtener
+     * los detalles completos de IGDB y actualizar la entidad local.
+     * Si ya tiene detalles completos, devuelve la entidad existente.
      * Si el juego no existe localmente, lo obtiene de IGDB, lo guarda en la base de datos
      * local (marcado como con detalles completos) y lo devuelve.
-     * </p>
      *
      * @param igdbId El ID de IGDB del juego a asegurar.
      * @return La entidad {@link Game} persistida y con detalles completos (o lo más completos posible).
@@ -206,16 +202,31 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     @Transactional
     public UserGameResponseDTO addOrUpdateGameInLibrary(String userEmail, Long igdbId, UserGameDataDTO userGameDataDTO) {
         User user = getUserByEmail(userEmail);
-        Game game = ensureGameExists(igdbId); // Asegura que el juego exista en la BD local y esté completo
+        Game game = ensureGameExists(igdbId);
 
-        UserGame userGame = userGameRepository.findByUserAndGame(user, game)
-                .orElseGet(() -> UserGame.builder().user(user).game(game).build()); // Crea una nueva entrada si no existe
+        // 1. Buscamos la entrada en la biblioteca y la guardamos en un Optional
+        Optional<UserGame> userGameOptional = userGameRepository.findByUserAndGame(user, game);
 
-        userGameMapper.updateFromDto(userGameDataDTO, userGame); // Aplica los datos del DTO a la entidad UserGame
+        UserGame userGame;
+        // 2. Usamos un if/else para comprobar si la entrada ya existe
+        if (userGameOptional.isPresent()) {
+            // Si existe, la obtenemos del Optional para actualizarla
+            userGame = userGameOptional.get();
+            logger.debug("Entrada UserGame encontrada (ID: {}). Se procederá a actualizar.", userGame.getInternalId());
+        } else {
+            // Si no existe, creamos una nueva instancia
+            userGame = UserGame.builder().user(user).game(game).build();
+            logger.debug("No se encontró entrada UserGame. Se creará una nueva.");
+        }
+        
+        userGameMapper.updateFromDto(userGameDataDTO, userGame);
         UserGame savedUserGame = userGameRepository.save(userGame);
+
+        // El log original para saber si se añadió o actualizó sigue siendo válido
         logger.info("Usuario {} {} el juego con IGDB ID {} (ID interno UserGame: {}) en su biblioteca.",
-                userEmail, (userGame.getInternalId() == null || savedUserGame.getInternalId().equals(userGame.getInternalId())) ? "actualizó" : "añadió", // Lógica mejorada para el log
+                userEmail, (userGameOptional.isPresent()) ? "actualizó" : "añadió",
                 igdbId, savedUserGame.getInternalId());
+
         return userGameMapper.toResponseDto(savedUserGame);
     }
 
