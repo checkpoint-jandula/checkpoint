@@ -1,12 +1,10 @@
 
 # MyCheckpoint
 
-## MyCheckPoint: Organiza tu progreso, vive tu pasión.
+**MyCheckPoint: Organiza tu progreso, vive tu pasión.**
 
-# Resumen (abstract)
-
-Ignorad esta sección por completo. Volved aquí después de escribir las conclusiones.  
-Esto es un resumen en un par de párrafos de todo el documento. Os doy instrucciones cuando tengamos todo el documento.
+# Resumen
+Este documento describe MyCheckPoint, una aplicación web diseñada para ayudar a los aficionados a los videojuegos a organizar sus bibliotecas de juegos, seguir su progreso y fomentar la interacción social. La plataforma aspira a ser una crónica personal de las trayectorias lúdicas de los jugadores, inspirándose en las exitosas funcionalidades sociales y de catalogación de otros sectores del entretenimiento como el cine (Filmaffinity) y la música (Rate Your Music). Sus funcionalidades principales incluyen la gestión de una biblioteca de juegos personal, la creación de listas personalizadas y "tier lists" para clasificar juegos, y la construcción de una red social para conectar con otros jugadores. El documento también detalla la arquitectura técnica de MyCheckPoint, empleando un robusto backend en Java Spring Boot para la gestión de datos y servicios API, junto con un frontend en Vue.js para una interfaz de usuario intuitiva, enfatizando una clara separación de responsabilidades y una metodología de desarrollo ágil.
 
 # Introducción
 
@@ -16,7 +14,7 @@ Esta necesidad se nos hizo evidente a nivel personal; nuestra afición por regis
 
 Para dar respuesta a esta problemática, en este Trabajo de Fin de Grado abordamos el diseño y desarrollo de MyCheckPoint. Concebimos el proyecto como un ecosistema digital donde los usuarios pueden catalogar sus videojuegos, registrar su progreso y crear y compartir listas y 'tier lists' de forma sencilla e intuitiva. Para enriquecer la experiencia, la plataforma se nutre con bases de datos externas como IGDB, proporcionando un entorno conectado y con información actualizada. Con MyCheckPoint no solo buscamos ofrecer una herramienta de gestión, sino también una "cápsula del tiempo" digital que permita a cada jugador atesorar y revisitar su evolución y sus logros.
 
-Hemos fundamentado la concepción de MyCheckPoint en un análisis exhaustivo del panorama digital actual. En este estudio no nos hemos limitado únicamente a las herramientas para videojugadores, sino que hemos abarcado plataformas de éxito en otros ámbitos del entretenimiento como el cine, la literatura o la música. Nuestro objetivo ha sido identificar y adaptar las mecánicas de catalogación, interacción social y descubrimiento de contenido que han demostrado su validez en dichas comunidades, para así trasladar un modelo de éxito probado a las particularidades y necesidades del ecosistema de los video juegos.
+Para este proyecto, hemos realizado un análisis del panorama digital. Al observar plataformas consolidadas no solo en el sector de los videojuegos sino que tambien en otros ámbitos como el cine o la música, identificamos mecánicas de catalogación, interacción y descubrimiento muy efectivas. En consecuencia, hemos diseñado la plataforma para trasladar y adaptar dichas funcionalidades a las necesidades específicas de la comunidad de jugadores.
 
 # Revisión de las alternativas
 
