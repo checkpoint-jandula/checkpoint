@@ -765,10 +765,38 @@ const prevScreenshot = () => {
 
 // AÑADE ESTA PROPIEDAD COMPUTADA para calcular el estilo 'transform' dinámicamente
 // Esto es lo que crea el efecto de "desplazamiento"
+const carouselViewportRef = ref(null); // Asegúrate de que esta línea ya existe
+
+// El ancho de cada item del carrusel, que ahora calcularemos dinámicamente
+const carouselItemWidth = ref(0);
+
+// Esta función se encargará de actualizar el ancho
+const updateCarouselItemWidth = () => {
+  if (carouselViewportRef.value) {
+    // El ancho del item es el ancho total del contenedor visible
+    carouselItemWidth.value = carouselViewportRef.value.offsetWidth;
+  }
+};
+
+// Cuando el componente se monta en la página, calculamos el ancho inicial
+onMounted(() => {
+  updateCarouselItemWidth();
+  // Y creamos un observador que recalcule el ancho si el tamaño de la ventana cambia
+  window.addEventListener('resize', updateCarouselItemWidth);
+});
+
+// Cuando el componente se destruye, limpiamos el observador para evitar fugas de memoria
+import { onUnmounted } from 'vue'; // Asegúrate de tener este import arriba
+onUnmounted(() => {
+  window.removeEventListener('resize', updateCarouselItemWidth);
+});
+
+// La propiedad computada ahora usa el ancho dinámico
 const carouselSliderStyle = computed(() => {
-  // Asumimos que cada imagen + margen ocupa 400px. Ajusta este valor si cambias el CSS.
-  const itemWidth = 420; // Corresponde a 400px de ancho + 20px de gap
-  const moveDistance = -screenshotCarouselIndex.value * itemWidth;
+  if (carouselItemWidth.value === 0) return {}; // Evita cálculos antes de que se monte
+
+  // El desplazamiento ahora se calcula correctamente en cualquier tamaño de pantalla
+  const moveDistance = -screenshotCarouselIndex.value * carouselItemWidth.value;
   return {
     transform: `translateX(${moveDistance}px)`
   };
