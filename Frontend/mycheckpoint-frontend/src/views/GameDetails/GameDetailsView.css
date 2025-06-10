@@ -1,3 +1,74 @@
+
+/* Estilos para alinear el título y el botón de acción */
+.section-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem; /* Mantenemos la separación que tenía el h2 */
+}
+
+/* Hacemos que el h2 dentro de este contenedor no tenga margen inferior */
+.section-header-with-action h2 {
+    margin-bottom: 0;
+}
+
+/* Un estilo opcional para hacer el botón de editar un poco más pequeño */
+.action-button.small-button {
+    padding: 0.4em 0.8em;
+    font-size: 0.85rem;
+}
+
+
+/*------Modal de Juego Detalles------*/
+/* --- Estilos para el nuevo modal por pasos (Wizard) --- */
+
+.wizard-step-0 h4 {
+    text-align: center;
+    color: var(--color-text-light-2);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+}
+
+.status-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.status-selection-grid button {
+    padding: 1.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.status-selection-grid button:hover {
+    background-color: var(--color-background-mute);
+    border-color: var(--color-border-hover);
+    transform: translateY(-2px);
+}
+
+.status-selection-grid button.selected {
+    background-color: hsla(160, 100%, 37%, 0.2);
+    border-color: hsla(160, 100%, 37%, 1);
+    color: hsla(160, 100%, 37%, 1);
+    box-shadow: 0 0 10px hsla(160, 100%, 37%, 0.3);
+}
+
+.library-form-modal .modal-footer {
+    /* Aseguramos que los botones de atrás/continuar estén en los extremos */
+    justify-content: space-between;
+}
+
+
+
+
+
 /* --- Estilos para la sección de Notas Privadas --- */
 .private-notes-section h2 {
     color: var(--color-heading);
@@ -435,7 +506,14 @@
     overflow-wrap: break-word;
     word-break: break-all;
 }
-.library-actions { text-align: center; margin-top: 1rem; margin-bottom: 1rem; }
+.library-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem; /* Espacio entre los botones */
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 .user-game-data-section .add-to-library-prompt { text-align: center; padding: 1rem; color: var(--color-text-light-2); }
 .metadata-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
 .metadata-lists .metadata-group { margin-bottom: 1.5rem; }

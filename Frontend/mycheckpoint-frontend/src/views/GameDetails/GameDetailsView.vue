@@ -14,7 +14,7 @@
 
           <div v-if="gameDetail.game_info.first_release_date || gameDetail.game_info.first_release_status !== null"
             class="game-release-status-on-cover meta-item" :class="getReleaseStatusClass(gameDetail.game_info)">
-            <span>{{ formatReleaseStatus(gameDetail.game_info) }}</span> 
+            <span>{{ formatReleaseStatus(gameDetail.game_info) }}</span>
           </div>
         </div>
 
@@ -49,8 +49,12 @@
               <h2>Mis Datos del Juego</h2>
 
               <div class="library-actions">
-                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, false)" class="action-button primary">
+                <button v-if="!showLibraryForm" @click="openLibraryModal(false)" class="action-button primary">
                   Editar Mis Datos
+                </button>
+                <button v-if="!showLibraryForm && gameDetail.user_game_data" @click="openPrivateNoteModal"
+                  class="action-button secondary">
+                  Añadir/Editar Nota Privada
                 </button>
               </div>
 
@@ -92,7 +96,7 @@
 
             <div v-else class="add-to-library-prompt">
               <div class="library-actions">
-                <button v-if="!showLibraryForm" @click="toggleLibraryForm(true, true)" class="action-button primary">
+                <button v-if="!showLibraryForm" @click="openLibraryModal(true)" class="action-button primary">
                   Añadir a Mi Biblioteca
                 </button>
               </div>
@@ -177,6 +181,16 @@
 
             <section class="private-notes-section section-block"
               v-if="gameDetail.user_game_data && gameDetail.user_game_data.private_comment">
+              <!--
+              <div class="section-header-with-action">
+                <h2>Mis Notas Privadas</h2>
+                
+                <button @click="openPrivateNoteModal" class="action-button secondary small-button">
+                  Editar Nota
+                </button>
+                
+              </div>
+              -->
               <h2>Mis Notas Privadas</h2>
               <blockquote class="private-comment-quote">
                 <p style="white-space: pre-wrap;">{{ displayComment }}</p>
@@ -479,29 +493,56 @@
       </div>
 
     </div>
-    <div v-if="showLibraryForm" class="modal-overlay" @click.self="toggleLibraryForm(false, false)">
-      <div class="modal-panel">
-        <form @submit.prevent="handleSaveToLibrary" class="library-form-modal">
-          <div class="modal-header">
-            <h3>{{ isAddingNewLibraryEntry ? 'Añadir a' : 'Editar en' }} Mi Biblioteca: {{ gameDetail?.game_info?.name
-            }}</h3>
-            <button type="button" @click="toggleLibraryForm(false, false)" class="modal-close-button"
-              aria-label="Cerrar">&times;</button>
+    <div v-if="showLibraryForm" class="modal-overlay" @click.self="closeLibraryModal">
+      <div class="modal-panel library-wizard-modal">
+        <div class="modal-header">
+          <h3>{{ isAddingNewLibraryEntry ? 'Añadir a' : 'Editar en' }} Mi Biblioteca: {{ gameDetail?.game_info?.name }}
+          </h3>
+          <button type="button" @click="closeLibraryModal" class="modal-close-button" aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="modalStep === 0" class="wizard-step-0">
+            <h4>¿Qué quieres hacer con este juego?</h4>
+            <div class="status-selection-grid">
+              <button @click="setStatusCategoryAndContinue('playing')"
+                :class="{ 'selected': mainStatusCategory === 'playing' }">Jugando</button>
+              <button @click="setStatusCategoryAndContinue('completed')"
+                :class="{ 'selected': mainStatusCategory === 'completed' }">Terminado</button>
+              <button @click="setStatusCategoryAndContinue('archived')"
+                :class="{ 'selected': mainStatusCategory === 'archived' }">Archivado</button>
+              <button @click="setStatusCategoryAndContinue('wishlist')"
+                :class="{ 'selected': mainStatusCategory === 'wishlist' }">Lista de Deseados</button>
+            </div>
           </div>
 
-          <div class="modal-body">
+          <form v-if="modalStep === 1" @submit.prevent="goToStep(2)" class="library-form-modal">
             <div class="form-grid">
               <div class="form-group">
-                <label for="lib-status">Estado:</label>
+                <label for="lib-status">Estado específico:</label>
                 <select id="lib-status" v-model="libraryForm.status">
-                  <option :value="null">-- Sin especificar --</option>
-                  <option v-for="opt in gameStatusOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+                  <option v-for="opt in computedStatusOptions" :key="opt.value" :value="opt.value">{{ opt.text }}
+                  </option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="lib-score">Puntuación (0-10):</label>
                 <input type="number" id="lib-score" v-model.number="libraryForm.score" min="0" max="10" step="0.5" />
               </div>
+            </div>
+            <div class="form-group full-width-form-group">
+              <label for="lib-public-comment">Comentario Público:</label>
+              <textarea id="lib-public-comment" v-model="libraryForm.comment" rows="4"></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" @click="goToStep(0)" class="action-button secondary">Atrás</button>
+              <button type="submit" class="action-button primary">Continuar</button>
+            </div>
+          </form>
+
+          <form v-if="modalStep === 2" @submit.prevent="handleSaveToLibrary" class="library-form-modal">
+            <div class="form-grid">
               <div class="form-group">
                 <label for="lib-platform">Plataforma Personal:</label>
                 <select id="lib-platform" v-model="libraryForm.personal_platform">
@@ -512,7 +553,7 @@
               </div>
               <div class="form-group checkbox-group">
                 <input type="checkbox" id="lib-possession" v-model="libraryForm.has_possession" />
-                <label for="lib-possession">¿Lo tengo?</label>
+                <label for="lib-possession">¿Lo tengo en propiedad?</label>
               </div>
               <div class="form-group">
                 <label for="lib-start-date">Fecha de Inicio:</label>
@@ -522,45 +563,33 @@
                 <label for="lib-end-date">Fecha de Fin:</label>
                 <input type="date" id="lib-end-date" v-model="libraryForm.end_date" />
               </div>
-              <div class="form-group">
-                <label for="lib-hours-story">Horas (Historia):</label>
-                <input type="number" id="lib-hours-story" v-model.number="libraryForm.story_duration_hours" min="0" />
-              </div>
-              <div class="form-group">
-                <label for="lib-hours-sides">Horas (Main+Sides):</label>
-                <input type="number" id="lib-hours-sides" v-model.number="libraryForm.story_secondary_duration_hours"
-                  min="0" />
-              </div>
-              <div class="form-group">
-                <label for="lib-hours-completionist">Horas (Completista):</label>
-                <input type="number" id="lib-hours-completionist"
-                  v-model.number="libraryForm.completionist_duration_hours" min="0" />
-              </div>
-            </div>
-            <div class="form-group full-width-form-group">
-              <label for="lib-public-comment">Comentario Público:</label>
-              <textarea id="lib-public-comment" v-model="libraryForm.comment" rows="3"></textarea>
-            </div>
-            <div class="form-group full-width-form-group">
-              <label for="lib-private-comment">Comentario Privado:</label>
-              <textarea id="lib-private-comment" v-model="libraryForm.private_comment" rows="3"></textarea>
-            </div>
-          </div>
 
-          <div class="modal-footer">
-            <div v-if="libraryActionMessage" :class="libraryActionError ? 'error-message' : 'success-message'"
-              class="action-message modal-action-message">
-              {{ libraryActionMessage }}
+              <div class="form-group">
+                <label for="lib-hours-type">Tipo de Horas:</label>
+                <select id="lib-hours-type" v-model="hourInputType">
+                  <option value="story_duration_hours">Horas (Historia)</option>
+                  <option value="story_secondary_duration_hours">Horas (Main+Sides)</option>
+                  <option value="completionist_duration_hours">Horas (Completista)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="lib-hours-value">Horas Jugadas:</label>
+                <input type="number" id="lib-hours-value" min="0" v-model.number="libraryForm[hourInputType]" />
+              </div>
             </div>
-            <button type="button" @click="toggleLibraryForm(false, false)" class="action-button secondary"
-              :disabled="isLoadingLibraryAction">
-              Cancelar
-            </button>
-            <button type="submit" :disabled="isLoadingLibraryAction" class="action-button primary">
-              {{ isLoadingLibraryAction ? 'Guardando...' : 'Guardar Cambios' }}
-            </button>
-          </div>
-        </form>
+            <div class="form-group full-width-form-group">
+              <label for="lib-private-comment">Comentario Privado (Solo visible para ti):</label>
+              <textarea id="lib-private-comment" v-model="libraryForm.private_comment" rows="4"></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" @click="goToStep(1)" class="action-button secondary">Atrás</button>
+              <button type="submit" :disabled="isLoadingLibraryAction" class="action-button primary">
+                {{ isLoadingLibraryAction ? 'Guardando...' : 'Guardar Cambios' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -606,6 +635,34 @@
   </div>
 
 
+  <div v-if="showPrivateNoteModal" class="modal-overlay" @click.self="showPrivateNoteModal = false">
+    <div class="modal-panel">
+      <form @submit.prevent="handleSavePrivateNote" class="library-form-modal">
+        <div class="modal-header">
+          <h3>Editar Mi Nota Privada</h3>
+          <button type="button" @click="showPrivateNoteModal = false" class="modal-close-button"
+            aria-label="Cerrar">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group full-width-form-group">
+            <label for="private-note-input">Tu nota privada sobre {{ gameDetail?.game_info?.name }}:</label>
+            <textarea id="private-note-input" v-model="privateNoteFormText" rows="8"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" @click="showPrivateNoteModal = false" class="action-button secondary"
+            :disabled="isSavingPrivateNote">
+            Cancelar
+          </button>
+          <button type="submit" :disabled="isSavingPrivateNote" class="action-button primary">
+            {{ isSavingPrivateNote ? 'Guardando...' : 'Guardar Nota' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
   <div v-if="showLightbox && currentImage" class="lightbox-overlay" @click.self="closeLightbox">
 
     <button v-if="currentGallery.length > 1" @click.stop="prevImage" class="nav-arrow prev"
@@ -643,14 +700,49 @@ import defaultRelatedCover from '@/assets/img/default-related-cover.png'; // Pla
 
 
 
+const showPrivateNoteModal = ref(false);
+const privateNoteFormText = ref('');
+const isSavingPrivateNote = ref(false);
 
 
-const isOwner = computed(() => {
-  if (!authStore.isAuthenticated || !authStore.currentUser || !gameListDetails.value) {
-    return false;
+// Abre el modal y carga la nota privada existente en el formulario
+const openPrivateNoteModal = () => {
+  privateNoteFormText.value = gameDetail.value?.user_game_data?.private_comment || '';
+  isSavingPrivateNote.value = false;
+  showPrivateNoteModal.value = true;
+};
+
+// Guarda únicamente el campo de la nota privada
+const handleSavePrivateNote = async () => {
+  if (!igdbId.value) return;
+  isSavingPrivateNote.value = true;
+
+  const dto = {
+    private_comment: privateNoteFormText.value
+  };
+
+  try {
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
+    // Actualizamos los datos locales con la respuesta de la API
+    if (gameDetail.value && gameDetail.value.user_game_data) {
+      gameDetail.value.user_game_data = response.data;
+    }
+    showPrivateNoteModal.value = false; // Cerramos el modal
+  } catch (error) {
+    console.error("Error al guardar la nota privada:", error);
+    // Aquí podrías añadir un mensaje de error para el usuario si quieres
+  } finally {
+    isSavingPrivateNote.value = false;
   }
-  return authStore.currentUser.nombre_usuario === gameListDetails.value.owner_username;
-});
+};
+
+
+// --- ESTADO DEL MODAL ASISTENTE (NUEVO) ---
+const modalStep = ref(0); // 0: Selección inicial, 1: Detalles primarios, 2: Detalles secundarios
+const mainStatusCategory = ref(null); // 'playing', 'completed', 'archived'
+const hourInputType = ref('story_duration_hours'); // Para el desplegable de horas
+
+
 
 
 const showCommentModal = ref(false);
@@ -901,6 +993,7 @@ watch(() => route.params.igdbId, (newId) => {
   if (newId && newId !== igdbId.value) {
     igdbId.value = newId;
     loadGameDetails(newId);
+    activeTab.value = 'details';
   }
 });
 
@@ -1246,6 +1339,11 @@ const formatDateSimple = (dateString) => {
 // --- NUEVO ESTADO para el formulario de la biblioteca ---
 const showLibraryForm = ref(false);
 const isAddingNewLibraryEntry = ref(false);
+const isLoadingLibraryAction = ref(false);
+const libraryActionMessage = ref('');
+const libraryActionError = ref(false);
+
+
 const libraryForm = reactive({
   status: null, //
   personal_platform: null, //
@@ -1259,23 +1357,27 @@ const libraryForm = reactive({
   story_secondary_duration_hours: null, //
   completionist_duration_hours: null, //
 });
-const isLoadingLibraryAction = ref(false);
-const libraryActionMessage = ref('');
-const libraryActionError = ref(false);
+
 
 // Opciones para los selectores del formulario (basadas en tus enums/DTOs)
-const gameStatusOptions = [ //
-  { value: 'PLAYING', text: 'Jugando' },
-  { value: 'PLAYING_PAUSED', text: 'Jugando (En Pausa)' },
-  { value: 'PLAYING_ENDLESS', text: 'Jugando (Sin Fin)' },
-  { value: 'COMPLETED_MAIN_STORY', text: 'Historia Principal Completada' },
-  { value: 'COMPLETED_MAIN_AND_SIDES', text: 'Principal + Secundarias Completado' },
-  { value: 'COMPLETED_100_PERCENT', text: 'Completado al 100%' },
-  { value: 'WISHLIST', text: 'En Lista de Deseos' },
-  { value: 'ARCHIVED_ABANDONED', text: 'Archivado (Abandonado)' },
-  { value: 'ARCHIVED_NOT_PLAYING', text: 'Archivado (Sin Jugar)' },
-  { value: 'ARCHIVED', text: 'Archivado (Otro)' },
-];
+const gameStatusOptions = {
+  playing: [
+    { value: 'PLAYING', text: 'Jugando' },
+    { value: 'PLAYING_PAUSED', text: 'Jugando (En Pausa)' },
+    { value: 'PLAYING_ENDLESS', text: 'Jugando (Sin Fin)' },
+  ],
+  completed: [
+    { value: 'COMPLETED', text: 'Completado' },
+    { value: 'COMPLETED_MAIN_STORY', text: 'Historia Principal Completada' },
+    { value: 'COMPLETED_MAIN_AND_SIDES', text: 'Principal + Secundarias' },
+    { value: 'COMPLETED_100_PERCENT', text: 'Completado al 100%' },
+  ],
+  archived: [
+    { value: 'ARCHIVED', text: 'Archivado' },
+    { value: 'ARCHIVED_ABANDONED', text: 'Archivado (Abandonado)' },
+    { value: 'ARCHIVED_NOT_PLAYING', text: 'Archivado (Sin Jugar)' },
+  ]
+};
 const personalPlatformOptions = [ //
   { value: 'STEAM', text: 'Steam' },
   { value: 'EPIC_GAMES', text: 'Epic Games Store' },
@@ -1288,6 +1390,71 @@ const personalPlatformOptions = [ //
   { value: 'UBISOFT_CONNECT', text: 'Ubisoft Connect' },
   { value: 'OTHER', text: 'Otra' },
 ];
+
+
+const openLibraryModal = (isNew = false) => {
+  isAddingNewLibraryEntry.value = isNew;
+  libraryActionMessage.value = '';
+  libraryActionError.value = false;
+  modalStep.value = 0; // Siempre empezamos en el paso 0
+  mainStatusCategory.value = null;
+
+  // Limpiar formulario antes de rellenar
+  Object.keys(libraryForm).forEach(key => {
+    libraryForm[key] = (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
+  });
+
+  if (!isNew && gameDetail.value?.user_game_data) {
+    // Modo Edición: Rellenamos el formulario con los datos existentes
+    const data = gameDetail.value.user_game_data;
+    Object.keys(libraryForm).forEach(key => {
+      if (data[key] !== undefined && data[key] !== null) {
+        libraryForm[key] = data[key];
+      }
+    });
+
+    // Determinamos la categoría principal para preseleccionar la opción
+    const currentStatus = data.status || '';
+    if (currentStatus.includes('PLAYING')) mainStatusCategory.value = 'playing';
+    else if (currentStatus.includes('COMPLETED')) mainStatusCategory.value = 'completed';
+    else if (currentStatus.includes('ARCHIVED')) mainStatusCategory.value = 'archived';
+    else if (currentStatus === 'WISHLIST') mainStatusCategory.value = 'wishlist';
+
+  }
+  showLibraryForm.value = true;
+};
+
+const closeLibraryModal = () => {
+  showLibraryForm.value = false;
+};
+
+// Navegación del asistente
+const setStatusCategoryAndContinue = (category) => {
+  console.log(`[PASO 0] Botón pulsado. Categoría seleccionada: '${category}'`);
+  mainStatusCategory.value = category;
+  if (category === 'wishlist') {
+    libraryForm.status = 'WISHLIST';
+    handleSaveToLibrary(); // Guardar directamente
+  } else {
+    // Asignamos un estado por defecto de la categoría
+    libraryForm.status = gameStatusOptions[category][0].value;
+    modalStep.value = 1;
+  }
+};
+
+const computedStatusOptions = computed(() => {
+  // Si no se ha seleccionado una categoría principal (ej: 'jugando'), devuelve un array vacío.
+  if (!mainStatusCategory.value) return [];
+
+  // Si se ha seleccionado, devuelve el array de opciones correspondiente a esa categoría.
+  // Por ejemplo, si mainStatusCategory es 'completed', devolverá la lista de estados de completado.
+  return gameStatusOptions[mainStatusCategory.value] || [];
+});
+
+const goToStep = (step) => {
+  modalStep.value = step;
+};
+
 
 
 
@@ -1315,63 +1482,38 @@ const toggleLibraryForm = (show, isNew = false) => {
 };
 
 const handleSaveToLibrary = async () => {
+  // 1. Se asegura de que existe un ID de juego para guardar.
   if (!igdbId.value) return;
+
+  // 2. Activa los indicadores de "cargando" para la interfaz.
   isLoadingLibraryAction.value = true;
   libraryActionMessage.value = '';
   libraryActionError.value = false;
 
+  // 3. Crea una copia de los datos del formulario para enviarla.
   const dto = { ...libraryForm };
-  // Limpieza y conversión de tipos
-  ['score', 'story_duration_hours', 'story_secondary_duration_hours', 'completionist_duration_hours'].forEach(key => {
-    if (dto[key] === '' || dto[key] === null || dto[key] === undefined) dto[key] = null;
-    else dto[key] = Number(dto[key]);
-    if (isNaN(dto[key])) dto[key] = null; // Si la conversión falla, poner a null
+
+  // 4. Lógica clave: Limpia los campos de horas que NO fueron seleccionados en el desplegable.
+  //    Esto asegura que solo se guarde el tipo de horas que el usuario introdujo.
+  const hourTypes = ['story_duration_hours', 'story_secondary_duration_hours', 'completionist_duration_hours'];
+  hourTypes.forEach(type => {
+    if (type !== hourInputType.value) {
+      dto[type] = null;
+    }
   });
-  if (dto.start_date === '') dto.start_date = null;
-  if (dto.end_date === '') dto.end_date = null;
 
-  // Crear un objeto DTO limpio solo con los campos que tienen valor o son booleanos
-  const cleanDto = {};
-  let hasDataToSend = false;
-  for (const key in dto) {
-    if (dto[key] !== null && dto[key] !== undefined && dto[key] !== '') { // No enviar strings vacíos como valor, solo si el backend los espera
-      cleanDto[key] = dto[key];
-      hasDataToSend = true;
-    } else if (typeof dto[key] === 'boolean') { // Enviar booleanos siempre
-      cleanDto[key] = dto[key];
-      // hasDataToSend = true; // Un booleano por sí solo puede no ser un "cambio" si es el default
-    } else if (dto[key] === null && gameDetail.value?.user_game_data?.[key] !== undefined) {
-      // Si el campo existía y ahora es null, enviamos null para borrarlo en el backend si así se desea.
-      cleanDto[key] = null;
-      hasDataToSend = true;
-    }
-  }
-  // Asegurar que has_possession se envíe si es el único campo
-  if (Object.keys(cleanDto).length === 0 && typeof dto.has_possession === 'boolean') {
-    cleanDto.has_possession = dto.has_possession;
-    // No marcamos hasDataToSend = true aquí necesariamente,
-    // el backend debe poder manejar un DTO solo con has_possession.
-    // O, podríamos necesitar al menos un status para crear una nueva entrada.
-  }
-  // Si es una nueva entrada y no se ha especificado nada, ¿qué enviar?
-  // Por ahora, si cleanDto está vacío, podríamos no enviar nada o enviar un DTO por defecto.
-  // Tu UserGameDataDTO tiene todos los campos como opcionales.
-
+  // 5. Intenta guardar los datos en la base de datos a través de la API.
   try {
-    console.log("Enviando a la biblioteca (add/update):", cleanDto, "para igdbId:", igdbId.value);
-    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), cleanDto);
-    if (gameDetail.value) {
-      gameDetail.value.user_game_data = response.data;
-    }
-    libraryActionMessage.value = '¡Juego guardado en tu biblioteca!';
-    libraryActionError.value = false;
-    showLibraryForm.value = false;
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
+    // Si tiene éxito, actualiza los datos del juego en la página y cierra el modal.
+    gameDetail.value.user_game_data = response.data;
+    closeLibraryModal();
   } catch (error) {
+    // 6. Si hay un error, lo captura y muestra un mensaje al usuario.
     libraryActionError.value = true;
-    if (error.response) {
-      libraryActionMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo guardar el juego.'}`;
-    } else { libraryActionMessage.value = 'Error de red al guardar en la biblioteca.'; }
+    libraryActionMessage.value = `Error: ${error.response?.data?.message || 'No se pudo guardar.'}`;
   } finally {
+    // 7. Se asegura de desactivar el indicador de "cargando", tanto si ha habido éxito como si ha habido un error.
     isLoadingLibraryAction.value = false;
   }
 };
