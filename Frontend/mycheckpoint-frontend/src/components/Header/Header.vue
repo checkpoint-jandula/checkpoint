@@ -6,26 +6,22 @@
         <span class="app-title">MyCheckPoint</span>
       </RouterLink>
 
-      
-
       <nav class="main-nav" :class="{ 'is-open': isMenuOpen }">
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" :to="{ name: 'friends' }">Amigos</RouterLink>
-        <RouterLink to="/public-gamelists">Listas Públicas</RouterLink>
-        <RouterLink to="/public-tierlists">Tier Lists Públicas</RouterLink>
-        <RouterLink to="/search-users">Buscar Usuarios</RouterLink>
+        <RouterLink to="/" @click="isMenuOpen = false">Home</RouterLink>
+        <RouterLink v-if="authStore.isAuthenticated" :to="{ name: 'friends' }" @click="isMenuOpen = false">Amigos</RouterLink>
+        <RouterLink to="/public-gamelists" @click="isMenuOpen = false">Listas Públicas</RouterLink>
+        <RouterLink to="/public-tierlists" @click="isMenuOpen = false">Tier Lists Públicas</RouterLink>
+        <RouterLink to="/search-users" @click="isMenuOpen = false">Buscar Usuarios</RouterLink>
       </nav>
 
       <div class="actions-container">
-
         <button @click="isMenuOpen = !isMenuOpen" class="menu-toggle" aria-label="Abrir menú">
-        <span class="hamburger-icon"></span>
-      </button>
+          <span class="hamburger-icon" :class="{'is-open': isMenuOpen}"></span>
+        </button>
 
-
-        <form @submit.prevent="executeSearch" class="search-container">
+        <form @submit.prevent="performSearch" class="search-container">
           <input type="search" v-model="searchQuery" placeholder="Buscar por nombre..." @keyup.enter="performSearch" />
-          <button @click="performSearch" class="search-button" aria-label="Buscar">
+          <button type="button" @click="performSearch" class="search-button" aria-label="Buscar">
             <span class="icon-search" aria-label="Buscar">🔍</span>
           </button>
         </form>
@@ -36,12 +32,18 @@
 
         <div class="user-auth-group">
           <template v-if="authStore.isAuthenticated && authStore.currentUser">
-            <div class="user-menu-container">
-              <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }"
-                class="user-profile-link" title="Mi Perfil">
+            <div class="user-menu-container" ref="userMenuContainerRef">
+              <a href="#" @click.prevent="toggleUserMenu" class="user-profile-link" title="Menú de usuario">
                 <img :src="profilePictureUrl" alt="Mi perfil" class="user-avatar-header">
-              </RouterLink>
-              <a role="button" href="#" @click.prevent="handleLogout" class="logout-button">Salir</a>
+              </a>
+              <div v-if="isUserMenuOpen" class="user-dropdown-menu">
+                <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }" class="dropdown-item">
+                  Ver Perfil
+                </RouterLink>
+                <a role="button" href="#" @click.prevent="handleLogout" class="dropdown-item logout">
+                  Salir
+                </a>
+              </div>
             </div>
           </template>
           <template v-else>
@@ -53,12 +55,6 @@
     </div>
 
     <div v-if="showFilterPanel" class="filter-panel">
-      <form @submit.prevent="executeSearch" class="search-container search-filter-form">
-          <input type="search" v-model="searchQuery" placeholder="Buscar por nombre..." @keyup.enter="performSearch" />
-          <button @click="performSearch" class="search-button" aria-label="Buscar">
-            <span class="icon-search" aria-label="Buscar">🔍</span>
-          </button>
-        </form>
       <form @submit.prevent="applyFilters" class="filter-form">
         <div class="filter-group">
           <label for="filter-genre">Género:</label>
@@ -100,25 +96,24 @@
 
 <script setup>
 import Logo from '@/components/Logo/Logo.vue';
-
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, onUnmounted } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { findAllGenres, findAllThemes, findAllGameModes } from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
 import defaultAvatar from '@/assets/img/default-avatar.png';
 
-const isMenuOpen = ref(false);
-
-
-
 const authStore = useAuthStore();
 const router = useRouter();
 
-const searchQuery = ref('');
-
-// Lógica del panel de filtros
+// Estado de la UI
+const isMenuOpen = ref(false);
 const showFilterPanel = ref(false);
+const isUserMenuOpen = ref(false);
+const userMenuContainerRef = ref(null);
+
+// Lógica de Búsqueda y Filtros
+const searchQuery = ref('');
 const genres = ref([]);
 const themes = ref([]);
 const gameModes = ref([]);
@@ -130,6 +125,7 @@ const filters = reactive({
   releaseDateEnd: ''
 });
 
+// Carga de datos para filtros
 onMounted(async () => {
   try {
     const [genresRes, themesRes, modesRes] = await Promise.all([
@@ -140,20 +136,18 @@ onMounted(async () => {
     genres.value = genresRes.data;
     themes.value = themesRes.data;
     gameModes.value = modesRes.data;
-
-    // --- LOG DE DEBUG 1 ---
-    // Revisa aquí si los objetos tienen la propiedad 'igdbId' o 'id'.
-    console.log('Datos para filtros cargados:', {
-      genres: genres.value,
-      themes: themes.value,
-      gameModes: gameModes.value
-    });
-
   } catch (error) {
     console.error("Error cargando datos para filtros:", error);
   }
+  // Event listener para cerrar el menú de usuario si se hace clic fuera
+  document.addEventListener('click', closeUserMenuOnClickOutside);
 });
 
+onUnmounted(() => {
+  document.removeEventListener('click', closeUserMenuOnClickOutside);
+});
+
+// Lógica del Menú de Usuario
 const profilePictureUrl = computed(() => {
   const fotoPerfil = authStore.currentUser?.foto_perfil;
   if (fotoPerfil) {
@@ -166,11 +160,23 @@ const profilePictureUrl = computed(() => {
   return defaultAvatar;
 });
 
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value;
+};
+
+const closeUserMenuOnClickOutside = (event) => {
+    if (userMenuContainerRef.value && !userMenuContainerRef.value.contains(event.target)) {
+        isUserMenuOpen.value = false;
+    }
+};
+
 const handleLogout = () => {
+  isUserMenuOpen.value = false; // Cerramos el menú
   authStore.logout();
   router.push({ name: 'login' });
 };
 
+// Lógica de Búsqueda y Filtros
 const performSearch = () => {
   if (searchQuery.value.trim()) {
     router.push({ name: 'search-games', query: { q: searchQuery.value.trim() } });
@@ -182,10 +188,6 @@ const toggleFilterPanel = () => {
 };
 
 const applyFilters = () => {
-  // --- LOG DE DEBUG 2 ---
-  // Revisa aquí el valor de `filters.genreId` después de seleccionar una opción.
-  console.log('Estado de los filtros al aplicar:', JSON.parse(JSON.stringify(filters)));
-
   const queryParams = { filter: 'true' };
   if (filters.genreId) queryParams.id_genero = filters.genreId;
   if (filters.themeId) queryParams.id_tema = filters.themeId;
@@ -196,11 +198,6 @@ const applyFilters = () => {
   if (filters.releaseDateEnd) {
     queryParams.fecha_fin = Math.floor(new Date(filters.releaseDateEnd).getTime() / 1000);
   }
-
-  // --- LOG DE DEBUG 3 ---
-  // Revisa si el objeto `queryParams` contiene `id_genero` con el valor correcto.
-  console.log('Navegando con los siguientes queryParams:', queryParams);
-
   router.push({ name: 'search-games', query: queryParams });
   showFilterPanel.value = false;
 };

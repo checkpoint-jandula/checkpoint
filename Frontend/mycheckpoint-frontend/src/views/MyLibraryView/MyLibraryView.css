@@ -76,12 +76,12 @@
   font-size: 1.2rem;
   color: var(--color-text);
 }
-/*.error-message {
+.error-message {
   color: #d8000c;
   background-color: #ffbaba;
   border: 1px solid #d8000c;
   border-radius: 4px;
-}*/
+}
 .empty-library-message {
   color: var(--color-text-light-2);
   padding: 2rem;
@@ -98,7 +98,7 @@
 
 .library-game-card {
   background-color: var(--color-background-soft);
-  border-radius: 8px;
+  
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   overflow: hidden;

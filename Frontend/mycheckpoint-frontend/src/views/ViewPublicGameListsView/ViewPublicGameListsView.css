@@ -34,7 +34,7 @@
 
 .gamelist-card {
   background-color: var(--color-background-soft);
-  border-radius: 8px;
+
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex; /* Para que el enlace ocupe toda la tarjeta */

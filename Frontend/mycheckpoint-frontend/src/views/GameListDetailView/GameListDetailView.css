@@ -135,7 +135,7 @@
 
 .library-game-card {
   background-color: var(--color-background);
-  border-radius: 6px;
+  
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   border: 1px solid var(--color-border);
