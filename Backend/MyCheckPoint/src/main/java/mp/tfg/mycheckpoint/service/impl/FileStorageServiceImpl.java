@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +53,12 @@ public class FileStorageServiceImpl implements FileStorageService {
      * Las extensiones se almacenan en minúsculas para una comparación insensible a mayúsculas.
      */
     private final List<String> allowedProfilePictureExtensions = Arrays.asList(".jpeg", ".jpg", ".png", ".gif");
+
+    /**
+     * Lista de tipos MIME permitidos para una validación segura.
+     * Estos corresponden a las extensiones permitidas.
+     */
+    private final List<String> allowedMimeTypes = Arrays.asList("image/jpeg", "image/png", "image/gif");
 
     /**
      * Constructor para FileStorageServiceImpl.
@@ -134,25 +142,39 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     /**
-     * Almacena un archivo de imagen de perfil subido por un usuario.
-     * El método realiza las siguientes validaciones antes de guardar:
-     * <ol>
-     * <li>Verifica que el archivo no sea nulo o vacío.</li>
-     * <li>Comprueba que el tamaño del archivo no exceda el máximo configurado.</li>
-     * <li>Valida que la extensión del archivo esté dentro de las permitidas (jpeg, jpg, png, gif).</li>
-     * </ol>
-     * El archivo se guarda con un nuevo nombre compuesto por el {@code userPublicId} y la extensión original,
-     * reemplazando cualquier archivo existente con el mismo nombre.
+     * Almacena la foto de perfil de un usuario tras una serie de validaciones de seguridad y formato.
      *
-     * @param file El archivo {@link MultipartFile} que representa la imagen de perfil subida.
-     * @param userPublicId El ID público (UUID en formato String) del usuario, utilizado para nombrar el archivo guardado.
-     * @return El nombre del archivo generado y almacenado (ej. "uuid_del_usuario.png").
-     * @throws FileStorageException Si el archivo está vacío, excede el tamaño máximo,
-     * tiene un formato no permitido, no se puede determinar la extensión,
-     * se intenta guardar fuera del directorio designado, o si ocurre un error de I/O.
+     * <p>El proceso de validación es el siguiente:</p>
+     * <ol>
+     * <li><b>Validación Básica:</b> Comprueba que el archivo no sea nulo ni esté vacío.</li>
+     * <li><b>Tamaño del Archivo:</b> Verifica que el tamaño del archivo no exceda el límite máximo configurado.</li>
+     * <li><b>Extensión del Archivo:</b> Realiza una comprobación inicial de que la extensión del archivo (ej. ".png")
+     * esté en la lista de extensiones permitidas.</li>
+     * <li><b>Validación de Contenido (MIME Type):</b> La validación más importante. Inspecciona los primeros bytes del
+     * archivo para determinar su tipo MIME real. Esto previene que un archivo de un tipo no permitido
+     * (como un script) sea subido simplemente renombrando su extensión.</li>
+     * </ol>
+     *
+     * <p>Si todas las validaciones son exitosas, el archivo se guarda en el directorio de almacenamiento designado.
+     * El nombre del archivo final se construye usando el ID público del usuario para garantizar unicidad y
+     * fácil recuperación. Si ya existe una foto de perfil para ese usuario, será reemplazada.</p>
+     *
+     * @param file El archivo {@link MultipartFile} que representa la imagen de perfil subida por el cliente.
+     * @param userPublicId El ID público (normalmente un UUID en formato String) del usuario. Se utiliza para
+     * nombrar el archivo guardado (ej. "uuid_del_usuario.png").
+     * @return El nombre del archivo generado y almacenado en el sistema.
+     * @throws FileStorageException Si ocurre un error durante el proceso de validación o almacenamiento.
+     * La excepción contendrá un {@link HttpStatus} apropiado:
+     * <ul>
+     * <li>{@code BAD_REQUEST}: Si el archivo es nulo, vacío o se detecta un intento de Path Traversal.</li>
+     * <li>{@code PAYLOAD_TOO_LARGE}: Si el archivo excede el tamaño máximo permitido.</li>
+     * <li>{@code UNSUPPORTED_MEDIA_TYPE}: Si la extensión o el tipo de contenido (MIME type) no son válidos.</li>
+     * <li>{@code INTERNAL_SERVER_ERROR}: Si ocurre un error de lectura o escritura en el servidor.</li>
+     * </ul>
      */
     @Override
     public String storeProfilePicture(MultipartFile file, String userPublicId) {
+        // Validaciones básicas
         if (file == null || file.isEmpty()) {
             throw new FileStorageException("No se puede guardar un archivo vacío o nulo.", HttpStatus.BAD_REQUEST);
         }
@@ -160,49 +182,76 @@ public class FileStorageServiceImpl implements FileStorageService {
         if (file.getSize() > this.maxProfilePictureSizeBytes) {
             String configuredMaxSizeReadable = convertBytesToReadableSize(this.maxProfilePictureSizeBytes);
             String actualFileSizeReadable = convertBytesToReadableSize(file.getSize());
-            throw new FileStorageException("El archivo excede el tamaño máximo permitido para fotos de perfil (" +
-                    configuredMaxSizeReadable + "). Tamaño del archivo subido: " +
-                    actualFileSizeReadable, HttpStatus.PAYLOAD_TOO_LARGE);
+            throw new FileStorageException("El archivo excede el tamaño máximo permitido (" +
+                    configuredMaxSizeReadable + ").", HttpStatus.PAYLOAD_TOO_LARGE);
         }
 
         String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-        String fileExtension = "";
+        String fileExtension = getFileExtension(originalFilename);
 
-        try {
-            int lastDot = originalFilename.lastIndexOf(".");
-            if (lastDot > 0 && lastDot < originalFilename.length() - 1) {
-                fileExtension = originalFilename.substring(lastDot).toLowerCase();
-            }
-
-            if (fileExtension.isBlank() || !this.allowedProfilePictureExtensions.contains(fileExtension)) {
-                throw new FileStorageException("Formato de archivo no permitido: '" + originalFilename +
-                        "'. Extensiones permitidas: " + String.join(", ", this.allowedProfilePictureExtensions), HttpStatus.BAD_REQUEST);
-            }
-        } catch (FileStorageException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error("Error al procesar el nombre del archivo para validación de extensión: {}", originalFilename, e);
-            throw new FileStorageException("No se pudo determinar la extensión del archivo de forma segura: " + originalFilename, e, HttpStatus.BAD_REQUEST);
+        // Validación de extensión
+        if (fileExtension.isBlank() || !this.allowedProfilePictureExtensions.contains(fileExtension)) {
+            throw new FileStorageException("Extensión de archivo no permitida. Permitidas: " + String.join(", ", this.allowedProfilePictureExtensions), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
 
-        String newFileName = userPublicId + fileExtension;
+        // Validación de contenido
+        try (InputStream inputStream = file.getInputStream()) {
+            // Se inspecciona el contenido del stream para adivinar el tipo MIME
+            InputStream bufferedInputStream = new BufferedInputStream(inputStream);
+            String mimeType = URLConnection.guessContentTypeFromStream(bufferedInputStream);
 
+            if (mimeType == null || !this.allowedMimeTypes.contains(mimeType.toLowerCase())) {
+                logger.warn("Intento de subida de archivo con tipo de contenido no válido. Archivo: '{}', MIME detectado: '{}'", originalFilename, mimeType);
+                throw new FileStorageException("El contenido del archivo no es una imagen válida. Tipos permitidos: " + String.join(", ", this.allowedMimeTypes), HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+            }
+            logger.info("Tipo MIME validado para '{}': {}", originalFilename, mimeType);
+
+        } catch (IOException e) {
+            logger.error("Error al leer el archivo para validar su tipo de contenido: {}", originalFilename, e);
+            throw new FileStorageException("No se pudo validar el contenido del archivo.", e, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // Almacenamiento seguro del archivo
+        String newFileName = userPublicId + fileExtension;
         try {
             Path targetLocation = this.profilePictureStorageLocation.resolve(newFileName).normalize();
 
             if (!targetLocation.startsWith(this.profilePictureStorageLocation)) {
-                throw new FileStorageException("No se puede guardar el archivo fuera del directorio de almacenamiento designado.", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new FileStorageException("Intento de Path Traversal detectado.", HttpStatus.BAD_REQUEST);
             }
 
+            // Se necesita un nuevo InputStream porque el anterior fue consumido por guessContentTypeFromStream.
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, targetLocation, StandardCopyOption.REPLACE_EXISTING);
             }
+
             logger.info("Foto de perfil guardada: {} para el usuario {}", newFileName, userPublicId);
             return newFileName;
+
         } catch (IOException ex) {
             logger.error("No se pudo guardar el archivo {}. Causa: {}", newFileName, ex.getMessage(), ex);
             throw new FileStorageException("No se pudo guardar el archivo " + newFileName + ". ¡Por favor, inténtalo de nuevo!", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * Extrae de forma segura la extensión de un nombre de archivo.
+     *
+     * <p>Este método de utilidad busca el último punto (".") en el nombre del archivo y
+     * devuelve la subcadena desde ese punto hasta el final, convertida a minúsculas.
+     * Si no se encuentra un punto o el nombre del archivo es nulo, devuelve una cadena vacía.</p>
+     *
+     * @param filename El nombre del archivo del cual se extraerá la extensión (ej. "MiFoto.JPG").
+     * @return La extensión del archivo en minúsculas, incluyendo el punto (ej. ".jpg"), o una
+     * cadena vacía si no tiene extensión o el nombre es nulo.
+     */
+    private String getFileExtension(String filename) {
+        if (filename == null) return "";
+        int lastDot = filename.lastIndexOf(".");
+        if (lastDot >= 0) {
+            return filename.substring(lastDot).toLowerCase();
+        }
+        return "";
     }
 
     /**
