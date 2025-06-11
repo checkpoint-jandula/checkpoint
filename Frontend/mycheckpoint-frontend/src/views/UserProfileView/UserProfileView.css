@@ -141,11 +141,11 @@
 }
 .tabs-navigation.profile-tabs button.active-tab {
   color: var(--color-heading);
-  border-bottom-color: hsla(160, 100%, 37%, 1);
+  border-bottom-color: var(--color-azul);
   background-color: var(--color-background-soft);
 }
 .tabs-navigation.profile-tabs button.active-tab.tab-library { /* Clase específica para la pestaña Biblioteca */
-  color: hsla(160, 100%, 37%, 1);
+  color: var(--color-azul);
   font-weight: bold;
 }
 .tab-content {

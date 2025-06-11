@@ -70,8 +70,8 @@
   padding: 0.75rem 1rem;
   font-size: 1rem;
   font-weight: bolder;
-  background-color: rgb(220, 30, 30);
-  color: black;
+  background-color: #03d7fd64;
+  color: var(--vt-c-text-dark-2);
   border: none;
   cursor: pointer;
   border-radius: 6px;
@@ -81,13 +81,8 @@
   transition: color 0.2s, background-color 0.2s;
 }
 .button-reset:hover {
-  background-color: var(--color-background-mute);
-  color: var(--color-text);
-}
-.button-reset .icon-reset {
-  font-weight: bold;
-  font-size: 1.2rem;
-  line-height: 1;
+  background-color: rgba(220, 30, 30, 0.583);
+  color: black;
 }
 /* --- FIN: Panel de Filtros Rediseñado --- */
 
