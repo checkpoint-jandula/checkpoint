@@ -23,6 +23,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -117,13 +118,14 @@ public class GameListServiceImpl implements GameListService {
     @Transactional(readOnly = true)
     public List<GameListResponseDTO> getAllGameListsForUser(String userEmail) {
         User owner = getUserByEmail(userEmail);
-        // El método del repositorio findByOwnerOrderByUpdatedAtDesc no especifica carga FETCH de userGames.
-        // Si se necesita userGames poblado aquí, se debería usar un método de repo con JOIN FETCH
-        // o cargar la colección explícitamente si la sesión de Hibernate lo permite.
-        // Por ahora, se asume que el mapper o el contexto transaccional manejan la carga LAZY si es necesaria.
-        return gameListRepository.findByOwnerOrderByUpdatedAtDesc(owner).stream()
-                .map(gameListMapper::toResponseDto)
-                .collect(Collectors.toList());
+
+        List<GameList> gameLists = gameListRepository.findByOwnerOrderByUpdatedAtDesc(owner);
+        List<GameListResponseDTO> responseDTOs = new ArrayList<>();
+
+        for (GameList gameList : gameLists) {
+            responseDTOs.add(gameListMapper.toResponseDto(gameList));
+        }
+        return responseDTOs;
     }
 
     /**
@@ -175,16 +177,15 @@ public class GameListServiceImpl implements GameListService {
     @Override
     @Transactional(readOnly = true)
     public List<GameListResponseDTO> getAllPublicGameLists() {
-        // Asume que el gameListMapper maneja correctamente la carga LAZY de userGames o
-        // que la transacción sigue activa. Para mayor seguridad, el método del repositorio
-        // debería hacer un JOIN FETCH si los juegos siempre son necesarios en esta vista.
-        return gameListRepository.findByIsPublicTrueOrderByUpdatedAtDesc().stream()
-                .map(gameList -> {
-                    // GameList fetchedList = gameListRepository.findByPublicIdAndIsPublicTrueWithGames(gameList.getPublicId()).orElse(gameList);
-                    // return gameListMapper.toResponseDto(fetchedList);
-                    return gameListMapper.toResponseDto(gameList);
-                })
-                .collect(Collectors.toList());
+        List<GameList> publicGameLists = gameListRepository.findByIsPublicTrueOrderByUpdatedAtDesc();
+
+        List<GameListResponseDTO> responseDTOs = new ArrayList<>();
+
+        for (GameList gameList : publicGameLists) {
+            responseDTOs.add(gameListMapper.toResponseDto(gameList));
+        }
+
+        return responseDTOs;
     }
 
     /**
@@ -235,7 +236,7 @@ public class GameListServiceImpl implements GameListService {
         logger.info("Iniciando proceso de eliminación para GameList '{}' (Public ID: {}) por usuario {}",
                 gameListToRemove.getName(), listPublicId, userEmail);
 
-        Optional<TierList> dependentTierListOpt = tierListRepository.findBySourceGameListAndType(gameListToRemove, TierListType.FROM_GAMELIST); // Necesitas este método
+        Optional<TierList> dependentTierListOpt = tierListRepository.findBySourceGameListAndType(gameListToRemove, TierListType.FROM_GAMELIST);
 
         if (dependentTierListOpt.isPresent()) {
             TierList tierListToDelete = dependentTierListOpt.get();
@@ -279,7 +280,7 @@ public class GameListServiceImpl implements GameListService {
     @Transactional
     public GameListResponseDTO addGameToCustomList(String userEmail, UUID listPublicId, Long userGameInternalId) {
         User owner = getUserByEmail(userEmail);
-        // Cargar la GameList junto con sus juegos para verificar si el UserGame ya existe
+        // Carga la GameList junto con sus juegos para verificar si el UserGame ya existe
         GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList with Public ID " + listPublicId + " not found for user " + userEmail));
@@ -322,7 +323,6 @@ public class GameListServiceImpl implements GameListService {
     public void removeGameFromCustomList(String userEmail, UUID listPublicId, Long userGameInternalId) {
         User owner = getUserByEmail(userEmail);
 
-        // Cargar la GameList CON sus juegos para poder operar sobre la colección de juegos
         GameList gameList = gameListRepository.findByPublicIdAndOwnerWithGames(listPublicId, owner)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "GameList con ID público " + listPublicId + " no encontrada para el usuario " + userEmail));
@@ -330,53 +330,52 @@ public class GameListServiceImpl implements GameListService {
         UserGame userGameToRemove = userGameRepository.findById(userGameInternalId)
                 .orElseThrow(() -> new ResourceNotFoundException("UserGame entry con ID " + userGameInternalId + " no encontrado."));
 
-        // Validación adicional: el UserGame debe pertenecer al dueño de la lista.
         if (!userGameToRemove.getUser().getId().equals(owner.getId())) {
             throw new UnauthorizedOperationException(
                     "El UserGame ID " + userGameInternalId + " no pertenece al usuario " + userEmail +
                             " y no puede ser eliminado de la lista " + listPublicId);
         }
 
-        // Intenta eliminar el UserGame de la colección de la GameList.
-        // Usar removeIf con comparación de ID es más robusto.
-        boolean removed = gameList.getUserGames().removeIf(ug -> ug.getInternalId().equals(userGameToRemove.getInternalId()));
+        boolean removed = false;
+        UserGame gameFound = null;
+        for (UserGame ug : gameList.getUserGames()) {
+            if (ug.getInternalId().equals(userGameToRemove.getInternalId())) {
+                gameFound = ug;
+                break;
+            }
+        }
+
+        if (gameFound != null) {
+            gameList.getUserGames().remove(gameFound);
+            removed = true;
+        }
 
         if (removed) {
-            gameListRepository.save(gameList); // Persiste el cambio en la GameList (UserGame quitado de la colección)
+            gameListRepository.save(gameList);
             logger.info("Juego (UserGame ID: {}) eliminado de GameList '{}' (Public ID: {}) por usuario {}",
                     userGameInternalId, gameList.getName(), listPublicId, userEmail);
 
-            // Paso crucial: Sincronizar la TierList asociada de tipo FROM_GAMELIST
-            // Esto asegura que si este UserGame estaba en la TierList vinculada, se elimine también de allí.
+            // Sincronizar la TierList asociada
             Optional<TierList> associatedTierListOpt = tierListRepository.findBySourceGameListAndType(gameList, TierListType.FROM_GAMELIST);
             if (associatedTierListOpt.isPresent()) {
                 TierList tierListToSync = associatedTierListOpt.get();
-                logger.info("Iniciando sincronización para TierList ID {} (Nombre: '{}', asociada a GameList ID {}) después de eliminar un juego de la GameList.",
-                        tierListToSync.getPublicId(), tierListToSync.getName(), gameList.getPublicId());
+                logger.info("Iniciando sincronización para TierList ID {} (asociada a GameList ID {}) después de eliminar un juego.",
+                        tierListToSync.getPublicId(), gameList.getPublicId());
                 try {
-                    // Tu método TierListServiceImpl.getOrCreateTierListForGameList llama internamente a
-                    // synchronizeTierListWithGameList. Esta sincronización es la que debe
-                    // eliminar el TierListItem si el UserGame ya no está en la GameList.
                     tierListService.getOrCreateTierListForGameList(owner.getEmail(), gameList.getPublicId());
-                    logger.info("Sincronización de TierList {} (asociada a GameList {}) completada exitosamente.",
-                            tierListToSync.getPublicId(), gameList.getPublicId());
+                    logger.info("Sincronización de TierList {} completada exitosamente.", tierListToSync.getPublicId());
                 } catch (Exception e) {
-                    logger.error("Error crítico durante la sincronización de la TierList {} (asociada a GameList {}): {}",
-                            tierListToSync.getPublicId(), gameList.getPublicId(), e.getMessage(), e);
-                    // Considera la estrategia de manejo de errores. Si la sincronización falla,
-                    // la eliminación del UserGame de la biblioteca podría fallar debido a la restricción de FK.
-                    // Propagar esta excepción podría ser lo correcto para mantener la consistencia de los datos
-                    // y revertir la eliminación del juego de la GameList si la sincronización es vital.
-                    throw new RuntimeException("Fallo al sincronizar la TierList asociada (" + tierListToSync.getPublicId() + ") con la GameList (" + gameList.getPublicId() + ") : " + e.getMessage(), e);
+                    logger.error("Error crítico durante la sincronización de la TierList {}: {}",
+                            tierListToSync.getPublicId(), e.getMessage(), e);
+                    throw new RuntimeException("Fallo al sincronizar la TierList asociada. La operación no pudo completarse.", e);
                 }
             } else {
-                logger.debug("No se encontró TierList de tipo FROM_GAMELIST asociada a GameList ID {} para sincronizar.", gameList.getPublicId());
+                logger.debug("No se encontró TierList asociada a GameList ID {} para sincronizar.", gameList.getPublicId());
             }
 
         } else {
-            logger.warn("El juego (UserGame ID: {}) no se encontraba en la GameList '{}' (Public ID: {}). No se realizó ninguna acción de eliminación de la lista.",
+            logger.warn("El juego (UserGame ID: {}) no se encontraba en la GameList '{}' (Public ID: {}). No se realizó ninguna acción.",
                     userGameInternalId, gameList.getName(), listPublicId);
-            // No es necesario lanzar una excepción si el juego no estaba, ya que el objetivo (que no esté en la lista) se cumple.
         }
     }
 }
