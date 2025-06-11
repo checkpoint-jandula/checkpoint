@@ -7,10 +7,10 @@
   backdrop-filter: blur(30px);
   box-shadow: 
     /* Sombra derecha (azul): más grande y extendida */
-    950px 0px 40px 10px rgba(33, 187, 214, 0.4),
-    
+    49.7vw 0px 40px 10px rgba(33, 187, 214, 0.4),
+     
     /* Sombra izquierda (rosa): más grande y extendida */
-    -950px 0px 40px 10px rgba(248, 31, 150, 0.4);
+    -49.7vw 0px 40px 10px rgba(248, 31, 150, 0.4);
   border-bottom: 2px solid rgba(255, 255, 255, 0.18);
 }
 

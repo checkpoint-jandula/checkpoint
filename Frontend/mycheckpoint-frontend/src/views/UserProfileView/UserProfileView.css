@@ -1,68 +1,178 @@
-/* NUEVOS ESTILOS PARA LAS ACCIONES DE AMISTAD */
+/* --- ESTILOS GENERALES DE LA VISTA DE PERFIL --- */
+
+.user-profile-view {
+  max-width: 1100px;
+  margin: 1rem auto;
+  padding: 1rem;
+}
+
+.loading-message, .error-message, .no-results-message {
+  text-align: center; 
+  padding: 2rem; 
+  font-size: 1.2rem;
+  color: var(--color-text);
+}
+
+.error-message { 
+  color: #d8000c; 
+  background-color: #ffbaba; 
+  border: 1px solid #d8000c; 
+  border-radius: 4px; 
+}
+
+.empty-library-message,
+.add-to-library-prompt p {
+  color: var(--color-text-light-2);
+  padding: 2rem;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Estilo base para todos los bloques de sección principales */
+.section-block {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem; 
+  background-color: var(--color-background-soft);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.tab-pane > .section-block:last-child {
+  margin-bottom: 0;
+}
+
+
+/* --- CABECERA DEL PERFIL --- */
+
+.profile-header {
+  display: flex;
+  flex-direction: column; /* Apilado en móvil por defecto */
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.profile-avatar {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--color-border-hover);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.profile-info h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.2rem;
+  color: var(--color-heading);
+  font-weight: 600;
+}
+
+.registration-date {
+  font-size: 0.85rem;
+  color: var(--color-text-light-2);
+  margin-bottom: 1rem;
+}
+
+/* --- ACCIONES DE AMISTAD --- */
+
 .friend-actions {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center; /* Centrado en móvil por defecto */
   gap: 0.5rem;
 }
-
 .friend-actions-received, .friend-actions-friends {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: center; /* Asegura centrado si hay wrap */
 }
-
-.action-button.small {
-  padding: 0.4em 0.8em;
-  font-size: 0.85rem;
-}
-
-.action-feedback {
-  font-size: 0.9em;
-  margin: 0.5rem 0 0 0;
-}
-.action-feedback.success {
-  color: green;
-}
-.action-feedback.error {
-  color: #d8000c;
-}
-
 .friend-actions-friends span {
   font-weight: bold;
   color: var(--color-heading);
 }
+.action-feedback {
+  font-size: 0.9em;
+  margin: 0.5rem 0 0 0;
+}
+.action-feedback.success { color: #2e7d32; }
+.action-feedback.error { color: #d8000c; }
 
-@media (min-width: 768px) {
-  .friend-actions {
-    align-items: flex-start;
-  }
+
+/* --- ACCIONES DEL PERFIL PROPIO (Botón de Ajustes) --- */
+
+.profile-actions {
+  margin-top: 1rem;
+  width: 100%; 
+  display: flex;
+  justify-content: center;
 }
 
-/* Estilos adicionales y reutilizados para la cuadrícula de la biblioteca pública */
+
+/* --- PESTAÑAS DE NAVEGACIÓN --- */
+
+.tabs-navigation.profile-tabs {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 2rem; 
+  margin-bottom: 0; /* Lo gestiona el tab-content */
+  border-bottom: 1px solid var(--color-border-hover);
+  justify-content: flex-start;
+}
+.tabs-navigation.profile-tabs button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent; 
+  background-color: transparent;
+  color: var(--color-text-light-2);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+  border-top-left-radius: 5px; 
+  border-top-right-radius: 5px;
+  white-space: nowrap; /* Evita que el texto del botón se parta */
+}
+.tabs-navigation.profile-tabs button:hover {
+  color: var(--color-text);
+  background-color: var(--color-background-mute);
+}
+.tabs-navigation.profile-tabs button.active-tab {
+  color: var(--color-heading);
+  border-bottom-color: hsla(160, 100%, 37%, 1);
+  background-color: var(--color-background-soft);
+}
+.tabs-navigation.profile-tabs button.active-tab.tab-library { /* Clase específica para la pestaña Biblioteca */
+  color: hsla(160, 100%, 37%, 1);
+  font-weight: bold;
+}
+.tab-content {
+  padding-top: 1.5rem;
+}
+
+
+/* --- BIBLIOTECA PÚBLICA (GRID Y TARJETAS) --- */
+
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1.5rem;
 }
-
 .library-game-card {
   background-color: var(--color-background-soft);
-  border-radius: 24px;
+  border-radius: 8px; /* Coherencia con .section-block */
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   overflow: hidden;
   display: flex; 
   flex-direction: column;
 }
-
 .library-game-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
-
 .library-game-card a {
   text-decoration: none;
   color: inherit;
@@ -70,7 +180,6 @@
   flex-direction: column;
   height: 100%; 
 }
-
 .library-game-cover {
   width: 100%;
   aspect-ratio: 3 / 4; 
@@ -78,14 +187,12 @@
   background-color: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
 }
-
 .card-content {
   padding: 0.8rem 1rem; 
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
-
 .game-title {
   font-size: 1rem; 
   font-weight: 600; 
@@ -99,13 +206,12 @@
   -webkit-box-orient: vertical;
   min-height: calc(1.3em * 2); 
 }
-
 .user-game-info {
   font-size: 0.8rem; 
-  margin-top: 0.5rem; 
+  margin-top: auto; /* Empuja la información hacia abajo */
+  padding-top: 0.5rem;
   color: var(--color-text-light-2);
 }
-
 .info-item {
   margin-bottom: 0.25rem; 
   white-space: nowrap;
@@ -116,119 +222,52 @@
   color: var(--color-text); 
   margin-right: 0.3em;
 }
-.empty-library-message {
-  color: var(--color-text-light-2);
-  padding: 2rem;
-  text-align: center;
-}
-.add-to-library-prompt {
-    text-align: center;
-    font-style: italic;
-    color: var(--color-text-light-2);
-    padding: 1rem;
-}
 
-.user-profile-view {
-  max-width: 1100px;
-  margin: 1rem auto;
-  padding: 1rem;
-}
+/* --- BOTONES DE ACCIÓN (Reutilizados) --- */
 
-.loading-message, .error-message, .no-results-message {
-  text-align: center; 
-  padding: 2rem; 
-  font-size: 1.2rem;
-  color: var(--color-text); /* */
-}
-
-.error-message { 
-  color: #d8000c; 
-  background-color: #ffbaba; 
-  border: 1px solid #d8000c; 
-  border-radius: 4px; 
-}
-
-.profile-content-wrapper { /* Renombrado desde profile-content para claridad */
-  /* Contenedor principal para el contenido del perfil debajo de mensajes de carga/error */
-}
-
-.section-block { /* Estilo base para todos los bloques de sección principales */
-  padding: 1.5rem;
-  margin-bottom: 1.5rem; 
-  background-color: var(--color-background-soft); /* */
-  border-radius: 8px; /* Bordes más redondeados para los bloques */
-  border: 1px solid var(--color-border); /* */
-}
-.tab-pane > .section-block:last-child { /* El último bloque dentro de una pestaña no necesita margen inferior */
-  margin-bottom: 0;
-}
-
-/* --- CABECERA DEL PERFIL --- */
-.profile-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem; /* Un poco más de espacio */
-  text-align: center;
-  /* Eliminamos el padding de aquí si .section-block ya lo tiene */
-}
-
-.profile-avatar {
-  width: 130px; /* Ligeramente más grande */
-  height: 130px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid var(--color-border-hover); /* Borde más prominente */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Sombra sutil */
-}
-
-.profile-info {
-  /* El gap del flex en profile-header maneja el espaciado si es necesario */
-}
-
-.profile-info h1 {
-  margin: 0 0 0.5rem 0; /* Ajustado margen inferior */
-  font-size: 2.2rem; /* Un poco más grande */
-  color: var(--color-heading); /* */
-  font-weight: 600;
-}
-
-.registration-date {
-  font-size: 0.85rem;
-  color: var(--color-text-light-2); /* */
-  margin-bottom: 1rem; /* Más espacio después de la fecha de registro */
-}
-
-.profile-meta-details { /* Contenedor para Tema, Notificaciones, Visibilidad */
-  display: flex;
-  flex-direction: column; /* Apilados por defecto */
-  gap: 0.5rem; /* Espacio entre los items meta */
-  align-items: center; /* Centrado en móvil */
-  margin-top: 0.5rem;
-  font-size: 0.95rem; /* Ligeramente más grande */
-  color: var(--color-text); /* */
-}
-
-.meta-detail {
-  display: inline-block; /* Para que el strong y span estén en línea */
-  padding: 0.25rem 0.5rem;
-  background-color: var(--color-background-mute); /* */
-  border-radius: 4px;
-  border: 1px solid var(--color-border); /* */
-}
-
-.meta-detail strong {
-  color: var(--color-text); /* */
-  margin-right: 0.4em;
+.action-button {
+  padding: 0.7em 1.4em;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  cursor: pointer; 
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  border: 1px solid transparent; 
+  text-decoration: none;
+  display: inline-block; 
   font-weight: 500;
+  white-space: nowrap;
 }
+.action-button.small {
+  padding: 0.4em 0.8em;
+  font-size: 0.85rem;
+}
+.action-button.primary {
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border-color: hsla(160, 100%, 37%, 1);
+}
+.action-button.primary:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); }
+.action-button.secondary {
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
+  border-color: var(--color-border-hover);
+}
+.action-button.secondary:hover:not(:disabled) { 
+  background-color: var(--color-border);
+  border-color: var(--color-border-hover);
+}
+.action-button.danger {
+    background-color: #c94040;
+    color: white;
+    border-color: #c94040;
+}
+.action-button.danger:hover:not(:disabled) {
+    background-color: #a53232;
+}
+.action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.profile-actions {
-  margin-top: 1rem;
-  width: 100%; 
-  display: flex;
-  justify-content: center;
-}
+
+/* --- LAYOUT PARA ESCRITORIO (min-width) --- */
 
 @media (min-width: 768px) {
   .profile-header {
@@ -237,118 +276,66 @@
     align-items: center; 
   }
   .profile-avatar {
-    width: 160px; /* Más grande en escritorio */
+    width: 160px;
     height: 160px;
   }
   .profile-info {
-    margin-left: 2rem; /* Más margen */
+    margin-left: 2rem;
     flex-grow: 1; 
   }
-  .profile-meta-details {
-    flex-direction: row; /* Lado a lado en escritorio */
-    justify-content: flex-start; 
-    gap: 1rem; /* Más espacio horizontal */
+  .friend-actions {
+    align-items: flex-start;
   }
   .profile-actions {
     width: auto; 
     margin-left: auto; 
     margin-top: 0;
-    align-self: center; /* Alinear con el centro del .profile-info */
+    align-self: center;
   }
 }
 
-/* --- PESTAÑAS --- */
-.tabs-navigation.profile-tabs {
-  display: flex;
-  gap: 0; /* Sin gap, el borde del botón lo simulará */
-  margin-top: 2rem; 
-  margin-bottom: 1.5rem; 
-  border-bottom: 1px solid var(--color-border-hover); /* */
-  padding: 0 1.5rem; /* Coincidir con padding de section-block si se usa */
-  justify-content: flex-start;
-}
+/* ------------------------------------------- */
+/* --- ESTILOS PARA DISPOSITIVOS MÓVILES --- */
+/* ------------------------------------------- */
+@media (max-width: 767px) {
+  
+  /* 1. Reducimos el padding general de la vista */
+  .user-profile-view {
+    padding: 0.5rem;
+  }
+  
+  /* 2. Hacemos la cabecera un poco más compacta */
+  .profile-header {
+      gap: 1rem;
+  }
+  .profile-info h1 {
+    font-size: 1.8rem;
+  }
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
 
-.tabs-navigation.profile-tabs button {
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  border: none;
-  border-bottom: 3px solid transparent; 
-  background-color: transparent;
-  color: var(--color-text-light-2); /* */
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
-  margin-right: 0.2rem; /* Pequeño espacio si los bordes no se solapan */
-  border-top-left-radius: 5px; 
-  border-top-right-radius: 5px;
-}
+  /* 3. La barra de pestañas se hace deslizable horizontalmente */
+  .tabs-navigation.profile-tabs {
+    overflow-x: auto;
+    /* Ocultamos la barra de scroll nativa para un look más limpio */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .tabs-navigation.profile-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
 
-.tabs-navigation.profile-tabs button:hover {
-  color: var(--color-text); /* */
-  background-color: var(--color-background-mute); /* */
-}
+  /* 4. La rejilla de la biblioteca se ajusta para ser más compacta */
+  .library-grid {
+    /* Permitimos columnas más estrechas para que quepan 2 en muchos móviles */
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
 
-.tabs-navigation.profile-tabs button.active-tab {
-  color: var(--color-heading); /* */
-  border-bottom-color: hsla(160, 100%, 37%, 1); /* Verde para el indicador activo */
-  background-color: var(--color-background-soft); /* */
+  .library-game-card .card-content {
+  display: none;
 }
-
-/* Enfatizar la pestaña "Biblioteca" cuando esté activa */
-.tabs-navigation.profile-tabs button[aria-label="Biblioteca"].active-tab, /* Si usas aria-label */
-.tabs-navigation.profile-tabs button.active-tab:nth-child(1) { /* Asumiendo que "Biblioteca" es el primer botón */
-  color: hsla(160, 100%, 37%, 1); /* Color de texto verde */
-  font-weight: bold; /* Hacerla un poco más prominente */
 }
-/* Si tienes un identificador más específico para el botón de biblioteca, úsalo. */
-/* Por ejemplo, si le añades una clase específica al botón de biblioteca: */
-/*
-.tabs-navigation.profile-tabs button.tab-library.active-tab {
-  color: hsla(160, 100%, 37%, 1);
-  font-weight: bold;
-}
-*/
-
-
-.tab-content {
-  padding-top: 1.5rem; /* Espacio entre la barra de pestañas y el contenido de la pestaña */
-}
-.tab-pane {
-  /* Estilos para el panel de pestaña activo */
-}
-.add-to-library-prompt p {
-    text-align: center;
-    font-style: italic;
-    color: var(--color-text-light-2); /* */
-    padding: 1rem;
-}
-
-/* Action button (consistente con UserSettingsView) */
-.action-button {
-  padding: 0.7em 1.4em; /* Ligeramente más padding */
-  font-size: 0.9rem; /* Un poco más pequeño */
-  border-radius: 5px;
-  cursor: pointer; 
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  border: 1px solid transparent; 
-  margin-left: 0.5rem;
-  text-decoration: none;
-  display: inline-block; 
-  font-weight: 500;
-}
-.action-button.primary {
-  background-color: hsla(160, 100%, 37%, 1); /* */
-  color: white;
-  border-color: hsla(160, 100%, 37%, 1); /* */
-}
-.action-button.primary:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); /* */ }
-.action-button.secondary {
-  background-color: var(--color-background-mute); /* */
-  color: var(--color-text); /* */
-  border-color: var(--color-border-hover); /* */
-}
-.action-button.secondary:hover:not(:disabled) { 
-  background-color: var(--color-border); /* */
-  border-color: var(--color-border-hover); /* */
-}
-.action-button:disabled { opacity: 0.6; cursor: not-allowed; }

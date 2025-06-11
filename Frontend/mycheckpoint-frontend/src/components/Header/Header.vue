@@ -37,7 +37,7 @@
                 <img :src="profilePictureUrl" alt="Mi perfil" class="user-avatar-header">
               </a>
               <div v-if="isUserMenuOpen" class="user-dropdown-menu">
-                <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }" class="dropdown-item">
+                <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }" class="dropdown-item" @click="isUserMenuOpen = false">
                   Ver Perfil
                 </RouterLink>
                 <a role="button" href="#" @click.prevent="handleLogout" class="dropdown-item logout">
