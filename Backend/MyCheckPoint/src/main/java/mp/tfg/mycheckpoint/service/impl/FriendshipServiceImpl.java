@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -250,10 +251,17 @@ public class FriendshipServiceImpl implements FriendshipService {
     @Transactional(readOnly = true)
     public List<FriendshipResponseDTO> getFriends(String currentUserEmail) {
         User currentUser = getUserByEmailOrThrow(currentUserEmail);
-        return friendshipRepository.findAcceptedFriendshipsForUser(currentUser, FriendshipStatus.ACCEPTED)
-                .stream()
-                .map(friendship -> friendshipMapper.toDto(friendship, currentUser))
-                .collect(Collectors.toList());
+
+        List<Friendship> friendships = friendshipRepository.findAcceptedFriendshipsForUser(currentUser, FriendshipStatus.ACCEPTED);
+        List<FriendshipResponseDTO> responseDTOs = new ArrayList<>();
+
+        for (Friendship friendship : friendships) {
+            // 5. Convertir cada entidad a DTO y añadirla a la lista de respuesta.
+            // Se pasa 'currentUser' como contexto al mapper.
+            responseDTOs.add(friendshipMapper.toDto(friendship, currentUser));
+        }
+
+        return responseDTOs;
     }
 
     /**
@@ -268,10 +276,15 @@ public class FriendshipServiceImpl implements FriendshipService {
     @Transactional(readOnly = true)
     public List<FriendshipResponseDTO> getPendingRequestsReceived(String currentUserEmail) {
         User currentUser = getUserByEmailOrThrow(currentUserEmail);
-        return friendshipRepository.findByReceiverAndStatus(currentUser, FriendshipStatus.PENDING)
-                .stream()
-                .map(friendship -> friendshipMapper.toDto(friendship, currentUser))
-                .collect(Collectors.toList());
+
+        List<Friendship> pendingRequests = friendshipRepository.findByReceiverAndStatus(currentUser, FriendshipStatus.PENDING);
+        List<FriendshipResponseDTO> responseDTOs = new ArrayList<>();
+
+        for (Friendship request : pendingRequests) {
+            responseDTOs.add(friendshipMapper.toDto(request, currentUser));
+        }
+
+        return responseDTOs;
     }
 
     /**
@@ -287,9 +300,14 @@ public class FriendshipServiceImpl implements FriendshipService {
     @Transactional(readOnly = true)
     public List<FriendshipResponseDTO> getPendingRequestsSent(String currentUserEmail) {
         User currentUser = getUserByEmailOrThrow(currentUserEmail);
-        return friendshipRepository.findByRequesterAndStatus(currentUser, FriendshipStatus.PENDING)
-                .stream()
-                .map(friendship -> friendshipMapper.toDto(friendship, currentUser))
-                .collect(Collectors.toList());
+
+        List<Friendship> sentRequests = friendshipRepository.findByRequesterAndStatus(currentUser, FriendshipStatus.PENDING);
+        List<FriendshipResponseDTO> responseDTOs = new ArrayList<>();
+
+        for (Friendship request : sentRequests) {
+            responseDTOs.add(friendshipMapper.toDto(request, currentUser));
+        }
+
+        return responseDTOs;
     }
 }
