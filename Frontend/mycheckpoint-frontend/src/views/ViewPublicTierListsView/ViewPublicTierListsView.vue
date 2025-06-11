@@ -14,7 +14,7 @@
         <RouterLink :to="{ name: 'view-public-tierlist', params: { tierListPublicId: tierList.public_id } }" class="card-link">
           <div class="card-header">
             <h3 class="list-name">{{ tierList.name }}</h3>
-            <span class="list-type-chip">{{ formatTierListType(tierList.type) }}</span>
+            
           </div>
           <p v-if="tierList.description" class="list-description">{{ truncateText(tierList.description, 150) }}</p>
           <p v-else class="list-description-empty"><em>Sin descripción.</em></p>

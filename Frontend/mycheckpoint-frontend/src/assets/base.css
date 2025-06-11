@@ -29,7 +29,9 @@
   --color-accent: hsla(340, 100%, 50%, 1);
 
   --color-azul: #21bad6;
+  --color-azul-hover: #147e8f;
   --color-rosa: #ce2aa5;
+  --color-rosa-hover: #771a57;
 }
 
 /*Tema Claro*/

@@ -41,41 +41,42 @@
       <div v-if="showEditMetadataModal && isOwner" class="modal-overlay" @click.self="closeEditMetadataModal">
         <div class="modal-panel">
           <form @submit.prevent="handleUpdateListMetadata" class="edit-list-form-modal">
-            <div class="modal-header">
-              <h3>Editar Detalles de la Lista</h3>
-              <button type="button" @click="closeEditMetadataModal" class="modal-close-button"
-                aria-label="Cerrar">&times;</button>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <label for="editListName">Nombre de la Lista:</label>
-                <input type="text" id="editListName" v-model="editListForm.name" required maxlength="150">
-              </div>
-              <div class="form-group">
-                <label for="editListDescription">Descripción (opcional):</label>
-                <textarea id="editListDescription" v-model="editListForm.description" rows="4"
-                  maxlength="1000"></textarea>
-              </div>
-              <div class="form-group checkbox-group">
-                <input type="checkbox" id="editListIsPublic" v-model="editListForm.is_public">
-                <label for="editListIsPublic">¿Hacer esta lista pública?</label>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <div v-if="editMetadataMessage" :class="editMetadataError ? 'error-message' : 'success-message'"
-                class="action-message modal-action-message">
-                {{ editMetadataMessage }}
-              </div>
-              <button type="button" @click="closeEditMetadataModal" class="action-button secondary"
-                :disabled="isLoadingMetadataUpdate">
-                Cancelar
-              </button>
-              <button type="submit" :disabled="isLoadingMetadataUpdate || !editListForm.name"
-                class="action-button primary">
-                {{ isLoadingMetadataUpdate ? 'Guardando...' : 'Guardar Cambios' }}
-              </button>
-            </div>
-          </form>
+  <div class="modal-header">
+    <h3>Editar Detalles de la Lista</h3>
+    <button type="button" @click="closeEditMetadataModal" class="modal-close-button"
+      aria-label="Cerrar">&times;</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label for="editListName">Nombre de la Lista:</label>
+      <input type="text" id="editListName" v-model="editListForm.name" required maxlength="30">
+      <small class="char-counter">{{ 30 - editListForm.name.length }} caracteres restantes</small>
+    </div>
+    <div class="form-group">
+      <label for="editListDescription">Descripción (opcional):</label>
+      <textarea id="editListDescription" v-model="editListForm.description" rows="4" maxlength="200"></textarea>
+      <small class="char-counter">{{ 200 - (editListForm.description || '').length }} caracteres restantes</small>
+    </div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="editListIsPublic" v-model="editListForm.is_public">
+      <label for="editListIsPublic">¿Hacer esta lista pública?</label>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div v-if="editMetadataMessage" :class="editMetadataError ? 'error-message' : 'success-message'"
+      class="action-message modal-action-message">
+      {{ editMetadataMessage }}
+    </div>
+    <button type="button" @click="closeEditMetadataModal" class="action-button secondary"
+      :disabled="isLoadingMetadataUpdate">
+      Cancelar
+    </button>
+    <button type="submit" :disabled="isLoadingMetadataUpdate || !editListForm.name"
+      class="action-button primary">
+      {{ isLoadingMetadataUpdate ? 'Guardando...' : 'Guardar Cambios' }}
+    </button>
+  </div>
+</form>
         </div>
       </div>
 
@@ -94,25 +95,32 @@
           Esta lista aún no tiene juegos.
         </div>
         <div class="library-grid" v-else>
-          <div v-for="gameEntry in gameListDetails.games_in_list" :key="gameEntry.internal_id"
-            class="library-game-card">
-            <RouterLink :to="{ name: 'game-details', params: { igdbId: gameEntry.game_igdb_id } }"
-              class="game-card-link-content">
-              <img :src="getCoverUrl(gameEntry.game_cover, 'cover_big')"
-                :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`" class="library-game-cover"
-                @error="onListGameCoverError" />
-              <div class="card-content">
-                <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3>
-                <div v-if="gameEntry.status" class="info-item minimal-info">
-                  {{ formatUserGameStatus(gameEntry.status) }}
-                </div>
-              </div>
-            </RouterLink>
-            <button v-if="isOwner" @click.stop="handleRemoveGameFromList(gameEntry.internal_id)"
-              class="remove-game-button" title="Quitar de la lista" :disabled="isLoadingActionOnGame">
-              &times;
-            </button>
-          </div>
+            <div v-for="gameEntry in gameListDetails.games_in_list" :key="gameEntry.internal_id"
+  class="library-game-card">
+
+  <RouterLink :to="{ name: 'game-details', params: { igdbId: gameEntry.game_igdb_id } }"
+    class="game-card-link-content">
+    
+    <div class="card-cover-container">
+      <img :src="getCoverUrl(gameEntry.game_cover, 'cover_big')"
+        :alt="`Carátula de ${gameEntry.game_name || 'Juego'}`" class="library-game-cover"
+        @error="onListGameCoverError" />
+
+      <div v-if="gameEntry.personal_platform" class="platform-logo-on-cover">
+        <img :src="getPlatformLogoUrl(gameEntry.personal_platform)" :alt="gameEntry.personal_platform" />
+      </div>
+    </div>
+
+    <div class="card-content">
+      <h3 class="game-title">{{ gameEntry.game_name || `Juego ID: ${gameEntry.game_igdb_id}` }}</h3>
+      </div>
+  </RouterLink>
+
+  <button v-if="isOwner" @click.stop="handleRemoveGameFromList(gameEntry.internal_id)"
+    class="remove-game-button" title="Quitar de la lista" :disabled="isLoadingActionOnGame">
+    <span class="remove-icon">&times;</span>
+  </button>
+</div>
         </div>
       </section>
     </div>
@@ -548,6 +556,23 @@ const getCoverUrl = (coverData, targetSize = 't_cover_small') => {
   }
   return currentPlaceholder;
 };
+
+// Devuelve la URL del logo de la plataforma
+const getPlatformLogoUrl = (platform) => {
+  if (!platform) return '';
+  // Asumimos que los nombres de archivo coinciden con los valores del backend en minúsculas
+  const platformName = platform.toLowerCase();
+  try {
+    // Esta sintaxis es necesaria para que Vite encuentre las imágenes dinámicamente
+    return new URL(`/src/assets/logo-personal-platform/${platformName}.svg`, import.meta.url).href;
+  } catch (error) {
+    console.warn(`No se encontró el logo para la plataforma: ${platformName}.svg`);
+    // Devuelve un logo genérico si no se encuentra el específico
+    return new URL(`/src/assets/logo-personal-platform/other.svg`, import.meta.url).href;
+  }
+};
+
+
 const onListGameCoverError = (event) => { event.target.src = defaultLibraryCover; };
 const formatUserGameStatus = (status) => {
   if (!status) return 'N/A';

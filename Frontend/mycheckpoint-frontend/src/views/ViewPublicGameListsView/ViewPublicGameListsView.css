@@ -67,6 +67,9 @@
   font-weight: 600;
   color: var(--color-heading);
   margin: 0;
+
+   overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .game-count {
@@ -89,6 +92,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-height: calc(1.5em * 3); /* Reserva espacio para 3 líneas */
+
+   overflow-wrap: break-word;
+  word-break: break-word;
 }
 .list-description-empty {
   font-size: 0.9rem;

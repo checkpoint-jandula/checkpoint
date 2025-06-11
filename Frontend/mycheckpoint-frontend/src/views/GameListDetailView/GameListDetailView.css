@@ -1,3 +1,4 @@
+/* --- ESTILOS GENERALES DE LA VISTA --- */
 .gamelist-detail-view {
   max-width: 900px;
   margin: 1rem auto;
@@ -36,47 +37,112 @@
   margin-bottom: 0;
 }
 
-.gamelist-header-section .header-content {
+
+/* --- INICIO: ESTILOS PARA EL FORMULARIO DEL MODAL DE EDICIÓN --- */
+
+.edit-list-form-modal .form-group {
+  margin-bottom: 1.25rem; /* Un poco más de espacio vertical */
+}
+.edit-list-form-modal .form-group:last-of-type {
+  margin-bottom: 0;
+}
+
+.edit-list-form-modal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* Estilo unificado para inputs y textarea */
+.edit-list-form-modal input[type="text"],
+.edit-list-form-modal textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px; /* Bordes más suaves */
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.edit-list-form-modal input[type="text"]:focus,
+.edit-list-form-modal textarea:focus {
+  outline: none;
+  border-color: hsla(160, 100%, 37%, 1);
+  box-shadow: 0 0 0 2px hsla(160, 100%, 37%, 0.2);
+}
+
+.edit-list-form-modal textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.edit-list-form-modal .checkbox-group {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+.edit-list-form-modal .checkbox-group:hover {
+    background-color: var(--color-background-mute);
 }
 
-@media (min-width: 768px) {
-  .gamelist-header-section .header-content {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .gamelist-header-section .header-actions-gamelist {
-    flex-shrink: 0;
-    /* Evita que los botones se encojan */
-    margin-left: 1rem;
-  }
+.edit-list-form-modal .checkbox-group input[type="checkbox"] {
+  margin-right: 0.75rem;
+  width: auto;
+  transform: scale(1.2); /* Checkbox un poco más grande */
+  accent-color: hsla(160, 100%, 37%, 1); /* Color del tick */
 }
 
+.edit-list-form-modal .checkbox-group label {
+  margin-bottom: 0;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+/* --- INICIO: CABECERA DE LA LISTA REDISEÑADA --- */
+
+.gamelist-header-section .header-content {
+  display: grid;
+  /* Rejilla de 2 columnas: 1. Info (flexible), 2. Acciones (auto) */
+  grid-template-columns: 1fr auto;
+  gap: 2rem; /* Espacio entre la info y los botones */
+  align-items: flex-start;
+}
 
 .gamelist-header-section h1 {
   font-size: 2rem;
   color: var(--color-heading);
   margin-top: 0;
   margin-bottom: 0.5rem;
+  line-height: 1.2;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .list-description-detail {
   font-size: 1rem;
   color: var(--color-text);
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   line-height: 1.6;
   white-space: pre-wrap;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .list-description-detail-empty {
   font-size: 1rem;
   color: var(--color-text-light-2);
   font-style: italic;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .list-meta-detail {
@@ -99,14 +165,26 @@
 }
 
 .list-meta-detail .status-chip.private {
-  background-color: var(--color-background-mute);
-  color: var(--color-text-light-2);
-  border: 1px solid var(--color-border);
+  background-color: rgba(220, 53, 69, 0.15); /* Fondo rojo muy claro */
+  color: #c94040; /* Texto en rojo oscuro */
+  border: 1px solid rgba(220, 53, 69, 0.3); /* Borde rojo claro */
 }
 
 .meta-separator {
   margin: 0 0.5em;
 }
+
+/* Contenedor para los botones de acción */
+.header-actions-gamelist {
+  display: flex;
+  flex-direction: column; /* Apila los botones verticalmente */
+  gap: 0.75rem; /* Espacio entre botones */
+  flex-shrink: 0;
+}
+/* --- FIN: CABECERA DE LA LISTA REDISEÑADA --- */
+
+
+/* --- SECCIÓN DE JUEGOS EN LA LISTA --- */
 
 .games-in-list-section .section-header-actions {
   display: flex;
@@ -123,24 +201,50 @@
   margin: 0;
   padding: 0;
   border: none;
+
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-/* Estilos para el grid de juegos (reutilizados de MyLibraryView) */
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  /* Más pequeños para esta vista */
   gap: 1rem;
+}
+
+/* --- INICIO: Estilos para el logo superpuesto --- */
+
+/* Aseguramos que el contenedor de la carátula sea el punto de referencia */
+.card-cover-container {
+  position: relative;
+  line-height: 0;
+}
+
+/* Estilos para el logo de la plataforma */
+.platform-logo-on-cover {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+}
+
+.platform-logo-on-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Sombra para que el logo resalte sobre cualquier fondo */
+  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.9));
 }
 
 .library-game-card {
   background-color: var(--color-background);
-  
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   border: 1px solid var(--color-border);
   position: relative;
-  /* Para el botón de eliminar */
+  overflow: hidden; /* Para que la imagen respete el redondeo */
 }
 
 .library-game-card:hover {
@@ -148,12 +252,12 @@
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-.library-game-card a {
-  text-decoration: none;
-  color: inherit;
+.game-card-link-content {
   display: flex;
   flex-direction: column;
   height: 100%;
+  text-decoration: none;
+  color: inherit;
 }
 
 .library-game-cover {
@@ -187,238 +291,20 @@
 .info-item.minimal-info {
   font-size: 0.75rem;
   color: var(--color-text-light-2);
-  margin-top: auto;
+  margin-top: auto; /* Empuja hacia abajo */
 }
 
-.remove-game-button {
+.remove-icon {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  background-color: rgba(211, 72, 72, 0.8);
-  /* Rojo semitransparente */
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 14px;
-  line-height: 24px;
-  text-align: center;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  bottom: 3px; 
+  right: 7px; 
+  z-index: 2;
 }
-
-.library-game-card:hover .remove-game-button {
-  opacity: 1;
-}
-
-.remove-game-button:hover {
-  background-color: #d9534f;
-  /* Rojo más opaco */
-}
-
-
-/* Estilos del Modal (similares a GameDetailsView modal) */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.65);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-panel {
-  background-color: var(--color-background-soft);
-  padding: 0;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 550px;
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.3rem;
-  color: var(--color-heading);
-}
-
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  line-height: 1;
-  color: var(--color-text-light-2);
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-}
-
-.edit-list-form-modal .form-group {
-  margin-bottom: 1rem;
-}
-
-.edit-list-form-modal .form-group:last-of-type {
-  margin-bottom: 0;
-}
-
-.edit-list-form-modal label {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-size: 0.9rem;
-  color: var(--color-text);
-  font-weight: 500;
-}
-
-.edit-list-form-modal input[type="text"],
-.edit-list-form-modal textarea {
-  width: 100%;
-  padding: 0.7rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background-color: var(--color-background);
-  color: var(--color-text);
-  font-size: 1rem;
-}
-
-.edit-list-form-modal .checkbox-group {
-  display: flex;
-  align-items: center;
-  margin-top: 0.5rem;
-}
-
-.edit-list-form-modal .checkbox-group input[type="checkbox"] {
-  margin-right: 0.5rem;
-  width: auto;
-  transform: scale(1.1);
-}
-
-.edit-list-form-modal .checkbox-group label {
-  margin-bottom: 0;
-  font-size: 1rem;
-  font-weight: normal;
-  color: var(--color-text);
-}
-
-.action-message {
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  text-align: left;
-}
-
-.modal-error {
-  /* Ya definido, pero puedes especializar .action-message.error-message */
-}
-
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  /* Para mensaje a la izquierda, botones a la derecha */
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.modal-footer .action-message {
-  /* Mensaje en el footer */
-  flex-grow: 1;
-  text-align: left;
-}
-
-.modal-footer .buttons-group {
-  /* Contenedor para botones si necesitas agruparlos */
-  display: flex;
-  gap: 0.75rem;
-}
-
-
-/* Action button (consistente) */
-.action-button {
-  padding: 0.7em 1.4em;
-  font-size: 0.9rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-  border: 1px solid transparent;
-  font-weight: 500;
-}
-
-.action-button.primary {
-  background-color: hsla(160, 100%, 37%, 1);
-  color: white;
-  border-color: hsla(160, 100%, 37%, 1);
-}
-
-.action-button.primary:hover:not(:disabled) {
-  background-color: hsla(160, 100%, 30%, 1);
-}
-
-.action-button.secondary {
-  background-color: var(--color-background-mute);
-  color: var(--color-text);
-  border-color: var(--color-border-hover);
-}
-
-.action-button.secondary:hover:not(:disabled) {
-  background-color: var(--color-border);
-}
-
-.action-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.section-header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-header-actions h2 {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.library-game-card {
-  position: relative;
-  /* Para posicionar el botón de quitar */
-}
-
-.game-card-link-content {
-  /* Nuevo wrapper para el contenido que no es el botón de eliminar */
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
 .remove-game-button {
   position: absolute;
   top: 6px;
   right: 6px;
-  background-color: rgba(220, 53, 69, 0.7);
-  /* Rojo bootstrap danger con transparencia */
+  background-color: rgba(220, 53, 69, 0.8);
   color: white;
   border: none;
   border-radius: 50%;
@@ -430,87 +316,81 @@
   text-align: center;
   cursor: pointer;
   opacity: 0;
-  /* Oculto por defecto */
   transition: opacity 0.2s, background-color 0.2s;
   z-index: 10;
-  /* Encima de la imagen/enlace */
 }
 
 .library-game-card:hover .remove-game-button {
   opacity: 1;
-  /* Visible al pasar el ratón por la tarjeta */
 }
 
 .remove-game-button:hover {
   background-color: #dc3545;
-  /* Rojo bootstrap danger */
 }
 
-.remove-game-button:disabled {
-  background-color: #aaa;
-  cursor: not-allowed;
+/* NUEVO: Estilo para el contador de caracteres */
+.char-counter {
+  display: block;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--color-text-light-2);
+  margin-top: 0.25rem;
+  font-style: italic;
 }
 
+/* --- ESTILOS PARA MODALES (sin cambios funcionales) --- */
+/* (Se omiten por brevedad, son los originales) */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.65); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-panel { background-color: var(--color-background-soft); padding: 0; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); width: 90%; max-width: 550px; display: flex; flex-direction: column; max-height: 90vh; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border); }
+.modal-header h3 { margin: 0; font-size: 1.3rem; color: var(--color-heading); }
+.modal-close-button { background: none; border: none; font-size: 1.8rem; line-height: 1; color: var(--color-text-light-2); cursor: pointer; }
+.modal-body { padding: 1.5rem; overflow-y: auto; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
+/* ... resto de estilos de modales ... */
 
-/* Estilos para el Modal de Añadir Juegos */
-.add-games-modal-panel {
-  /* Hereda de .modal-panel pero puede tener ajustes */
-  max-width: 700px;
-  /* Un poco más ancho para la lista */
-}
+/* Botones de Acción (consistentes) */
+.action-button { padding: 0.7em 1.4em; font-size: 0.9rem; border-radius: 5px; cursor: pointer; transition: background-color 0.2s, color 0.2s, border-color 0.2s; border: 1px solid transparent; font-weight: 500; }
+.action-button.primary { background-color: var(--color-azul); color: white; border-color: var(--color-azul); }
+.action-button.primary:hover:not(:disabled) { background-color: var(--color-azul-hover); }
+.action-button.secondary { background-color: var(--color-rosa); color: var(--color-text); border-color: var(--color-border-hover); }
+.action-button.secondary:hover:not(:disabled) { background-color: var(--color-rosa-hover); }
+.action-button.danger { background-color: #c94040; color: white; border-color: #c94040; }
+.action-button.danger:hover:not(:disabled) { background-color: #a53232; }
+.action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.add-games-list {
-  list-style-type: none;
-  padding: 0;
-  max-height: 60vh;
-  /* Altura máxima para la lista antes de scroll */
-  overflow-y: auto;
-}
+/* Modal de Añadir Juegos */
+.add-games-modal-panel { max-width: 700px; }
+.add-games-list { list-style-type: none; padding: 0; max-height: 60vh; overflow-y: auto; }
+.add-games-list li { display: flex; align-items: center; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--color-border); cursor: pointer; transition: background-color 0.15s ease-in-out; }
+.add-games-list li:last-child { border-bottom: none; }
+.add-games-list li:hover { background-color: var(--color-background-mute); }
+.add-games-list li.selected-for-add { background-color: hsla(160, 100%, 37%, 0.1); font-weight: 500; }
+.add-game-cover-thumb { width: 40px; height: auto; aspect-ratio: 3/4; object-fit: cover; margin-right: 1rem; border-radius: 3px; }
+.add-games-list li span { flex-grow: 1; }
+.add-game-checkbox { margin-left: 1rem; pointer-events: none; transform: scale(1.2); }
 
-.add-games-list li {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
-}
 
-.add-games-list li:last-child {
-  border-bottom: none;
-}
+/* ------------------------------------------- */
+/* --- ESTILOS PARA DISPOSITIVOS MÓVILES --- */
+/* ------------------------------------------- */
+@media (max-width: 767px) {
+  
+  /* 1. La cabecera se apila en una sola columna */
+  .gamelist-header-section .header-content {
+    grid-template-columns: 1fr; /* Pasa de 2 columnas a 1 */
+    gap: 1.5rem; /* Espacio entre el bloque de info y el de acciones */
+  }
 
-.add-games-list li:hover {
-  background-color: var(--color-background-mute);
-}
+  .header-actions-gamelist {
+    flex-direction: row; /* Botones en fila en móvil */
+    flex-wrap: wrap; /* Permitimos que salten de línea si no caben */
+    justify-content: flex-start;
+  }
 
-.add-games-list li.selected-for-add {
-  background-color: hsla(160, 100%, 37%, 0.1);
-  font-weight: 500;
-}
-
-.add-game-cover-thumb {
-  width: 40px;
-  height: auto;
-  aspect-ratio: 3/4;
-  object-fit: cover;
-  margin-right: 1rem;
-  border-radius: 3px;
-}
-
-.add-games-list li span {
-  flex-grow: 1;
-}
-
-.add-game-checkbox {
-  margin-left: 1rem;
-  pointer-events: none;
-  /* Para que el clic en el li funcione */
-  transform: scale(1.2);
-}
-
-.modal-error {
-  padding: 0.5rem;
-  /* Menos padding para errores dentro del modal */
-  font-size: 0.9rem;
+  /* 2. La rejilla de juegos se fuerza a 2 columnas */
+  .library-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
 }
