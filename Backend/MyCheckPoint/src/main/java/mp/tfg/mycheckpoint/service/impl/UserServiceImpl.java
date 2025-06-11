@@ -26,29 +26,22 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
 /**
  * Implementación del servicio {@link UserService} para la gestión de usuarios.
- * <p>
  * Esta clase proporciona la lógica de negocio para todas las operaciones relacionadas con los usuarios,
  * incluyendo la creación, lectura, actualización y eliminación (CRUD) de perfiles de usuario.
  * También maneja procesos de cuenta como la verificación de correo electrónico, el cambio y
  * restablecimiento de contraseñas, la eliminación programada de cuentas (borrado suave),
  * la búsqueda de usuarios por nombre de usuario y la actualización de la foto de perfil.
- * </p>
- * <p>
  * Todas las operaciones que modifican datos están anotadas como {@link Transactional} para
  * asegurar la atomicidad y consistencia de los datos. Se utilizan mappers para la conversión
  * entre entidades y DTOs, y se interactúa con varios repositorios para la persistencia de datos.
  * Además, se publican eventos para acciones asíncronas como el envío de correos electrónicos
  * y se utiliza un servicio de almacenamiento de archivos para las fotos de perfil.
- * </p>
  */
 @Service
 public class UserServiceImpl implements UserService {
@@ -103,16 +96,13 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Crea un nuevo usuario en el sistema.
-     * <p>
      * Antes de la creación, se realizan las siguientes validaciones:
-     * <ul>
-     * <li>Verifica que el correo electrónico proporcionado no esté ya registrado por una cuenta activa.</li>
-     * <li>Verifica que el nombre de usuario proporcionado no esté ya en uso por una cuenta activa.</li>
-     * </ul>
+     * Verifica que el correo electrónico proporcionado no esté ya registrado por una cuenta activa.
+     * Verifica que el nombre de usuario proporcionado no esté ya en uso por una cuenta activa.
+     *
      * La contraseña del usuario se hashea utilizando el {@link PasswordEncoder} configurado.
      * Tras guardar el nuevo usuario, se genera un {@link VerificationToken}, se guarda, y se publica
      * un evento {@link OnRegistrationCompleteEvent} para que un listener envíe el correo de verificación.
-     * </p>
      *
      * @param userCreateDTO DTO que contiene los datos para la creación del usuario (nombre de usuario, email y contraseña).
      * @return Un {@link UserDTO} que representa al usuario recién creado, incluyendo su ID público y fecha de registro.
@@ -151,7 +141,21 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDTO> getUserById(Long id) {
-        return userRepository.findById(id).map(userMapper::toDto);
+        // Buscar el usuario por su ID y guardar el resultado en un Optional.
+        Optional<User> userOptional = userRepository.findById(id);
+
+        // Comprobar si el Optional contiene un valor.
+        if (userOptional.isPresent()) {
+            // Si existe, obtener la entidad User.
+            User user = userOptional.get();
+            // Convertir la entidad a DTO.
+            UserDTO userDTO = userMapper.toDto(user);
+            // Devolver un Optional que contiene el DTO.
+            return Optional.of(userDTO);
+        } else {
+            // Si no existe, devolver un Optional vacío.
+            return Optional.empty();
+        }
     }
 
     /**
@@ -164,7 +168,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDTO> getUserByPublicId(UUID publicId) {
-        return userRepository.findByPublicId(publicId).map(userMapper::toDto);
+        Optional<User> userOptional = userRepository.findByPublicId(publicId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            UserDTO userDTO = userMapper.toDto(user);
+            return Optional.of(userDTO);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -177,7 +189,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserSearchResultDTO> getUserByPublicIdAsSearchResult(UUID publicId) {
-        return userRepository.findByPublicId(publicId).map(userMapper::toSearchResultDto);
+        Optional<User> userOptional = userRepository.findByPublicId(publicId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            UserSearchResultDTO searchResultDTO = userMapper.toSearchResultDto(user);
+            return Optional.of(searchResultDTO);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -190,16 +210,22 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDTO> getUserByEmail(String email) {
-        return userRepository.findByEmail(email).map(userMapper::toDto);
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            UserDTO userDTO = userMapper.toDto(user);
+            return Optional.of(userDTO);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
      * Actualiza el perfil de un usuario existente, identificado por su correo electrónico.
-     * <p>
      * Solo los campos presentes y no nulos en el {@link UserProfileUpdateDTO} se utilizarán para
      * la actualización. Si se intenta cambiar el nombre de usuario a uno que ya está en uso
      * por otro usuario diferente, se lanzará una {@link DuplicateEntryException}.
-     * </p>
      *
      * @param userEmail El correo electrónico del usuario cuyo perfil se va a actualizar.
      * @param profileUpdateDTO DTO que contiene los datos del perfil a actualizar (nombre de usuario, tema, foto, etc.).
@@ -229,11 +255,9 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Confirma la dirección de correo electrónico de un usuario utilizando un token de verificación.
-     * <p>
      * El método busca el token proporcionado. Si el token es válido (existe, no está usado y no ha expirado),
      * se marca el correo electrónico del usuario asociado como verificado ({@code emailVerified = true}) y
      * el token se marca como usado para prevenir su reutilización.
-     * </p>
      *
      * @param tokenString El token de verificación (en formato String) enviado al usuario.
      * @return Un mensaje de cadena indicando el resultado del proceso de confirmación
@@ -252,13 +276,12 @@ public class UserServiceImpl implements UserService {
             throw new InvalidTokenException("Este enlace de verificación ya ha sido utilizado.");
         }
         if (verificationToken.isExpired()) {
-            // Considerar eliminar el token expirado aquí o mediante una tarea programada.
-            verificationTokenRepository.delete(verificationToken); // Eliminar token expirado para evitar acumulación
+            verificationTokenRepository.delete(verificationToken);
             throw new InvalidTokenException("El enlace de verificación ha expirado.");
         }
 
         User user = verificationToken.getUser();
-        if (user == null) { // Aunque la FK es NOT NULL, es una buena práctica verificar.
+        if (user == null) {
             logger.error("No se encontró usuario para el token de verificación ID: {}", verificationToken.getId());
             throw new ResourceNotFoundException("Usuario asociado al token no encontrado, ID de token: " + verificationToken.getId());
         }
@@ -280,12 +303,10 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Cambia la contraseña de un usuario.
-     * <p>
      * Primero, se verifica si la {@code contraseñaActual} proporcionada coincide con la contraseña
      * almacenada del usuario. Si la verificación es exitosa, se comprueba que la
      * {@code nuevaContraseña} no sea igual a la actual. Finalmente, la nueva contraseña se hashea
      * y se actualiza en la base de datos.
-     * </p>
      *
      * @param userEmail El correo electrónico del usuario cuya contraseña se va a cambiar.
      * @param passwordChangeDTO DTO que contiene la contraseña actual del usuario y la nueva contraseña deseada.
@@ -313,19 +334,15 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Inicia el proceso de "olvido de contraseña" para un usuario.
-     * <p>
      * Si se encuentra un usuario con el correo electrónico proporcionado en {@link ForgotPasswordDTO}:
-     * <ol>
-     * <li>Se invalidan (marcan como usados) los tokens de restablecimiento de contraseña anteriores,
-     * activos y no expirados para ese usuario.</li>
-     * <li>Se genera un nuevo {@link PasswordResetToken}.</li>
-     * <li>Se guarda el nuevo token en la base de datos.</li>
-     * <li>Se envía un correo electrónico al usuario con el nuevo token e instrucciones para restablecer su contraseña.</li>
-     * </ol>
+     * Se invalidan (marcan como usados) los tokens de restablecimiento de contraseña anteriores,
+     * activos y no expirados para ese usuario.
+     * Se genera un nuevo {@link PasswordResetToken}.
+     * Se guarda el nuevo token en la base de datos.
+     * Se envía un correo electrónico al usuario con el nuevo token e instrucciones para restablecer su contraseña.
      * Por razones de seguridad, si el correo electrónico no se encuentra, se lanza una {@link ResourceNotFoundException}
      * que el controlador debe manejar para dar una respuesta genérica al cliente, evitando así revelar
      * si una dirección de correo electrónico está registrada o no en el sistema.
-     * </p>
      *
      * @param forgotPasswordDTO DTO que contiene el correo electrónico del usuario que ha olvidado su contraseña.
      * @throws ResourceNotFoundException Si no se encuentra ningún usuario con el correo electrónico proporcionado.
@@ -334,38 +351,41 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void processForgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
+        //Buscar al usuario por su email.
         Optional<User> userOptional = userRepository.findByEmail(forgotPasswordDTO.getEmail());
+
+        //Comprobar si el usuario no fue encontrado para lanzar la excepción.
         if (userOptional.isEmpty()) {
             throw new ResourceNotFoundException("Usuario no encontrado con email: " + forgotPasswordDTO.getEmail());
         }
+        //Si se encontró, obtener la entidad del usuario.
         User user = userOptional.get();
-
-        // Invalidar tokens de reseteo de contraseña anteriores que aún estén activos para este usuario
-        passwordResetTokenRepository.findByUserAndUsedFalseAndExpiryDateAfter(user, OffsetDateTime.now())
-                .ifPresent(existingToken -> {
-                    logger.info("Invalidando token de reseteo de contraseña anterior (ID: {}) para el usuario {}.", existingToken.getId(), user.getEmail());
-                    existingToken.setUsed(true);
-                    passwordResetTokenRepository.save(existingToken);
-                });
-
+        //Buscar si existe un token de reseteo anterior y activo.
+        Optional<PasswordResetToken> existingTokenOptional = passwordResetTokenRepository
+                .findByUserAndUsedFalseAndExpiryDateAfter(user, OffsetDateTime.now());
+        //Si se encuentra un token activo, invalidarlo.
+        if (existingTokenOptional.isPresent()) {
+            PasswordResetToken existingToken = existingTokenOptional.get();
+            logger.info("Invalidando token de reseteo de contraseña anterior (ID: {}) para el usuario {}.", existingToken.getId(), user.getEmail());
+            existingToken.setUsed(true);
+            passwordResetTokenRepository.save(existingToken);
+        }
+        //Crear y guardar el nuevo token de restablecimiento.
         PasswordResetToken passwordResetToken = new PasswordResetToken(user);
         passwordResetTokenRepository.save(passwordResetToken);
+        //Enviar el correo electrónico con el nuevo token.
         emailService.sendPasswordResetEmail(user, passwordResetToken.getToken());
     }
 
     /**
      * Procesa el restablecimiento de la contraseña de un usuario utilizando un token de restablecimiento.
-     * <p>
      * Se realizan las siguientes validaciones sobre el token:
-     * <ul>
-     * <li>Debe existir en la base de datos.</li>
-     * <li>No debe haber sido utilizado previamente.</li>
-     * <li>No debe haber expirado.</li>
-     * </ul>
+     * Debe existir en la base de datos.
+     * No debe haber sido utilizado previamente.
+     * No debe haber expirado.
      * Si el token es válido, se actualiza la contraseña del usuario asociado (previamente hasheada).
      * Adicionalmente, se verifica que la nueva contraseña no sea igual a la contraseña actual del usuario.
      * El token de restablecimiento se marca como usado después del proceso.
-     * </p>
      *
      * @param resetPasswordDTO DTO que contiene el token de restablecimiento y la nueva contraseña deseada.
      * @return Un mensaje de cadena confirmando el éxito del restablecimiento de la contraseña.
@@ -408,15 +428,13 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Programa la cuenta de un usuario para su eliminación (borrado suave).
-     * <p>
+     * Programa la cuenta de un usuario para su eliminación (soft delete).
      * Se requiere la contraseña actual del usuario para confirmar la acción. Si la contraseña es válida,
      * se establece una fecha de eliminación futura en el perfil del usuario (definida por
      * {@code ACCOUNT_DELETION_GRACE_PERIOD_DAYS}). Durante este período de gracia, el usuario puede
      * cancelar la eliminación simplemente iniciando sesión.
      * Los tokens de verificación de correo y de restablecimiento de contraseña asociados al usuario
      * también se eliminan para prevenir su uso.
-     * </p>
      *
      * @param userEmail El correo electrónico del usuario cuya cuenta se programará para eliminación.
      * @param accountDeleteDTO DTO que contiene la contraseña actual del usuario para verificación.
@@ -459,11 +477,9 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Busca usuarios por una subcadena de su nombre de usuario, ignorando mayúsculas y minúsculas.
-     * <p>
      * El término de búsqueda ({@code usernameQuery}) debe tener al menos 2 caracteres.
      * El usuario que realiza la búsqueda (identificado por {@code currentUserEmail}) es excluido de los resultados.
      * Solo se devuelven usuarios cuyas cuentas no estén marcadas para eliminación.
-     * </p>
      *
      * @param usernameQuery El término de búsqueda para el nombre de usuario.
      * @param currentUserEmail El correo electrónico del usuario que realiza la búsqueda (para autoexclusión).
@@ -492,20 +508,21 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException("No se encontraron usuarios con el nombre: '" + usernameQuery.trim() + "'");
         }
         logger.info("Búsqueda de usuarios por '{}' realizada por el usuario {} encontró {} resultados.", usernameQuery, currentUserEmail, foundUsers.size());
-        return foundUsers.stream()
-                .map(userMapper::toSearchResultDto)
-                .collect(Collectors.toList());
+
+        List<UserSearchResultDTO> resultDTOs = new ArrayList<>();
+        for (User foundUser : foundUsers) {
+            resultDTOs.add(userMapper.toSearchResultDto(foundUser));
+        }
+        return resultDTOs;
     }
 
     /**
      * Actualiza la foto de perfil de un usuario.
-     * <p>
      * Este método asume que el archivo de imagen ya ha sido guardado por el {@link FileStorageService}
      * y que {@code profilePictureFileName} es el nombre del archivo resultante de esa operación.
      * Se actualiza la referencia al nombre del archivo en la entidad del usuario.
      * Si el usuario tenía una foto de perfil anterior diferente a la nueva, el archivo antiguo
      * se elimina del sistema de almacenamiento a través del {@code FileStorageService}.
-     * </p>
      *
      * @param userEmail El correo electrónico del usuario cuya foto de perfil se va a actualizar.
      * @param profilePictureFileName El nombre del nuevo archivo de imagen de perfil (ej. "uuid_del_usuario.jpg").
