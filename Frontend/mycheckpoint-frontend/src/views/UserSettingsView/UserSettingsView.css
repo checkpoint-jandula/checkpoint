@@ -1,6 +1,9 @@
 /* ... (estilos existentes) ... */
+h2 {
+    margin-bottom: 1rem;
+}
 .user-settings-container {
-    max-width: 600px;
+    max-width: 1000px;
     margin: 2rem auto;
     padding: 1rem;
 }
@@ -168,4 +171,37 @@ button:disabled {
     padding: 1rem;
     border: 1px dashed red;
     border-radius: 4px;
+}
+
+/* --- NUEVO LAYOUT DE DOS COLUMNAS PARA AJUSTES --- */
+
+.settings-layout-wrapper {
+  display: flex;
+  gap: 1.5rem; /* Espacio entre columnas */
+  align-items: flex-start; /* Alinea las columnas en la parte superior */
+}
+
+.settings-column-left {
+  width: 300px; /* Ancho fijo para la columna de la foto */
+  flex-shrink: 0; /* Evita que la columna se encoja */
+}
+
+.settings-column-right {
+  flex-grow: 1; /* Permite que la columna de formularios ocupe el resto del espacio */
+  min-width: 0; /* Evita problemas de desbordamiento en flexbox */
+}
+
+
+/* --- ADAPTACIÓN A MÓVILES --- */
+@media (max-width: 768px) {
+  .settings-layout-wrapper {
+    /* Las columnas se apilan una encima de la otra */
+    flex-direction: column;
+  }
+
+  .settings-column-left,
+  .settings-column-right {
+    /* Ambas columnas ocupan todo el ancho disponible */
+    width: 100%;
+  }
 }

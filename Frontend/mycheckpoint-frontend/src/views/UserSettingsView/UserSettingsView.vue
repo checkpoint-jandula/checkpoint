@@ -2,122 +2,131 @@
   <div class="user-settings-container">
     <h2>Ajustes del Perfil</h2>
 
-    <section class="settings-section">
-      <h3>Actualizar Información del Perfil</h3>
-      <form @submit.prevent="handleUpdateProfile">
-        <div class="form-group">
-          <label for="username">Nombre de Usuario:</label>
-          <input type="text" id="username" v-model="profileForm.nombre_usuario" />
-          <small v-if="profileForm.nombre_usuario && profileForm.nombre_usuario.length > 0 && profileForm.nombre_usuario.length < 3" class="input-hint">
-            Debe tener al menos 3 caracteres.
-          </small>
-        </div>
-        <div class="form-group">
-          <label for="theme">Tema Preferido:</label>
-          <select id="theme" v-model="profileForm.tema">
-            <option value="CLARO">Claro</option>
-            <option value="OSCURO">Oscuro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="notifications">Recibir Notificaciones:</label>
-          <input type="checkbox" id="notifications" v-model="profileForm.notificaciones" />
-        </div>
-        <div class="form-group">
-          <label for="profileVisibility">Visibilidad del Perfil:</label>
-          <select id="profileVisibility" v-model="profileForm.visibilidad_perfil">
-            <option value="PUBLICO">Público</option>
-            <option value="PRIVADO">Privado</option>
-            <option value="SOLO_AMIGOS">Solo Amigos</option>
-          </select>
-        </div>
-        <button type="submit" :disabled="isLoadingProfile">
-          {{ isLoadingProfile ? 'Guardando...' : 'Guardar Cambios de Perfil' }}
-        </button>
-        <div v-if="profileMessage" :class="profileError ? 'error-message' : 'success-message'">
-          {{ profileMessage }}
-        </div>
-      </form>
-    </section>
-
-    <section class="settings-section">
-      <h3>Foto de Perfil</h3>
-      <div class="profile-picture-area">
-        <p>Foto Actual:</p>
-        <img :src="currentProfilePictureUrl" alt="Foto de perfil actual" class="profile-picture-current" />
-        <div class="form-group">
-          <label for="profilePictureInput">Seleccionar nueva foto:</label>
-          <input type="file" id="profilePictureInput" @change="onFileSelected" accept="image/png, image/jpeg, image/gif" />
-        </div>
-        <div v-if="imagePreviewUrl" class="image-preview-container">
-          <p>Vista Previa:</p>
-          <img :src="imagePreviewUrl" alt="Vista previa de nueva foto" class="profile-picture-preview" />
-        </div>
-        <button @click="handleUploadPhoto" :disabled="!selectedFile || isLoadingPhoto" class="upload-button">
-          {{ isLoadingPhoto ? 'Subiendo...' : 'Subir Nueva Foto' }}
-        </button>
-        <div v-if="photoMessage" :class="photoError ? 'error-message' : 'success-message'">
-          {{ photoMessage }}
-        </div>
+    <div class="settings-layout-wrapper">
+      
+      <div class="settings-column-left">
+        <section class="settings-section">
+          <h3>Foto de Perfil</h3>
+          <div class="profile-picture-area">
+            <p>Foto Actual:</p>
+            <img :src="currentProfilePictureUrl" alt="Foto de perfil actual" class="profile-picture-current" />
+            <div class="form-group">
+              <label for="profilePictureInput">Seleccionar nueva foto:</label>
+              <input type="file" id="profilePictureInput" @change="onFileSelected" accept="image/png, image/jpeg, image/gif" />
+            </div>
+            <div v-if="imagePreviewUrl" class="image-preview-container">
+              <p>Vista Previa:</p>
+              <img :src="imagePreviewUrl" alt="Vista previa de nueva foto" class="profile-picture-preview" />
+            </div>
+            <button @click="handleUploadPhoto" :disabled="!selectedFile || isLoadingPhoto" class="upload-button">
+              {{ isLoadingPhoto ? 'Subiendo...' : 'Subir Nueva Foto' }}
+            </button>
+            <div v-if="photoMessage" :class="photoError ? 'error-message' : 'success-message'">
+              {{ photoMessage }}
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
-
-    <section class="settings-section">
-      <h3>Cambiar Contraseña</h3>
-      <form @submit.prevent="handleChangePassword">
-         <div class="form-group">
-          <label for="currentPassword">Contraseña Actual:</label>
-          <input type="password" id="currentPassword" v-model="passwordChangeForm.currentPassword" required />
-        </div>
-        <div class="form-group">
-          <label for="newPasswordForChange">Nueva Contraseña:</label>
-          <input type="password" id="newPasswordForChange" v-model="passwordChangeForm.newPassword" required />
-          <small v-if="passwordChangeForm.newPassword && passwordChangeForm.newPassword.length > 0 && passwordChangeForm.newPassword.length < 8" class="input-hint">
-            Debe tener al menos 8 caracteres.
-          </small>
-        </div>
-        <div class="form-group">
-          <label for="confirmNewPassword">Confirmar Nueva Contraseña:</label>
-          <input type="password" id="confirmNewPassword" v-model="passwordChangeForm.confirmNewPassword" required />
-        </div>
-        <div v-if="passwordChangeForm.newPassword && passwordChangeForm.confirmNewPassword && passwordChangeForm.newPassword !== passwordChangeForm.confirmNewPassword" class="error-message-inline">
-          Las nuevas contraseñas no coinciden.
-        </div>
-        <button type="submit" :disabled="isLoadingChangePassword || passwordChangeForm.newPassword !== passwordChangeForm.confirmNewPassword || passwordChangeForm.newPassword.length < 8">
-          {{ isLoadingChangePassword ? 'Cambiando...' : 'Cambiar Contraseña' }}
-        </button>
-        <div v-if="changePasswordMessage" :class="changePasswordError ? 'error-message' : 'success-message'">
-          {{ changePasswordMessage }}
-        </div>
-      </form>
-    </section>
-
-    <section class="settings-section delete-account-section">
-      <h3>Eliminar Cuenta (Zona Peligrosa)</h3>
-      <p>
-        Esta acción programará la eliminación permanente de tu cuenta después de un período de gracia.
-        Perderás acceso a todos tus datos. Esta acción no se puede deshacer.
-      </p>
-      <button @click="requestAccountDeletion" v-if="!showDeleteConfirmation" class="delete-button-request">
-        Solicitar Eliminación de Cuenta
-      </button>
-
-      <div v-if="showDeleteConfirmation" class="delete-confirmation-area">
-        <p>Para confirmar la eliminación de tu cuenta, por favor ingresa tu contraseña actual.</p>
-        <div class="form-group">
-          <label for="passwordForDelete">Contraseña Actual:</label>
-          <input type="password" id="passwordForDelete" v-model="passwordForDelete" required />
-        </div>
-        <button @click="handleDeleteAccount" :disabled="isLoadingDeleteAccount || !passwordForDelete" class="delete-button-confirm">
-          {{ isLoadingDeleteAccount ? 'Eliminando...' : 'Eliminar Mi Cuenta Permanentemente' }}
-        </button>
+      <div class="settings-column-right">
+        <section class="settings-section">
+          <h3>Actualizar Información del Perfil</h3>
+          <form @submit.prevent="handleUpdateProfile">
+            <div class="form-group">
+              <label for="username">Nombre de Usuario:</label>
+              <input type="text" id="username" v-model="profileForm.nombre_usuario" />
+              <small v-if="profileForm.nombre_usuario && profileForm.nombre_usuario.length > 0 && profileForm.nombre_usuario.length < 3" class="input-hint">
+                Debe tener al menos 3 caracteres.
+              </small>
+            </div>
+            <div class="form-group">
+              <label for="theme">Tema Preferido:</label>
+              <select id="theme" v-model="profileForm.tema">
+                <option value="CLARO">Claro</option>
+                <option value="OSCURO">Oscuro</option>
+              </select>
+            </div>
+            <!--
+            <div class="form-group">
+              <label for="notifications">Recibir Notificaciones:</label>
+              <input type="checkbox" id="notifications" v-model="profileForm.notificaciones" />
+            </div>
+            -->
+            <div class="form-group">
+              <label for="profileVisibility">Visibilidad del Perfil:</label>
+              <select id="profileVisibility" v-model="profileForm.visibilidad_perfil">
+                <option value="PUBLICO">Público</option>
+                <option value="PRIVADO">Privado</option>
+                <option value="SOLO_AMIGOS">Solo Amigos</option>
+              </select>
+            </div>
+            <button type="submit" :disabled="isLoadingProfile">
+              {{ isLoadingProfile ? 'Guardando...' : 'Guardar Cambios de Perfil' }}
+            </button>
+            <div v-if="profileMessage" :class="profileError ? 'error-message' : 'success-message'">
+              {{ profileMessage }}
+            </div>
+          </form>
+        </section>
+    
+        <section class="settings-section">
+          <h3>Cambiar Contraseña</h3>
+          <form @submit.prevent="handleChangePassword">
+             <div class="form-group">
+              <label for="currentPassword">Contraseña Actual:</label>
+              <input type="password" id="currentPassword" v-model="passwordChangeForm.currentPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="newPasswordForChange">Nueva Contraseña:</label>
+              <input type="password" id="newPasswordForChange" v-model="passwordChangeForm.newPassword" required />
+              <small v-if="passwordChangeForm.newPassword && passwordChangeForm.newPassword.length > 0 && passwordChangeForm.newPassword.length < 8" class="input-hint">
+                Debe tener al menos 8 caracteres.
+              </small>
+            </div>
+            <div class="form-group">
+              <label for="confirmNewPassword">Confirmar Nueva Contraseña:</label>
+              <input type="password" id="confirmNewPassword" v-model="passwordChangeForm.confirmNewPassword" required />
+            </div>
+            <div v-if="passwordChangeForm.newPassword && passwordChangeForm.confirmNewPassword && passwordChangeForm.newPassword !== passwordChangeForm.confirmNewPassword" class="error-message-inline">
+              Las nuevas contraseñas no coinciden.
+            </div>
+            <button type="submit" :disabled="isLoadingChangePassword || passwordChangeForm.newPassword !== passwordChangeForm.confirmNewPassword || passwordChangeForm.newPassword.length < 8">
+              {{ isLoadingChangePassword ? 'Cambiando...' : 'Cambiar Contraseña' }}
+            </button>
+            <div v-if="changePasswordMessage" :class="changePasswordError ? 'error-message' : 'success-message'">
+              {{ changePasswordMessage }}
+            </div>
+          </form>
+        </section>
+    
+        <section class="settings-section delete-account-section">
+          <h3>Eliminar Cuenta</h3>
+          <p>
+            Esta acción programará la eliminación permanente de tu cuenta después de un período de gracia.
+            Perderás acceso a todos tus datos. 
+            <br>
+            Para deshacer esta acción, deberas volver a iniciar sesion antes de que se complete el tiempo de gracia.
+          </p>
+          <button @click="requestAccountDeletion" v-if="!showDeleteConfirmation" class="delete-button-request">
+            Solicitar Eliminación de Cuenta
+          </button>
+    
+          <div v-if="showDeleteConfirmation" class="delete-confirmation-area">
+            <p>Para confirmar la eliminación de tu cuenta, por favor ingresa tu contraseña actual.</p>
+            <div class="form-group">
+              <label for="passwordForDelete">Contraseña Actual:</label>
+              <input type="password" id="passwordForDelete" v-model="passwordForDelete" required />
+            </div>
+            <button @click="handleDeleteAccount" :disabled="isLoadingDeleteAccount || !passwordForDelete" class="delete-button-confirm">
+              {{ isLoadingDeleteAccount ? 'Eliminando...' : 'Eliminar Mi Cuenta Permanentemente' }}
+            </button>
+          </div>
+          <div v-if="deleteAccountMessage" :class="deleteAccountError ? 'error-message' : 'success-message'">
+            {{ deleteAccountMessage }}
+          </div>
+        </section>
       </div>
-      <div v-if="deleteAccountMessage" :class="deleteAccountError ? 'error-message' : 'success-message'">
-        {{ deleteAccountMessage }}
       </div>
-    </section>
-
-  </div>
+    </div>
 </template>
 
 <script setup>

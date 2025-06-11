@@ -331,7 +331,7 @@
   .library-grid {
     /* Permitimos columnas más estrechas para que quepan 2 en muchos móviles */
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    grid-template-columns: 1fr 1fr;
+    
     gap: 1rem;
   }
 
