@@ -8,7 +8,8 @@
 
       <nav class="main-nav" :class="{ 'is-open': isMenuOpen }">
         <RouterLink to="/" @click="isMenuOpen = false">Home</RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" :to="{ name: 'friends' }" @click="isMenuOpen = false">Amigos</RouterLink>
+        <RouterLink v-if="authStore.isAuthenticated" :to="{ name: 'friends' }" @click="isMenuOpen = false">Amigos
+        </RouterLink>
         <RouterLink to="/public-gamelists" @click="isMenuOpen = false">Listas Públicas</RouterLink>
         <RouterLink to="/public-tierlists" @click="isMenuOpen = false">Tier Lists Públicas</RouterLink>
         <RouterLink to="/search-users" @click="isMenuOpen = false">Buscar Usuarios</RouterLink>
@@ -16,7 +17,7 @@
 
       <div class="actions-container">
         <button @click="isMenuOpen = !isMenuOpen" class="menu-toggle" aria-label="Abrir menú">
-          <span class="hamburger-icon" :class="{'is-open': isMenuOpen}"></span>
+          <span class="hamburger-icon" :class="{ 'is-open': isMenuOpen }"></span>
         </button>
 
         <form @submit.prevent="performSearch" class="search-container">
@@ -37,7 +38,8 @@
                 <img :src="profilePictureUrl" alt="Mi perfil" class="user-avatar-header">
               </a>
               <div v-if="isUserMenuOpen" class="user-dropdown-menu">
-                <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }" class="dropdown-item" @click="isUserMenuOpen = false">
+                <RouterLink :to="{ name: 'profile', params: { publicId: authStore.currentUser.public_id } }"
+                  class="dropdown-item" @click="isUserMenuOpen = false">
                   Ver Perfil
                 </RouterLink>
                 <a role="button" href="#" @click.prevent="handleLogout" class="dropdown-item logout">
@@ -165,9 +167,9 @@ const toggleUserMenu = () => {
 };
 
 const closeUserMenuOnClickOutside = (event) => {
-    if (userMenuContainerRef.value && !userMenuContainerRef.value.contains(event.target)) {
-        isUserMenuOpen.value = false;
-    }
+  if (userMenuContainerRef.value && !userMenuContainerRef.value.contains(event.target)) {
+    isUserMenuOpen.value = false;
+  }
 };
 
 const handleLogout = () => {

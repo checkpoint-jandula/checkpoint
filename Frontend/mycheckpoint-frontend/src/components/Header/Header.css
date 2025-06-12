@@ -159,8 +159,6 @@ nav a.router-link-exact-active {
 
 .filter-toggle-button {
   background: none;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
   width: 34px;
   height: 34px;
   cursor: pointer;
@@ -170,18 +168,19 @@ nav a.router-link-exact-active {
   justify-content: center;
 }
 .filter-toggle-button:hover {
-    background-color: var(--color-border);
+    scale: 1.4;
 }
 
 .filter-icon {
-  width: 16px;
-  height: 16px;
-  border: solid 2px;
-  border-radius: 2px;
-  position: relative;
+  width: 30px;  /* Ajusta el tamaño según necesites */
+  height: 30px; /* Ajusta el tamaño según necesites */
+  
+  /* Aquí está la magia: usamos tu SVG como fondo */
+  background-image: url('/src/assets/icons/Fillter_Icon.svg');
+  background-size: contain; /* Asegura que la imagen quepa completa */
+  background-repeat: no-repeat;
+  background-position: center;
 }
-.filter-icon:before { content: ""; position: absolute; height: 2px; width: 10px; background: currentColor; top: 3px; left: 1px; }
-.filter-icon:after { content: ""; position: absolute; height: 2px; width: 4px; background: currentColor; top: 9px; left: 4px; }
 
 
 /* --- ESTILOS PARA EL MENÚ DE USUARIO --- */
