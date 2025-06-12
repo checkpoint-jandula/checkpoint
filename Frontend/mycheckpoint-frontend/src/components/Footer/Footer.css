@@ -28,7 +28,7 @@
   font-weight: 600;
   color: var(--color-heading);
   margin-bottom: 1rem;
-  border-bottom: 2px solid hsla(160, 100%, 37%, 0.5); /* Acento de color */
+  border-bottom: 2px solid var(--color-azul-hover); /* Acento de color */
   padding-bottom: 0.5rem;
   display: inline-block;
 }
@@ -44,9 +44,9 @@
   color: var(--color-text-mute); /* Un color de texto más suave */
 }
 
+
 .igdb-logo {
   max-width: 100px;
-  margin-bottom: 1rem;
   /* El logo de IGDB es oscuro. Si tu fondo es oscuro, invierte el color */
   /* filter: invert(1) brightness(2); */
 }
@@ -74,7 +74,8 @@
 }
 
 .footer-section a:hover {
-  color: hsla(160, 100%, 37%, 1); /* Tu color de acento al pasar el ratón */
+  color: var(--color-rosa-hover); /* Tu color de acento al pasar el ratón */
+  background-color: transparent !important;
   text-decoration: underline;
 }
 

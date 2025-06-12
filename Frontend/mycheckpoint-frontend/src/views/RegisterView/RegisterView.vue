@@ -1,37 +1,40 @@
 <template>
   <div class="register-container">
-    <h2>Crear Cuenta</h2>
-    <form @submit.prevent="handleRegister">
-      <div class="form-group">
-        <label for="username">Nombre de Usuario:</label>
-        <input type="text" id="username" v-model="username" required />
-      </div>
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" required />
-      </div>
-      <div class="form-group">
-        <label for="password">Contraseña:</label>
-        <input type="password" id="password" v-model="password" required />
-        <small v-if="password && password.length > 0 && password.length < 8" class="password-hint">
-          La contraseña debe tener al menos 8 caracteres.
-        </small>
+    
+    <div class="register-content">
+      <h2>Crear Cuenta</h2>
+      <form @submit.prevent="handleRegister">
+        <div class="form-group">
+          <label for="username">Nombre de Usuario:</label>
+          <input type="text" id="username" v-model="username" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" v-model="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña:</label>
+          <input type="password" id="password" v-model="password" required />
+          <small v-if="password && password.length > 0 && password.length < 8" class="password-hint">
+            La contraseña debe tener al menos 8 caracteres.
+          </small>
+        </div>
+
+        <button type="submit" :disabled="isLoading">
+          {{ isLoading ? 'Registrando...' : 'Registrar' }}
+        </button>
+      </form>
+
+      <div v-if="errorMessages.length > 0" class="error-messages">
+        <h4>Error al registrar:</h4>
+        <ul>
+          <li v-for="(error, index) in errorMessages" :key="index">{{ error }}</li>
+        </ul>
       </div>
 
-      <button type="submit" :disabled="isLoading">
-        {{ isLoading ? 'Registrando...' : 'Registrar' }}
-      </button>
-    </form>
-
-    <div v-if="errorMessages.length > 0" class="error-messages">
-      <h4>Error al registrar:</h4>
-      <ul>
-        <li v-for="(error, index) in errorMessages" :key="index">{{ error }}</li>
-      </ul>
-    </div>
-
-    <div v-if="successMessage" class="success-message">
-      {{ successMessage }}
+      <div v-if="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
     </div>
   </div>
 </template>
@@ -90,7 +93,7 @@ const handleRegister = async () => {
       // El servidor respondió con un código de estado fuera del rango 2xx
       console.error("Datos del error:", error.response.data);
       console.error("Estado del error:", error.response.status);
-      
+
       if (error.response.status === 400) { //
         // Error de validación desde el backend
         if (error.response.data && error.response.data.errors) { //
@@ -101,7 +104,7 @@ const handleRegister = async () => {
       } else if (error.response.status === 409) { //
         // Conflicto (email o nombre de usuario ya existen)
         if (error.response.data && error.response.data.message) { //
-           errorMessages.value = [error.response.data.message];
+          errorMessages.value = [error.response.data.message];
         } else {
           errorMessages.value = ['El nombre de usuario o el email ya están registrados.'];
         }

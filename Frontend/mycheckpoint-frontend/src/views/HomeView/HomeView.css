@@ -26,6 +26,7 @@ h1 {
   display: flex;
   overflow-x: auto;
   padding-bottom: 1rem; /* Espacio para la barra de scroll */
+  padding-top: 0.5rem;
   gap: 1.5rem;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) var(--color-background-soft);
@@ -57,7 +58,7 @@ h1 {
 }
 
 .game-card:hover {
-  transform: translateY(-5px);
+  scale: 1.05;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 

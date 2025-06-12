@@ -19,7 +19,7 @@ import Footer from '@/components/Footer/Footer.vue';
   display: flex;
   flex-direction: column;
   min-width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
 }
 
 .main-content {
