@@ -565,11 +565,11 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 
 ## Anexo 1
 ### Especificación OpenAPI
-### MyCheckPoint API Documentation
+ MyCheckPoint API Documentation
 
 **OpenAPI Version:** 3.0.1
 
-## Info
+ Info
 
 * **Titulo:** MyCheckPoint
 * **Descripcion:** API para la aplicación MyCheckPoint
@@ -579,16 +579,16 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
     * **URL:** [http://springdoc.org](http://springdoc.org)
 * **Version:** v1
 
-## Servers
+ Servers
 
 * **URL:** `http://localhost:8080`
 * **Descripcion:** Generated server url
 
-## Seguridad
+ Seguridad
 
 * **bearerAuth**
 
-## Tags
+ Tags
 
 * **Friendship Controller:** API para la gestión de amistades y solicitudes de amistad
 * **Usuarios:** API para la gestión de usuarios
@@ -598,9 +598,9 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Autenticación Controller:** API para la autenticación de usuarios y gestión de tokens
 * **TierList Controller:** API para la gestión de Tier Lists de juegos
 
-## Paths
+ Paths
 
-### `GET /api/v1/usuarios/me`
+ `GET /api/v1/usuarios/me`
 
 * **Tags:** Usuarios
 * **Resumen:** Obtener los datos del usuario autenticado actualmente
@@ -622,7 +622,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/usuarios/me`
+ `PUT /api/v1/usuarios/me`
 
 * **Tags:** Usuarios
 * **Resumen:** Actualizar el perfil del usuario autenticado actualmente
@@ -654,7 +654,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/usuarios/me`
+ `DELETE /api/v1/usuarios/me`
 
 * **Tags:** Usuarios
 * **Resumen:** Programar la eliminación de la cuenta del usuario autenticado
@@ -685,7 +685,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/usuarios/me/password`
+ `PUT /api/v1/usuarios/me/password`
 
 * **Tags:** Usuarios
 * **Resumen:** Cambiar la contraseña del usuario autenticado actualmente
@@ -718,7 +718,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/users/me/gamelists/{listPublicId}`
+ `GET /api/v1/users/me/gamelists/{listPublicId}`
 
 * **Tags:** GameList Controller
 * **Resumen:** Obtener una lista de juegos específica del usuario autenticado por su ID público
@@ -744,7 +744,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/users/me/gamelists/{listPublicId}`
+ `PUT /api/v1/users/me/gamelists/{listPublicId}`
 
 * **Tags:** GameList Controller
 * **Resumen:** Actualizar una lista de juegos existente del usuario autenticado
@@ -776,7 +776,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/users/me/gamelists/{listPublicId}`
+`DELETE /api/v1/users/me/gamelists/{listPublicId}`
 
 * **Tags:** GameList Controller
 * **Resumen:** Eliminar una lista de juegos del usuario autenticado
@@ -800,7 +800,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/tierlists/{tierListPublicId}`
+ `GET /api/v1/tierlists/{tierListPublicId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Obtener una Tier List específica por su ID público
@@ -827,7 +827,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `PUT /api/v1/tierlists/{tierListPublicId}`
+ `PUT /api/v1/tierlists/{tierListPublicId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Actualizar los metadatos de una Tier List existente
@@ -862,7 +862,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/tierlists/{tierListPublicId}`
+ `DELETE /api/v1/tierlists/{tierListPublicId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Eliminar una Tier List existente
@@ -889,7 +889,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}`
+ `PUT /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Actualizar el nombre de una sección (tier) específica en una Tier List
@@ -927,7 +927,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}`
+ `DELETE /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Eliminar una sección (tier) de una Tier List
@@ -962,7 +962,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/tierlists/{tierListPublicId}/items/{tierListItemInternalId}/move`
+`PUT /api/v1/tierlists/{tierListPublicId}/items/{tierListItemInternalId}/move`
 
 * **Tags:** TierList Controller
 * **Resumen:** Mover un ítem (juego) dentro de una Tier List
@@ -1000,7 +1000,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `PUT /api/v1/friends/requests/accept/{requesterUserPublicId}`
+`PUT /api/v1/friends/requests/accept/{requesterUserPublicId}`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Aceptar una solicitud de amistad pendiente
@@ -1029,7 +1029,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/usuarios`
+`POST /api/v1/usuarios`
 
 * **Tags:** Usuarios
 * **Resumen:** Registrar un nuevo usuario
@@ -1053,7 +1053,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `POST /api/v1/usuarios/me/profile-picture`
+`POST /api/v1/usuarios/me/profile-picture`
 
 * **Tags:** Usuarios
 * **Resumen:** Subir o actualizar la foto de perfil del usuario autenticado
@@ -1090,7 +1090,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/users/me/tierlists`
+`GET /api/v1/users/me/tierlists`
 
 * **Tags:** TierList Controller
 * **Resumen:** Obtener todas las Tier Lists de perfil del usuario autenticado
@@ -1112,7 +1112,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/users/me/tierlists`
+`POST /api/v1/users/me/tierlists`
 
 * **Tags:** TierList Controller
 * **Resumen:** Crear una nueva Tier List de perfil para el usuario autenticado
@@ -1140,7 +1140,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/users/me/library/games/{igdbId}`
+`GET /api/v1/users/me/library/games/{igdbId}`
 
 * **Tags:** User Game Library Controller
 * **Resumen:** Obtener un juego específico de la biblioteca del usuario autenticado
@@ -1166,7 +1166,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/users/me/library/games/{igdbId}`
+`POST /api/v1/users/me/library/games/{igdbId}`
 
 * **Tags:** User Game Library Controller
 * **Resumen:** Añadir o actualizar un juego en la biblioteca del usuario autenticado
@@ -1198,7 +1198,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/users/me/library/games/{igdbId}`
+`DELETE /api/v1/users/me/library/games/{igdbId}`
 
 * **Tags:** User Game Library Controller
 * **Resumen:** Eliminar un juego de la biblioteca del usuario autenticado
@@ -1222,7 +1222,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/users/me/gamelists`
+`GET /api/v1/users/me/gamelists`
 
 * **Tags:** GameList Controller
 * **Resumen:** Obtener todas las listas de juegos del usuario autenticado
@@ -1244,7 +1244,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/users/me/gamelists`
+`POST /api/v1/users/me/gamelists`
 
 * **Tags:** GameList Controller
 * **Resumen:** Crear una nueva lista de juegos para el usuario autenticado
@@ -1272,7 +1272,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/users/me/gamelists/{listPublicId}/games`
+`POST /api/v1/users/me/gamelists/{listPublicId}/games`
 
 * **Tags:** GameList Controller
 * **Resumen:** Añadir un juego de la biblioteca del usuario a una de sus listas de juegos
@@ -1307,7 +1307,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/tierlists/{tierListPublicId}/sections`
+`POST /api/v1/tierlists/{tierListPublicId}/sections`
 
 * **Tags:** TierList Controller
 * **Resumen:** Añadir una nueva sección (tier) a una Tier List existente
@@ -1342,7 +1342,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}/items`
+`POST /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}/items`
 
 * **Tags:** TierList Controller
 * **Resumen:** Añadir o mover un ítem (juego) a una sección específica de una Tier List de perfil
@@ -1380,7 +1380,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/tierlists/{tierListPublicId}/items/unclassified`
+`POST /api/v1/tierlists/{tierListPublicId}/items/unclassified`
 
 * **Tags:** TierList Controller
 * **Resumen:** Añadir o mover un ítem (juego) a la sección 'Sin Clasificar' de una Tier List de perfil
@@ -1415,7 +1415,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/friends/requests/send/{receiverUserPublicId}`
+`POST /api/v1/friends/requests/send/{receiverUserPublicId}`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Enviar una solicitud de amistad
@@ -1447,7 +1447,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `POST /api/v1/auth/reset-password`
+`POST /api/v1/auth/reset-password`
 
 * **Tags:** Autenticación Controller
 * **Resumen:** Restablecer la contraseña del usuario utilizando un token
@@ -1475,7 +1475,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `POST /api/v1/auth/login`
+`POST /api/v1/auth/login`
 
 * **Tags:** Autenticación Controller
 * **Resumen:** Autenticar usuario y obtener token JWT
@@ -1505,7 +1505,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `POST /api/v1/auth/forgot-password`
+`POST /api/v1/auth/forgot-password`
 
 * **Tags:** Autenticación Controller
 * **Resumen:** Solicitar restablecimiento de contraseña
@@ -1527,7 +1527,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ValidationErrorResponse`
 
-### `GET /api/v1/usuarios/search`
+`GET /api/v1/usuarios/search`
 
 * **Tags:** Usuarios
 * **Resumen:** Buscar usuarios por nombre de usuario
@@ -1556,7 +1556,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/usuarios/public/{publicId}`
+`GET /api/v1/usuarios/public/{publicId}`
 
 * **Tags:** Usuarios
 * **Resumen:** Obtener un usuario por su ID público
@@ -1577,7 +1577,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/users/me/library/games`
+`GET /api/v1/users/me/library/games`
 
 * **Tags:** User Game Library Controller
 * **Resumen:** Obtener la biblioteca completa de juegos del usuario autenticado
@@ -1599,7 +1599,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/tierlists/public`
+`GET /api/v1/tierlists/public`
 
 * **Tags:** TierList Controller
 * **Resumen:** Obtener todas las Tier Lists públicas
@@ -1613,7 +1613,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/games/{igdbId}/details`
+`GET /api/v1/games/{igdbId}/details`
 
 * **Tags:** User Game Library Controller
 * **Resumen:** Obtener detalles completos de un juego
@@ -1634,7 +1634,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/gamelists/{listPublicId}/public`
+`GET /api/v1/gamelists/{listPublicId}/public`
 
 * **Tags:** GameList Controller
 * **Resumen:** Obtener una lista de juegos pública específica por su ID público
@@ -1655,7 +1655,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/gamelists/{gameListPublicId}/tierlist`
+`GET /api/v1/gamelists/{gameListPublicId}/tierlist`
 
 * **Tags:** TierList Controller
 * **Resumen:** Obtener o crear la Tier List asociada a una GameList específica
@@ -1682,7 +1682,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/gamelists/public`
+`GET /api/v1/gamelists/public`
 
 * **Tags:** GameList Controller
 * **Resumen:** Obtener todas las listas de juegos públicas
@@ -1696,7 +1696,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/v1/friends`
+`GET /api/v1/friends`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Obtener la lista de amigos del usuario autenticado
@@ -1718,7 +1718,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/friends/requests/sent`
+`GET /api/v1/friends/requests/sent`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Obtener las solicitudes de amistad pendientes enviadas por el usuario autenticado
@@ -1740,7 +1740,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/friends/requests/received`
+`GET /api/v1/friends/requests/received`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Obtener las solicitudes de amistad pendientes recibidas por el usuario autenticado
@@ -1762,7 +1762,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `GET /api/v1/auth/confirm-account`
+`GET /api/v1/auth/confirm-account`
 
 * **Tags:** Autenticación Controller
 * **Resumen:** Confirmar la dirección de correo electrónico de un usuario
@@ -1789,7 +1789,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/juegos/igdb/filtrar`
+`GET /api/juegos/igdb/filtrar`
 
 * **Tags:** Game Controller
 * **Resumen:** Filtrar juegos en IGDB por múltiples criterios
@@ -1825,7 +1825,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `GET /api/juegos/igdb/buscar`
+`GET /api/juegos/igdb/buscar`
 
 * **Tags:** Game Controller
 * **Resumen:** Buscar juegos en IGDB por nombre
@@ -1846,7 +1846,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Contenido:** `application/json`
 * **Esquema:** `#/components/schemas/ErrorResponse`
 
-### `DELETE /api/v1/users/me/gamelists/{listPublicId}/games/{userGameInternalId}`
+`DELETE /api/v1/users/me/gamelists/{listPublicId}/games/{userGameInternalId}`
 
 * **Tags:** GameList Controller
 * **Resumen:** Eliminar un juego de una lista de juegos personalizada del usuario autenticado
@@ -1876,7 +1876,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/tierlists/{tierListPublicId}/items/{tierListItemInternalId}`
+`DELETE /api/v1/tierlists/{tierListPublicId}/items/{tierListItemInternalId}`
 
 * **Tags:** TierList Controller
 * **Resumen:** Eliminar un ítem (juego) de una Tier List de perfil
@@ -1911,7 +1911,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/friends/{friendUserPublicId}`
+`DELETE /api/v1/friends/{friendUserPublicId}`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Eliminar un amigo
@@ -1935,7 +1935,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-### `DELETE /api/v1/friends/requests/decline/{requesterUserPublicId}`
+`DELETE /api/v1/friends/requests/decline/{requesterUserPublicId}`
 
 * **Tags:** Friendship Controller
 * **Resumen:** Rechazar o cancelar una solicitud de amistad pendiente
@@ -1962,11 +1962,11 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Seguridad:**
 * bearerAuth
 
-## Components
+Components
 
-### Schemas
+Schemas
 
-#### `ErrorResponse`
+`ErrorResponse`
 
 * **Descripcion:** Respuesta de error genérica para errores 4xx y 5xx.
 * **Tipo:** `object`
@@ -1976,7 +1976,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Mensaje detallado del error.  
   * **Ejemplo:** `El recurso solicitado no fue encontrado.`
 
-#### `ValidationErrorResponse`
+`ValidationErrorResponse`
 
 * **Descripcion:** Respuesta específica para errores de validación de campos (HTTP 400).
 * **Tipo:** `object`
@@ -1987,7 +1987,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Ejemplo:** `["El nombre de usuario es obligatorio", "El email debe ser válido"]`
 * **Items:** `string`
 
-#### `DuplicatedResourceResponse`
+`DuplicatedResourceResponse`
 
 * **Descripcion:** Respuesta específica para errores de recursos duplicados (HTTP 409).
 * **Tipo:** `object`
@@ -1997,7 +1997,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Mensaje de error indicando que el recurso ya existe.  
   * **Ejemplo:** `El usuario ya existe.`
 
-#### `UnauthorizedResponse`
+`UnauthorizedResponse`
 
 * **Descripcion:** Respuesta específica para errores de autorización (HTTP 401).
 * **Tipo:** `object`
@@ -2007,7 +2007,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Mensaje de error indicando que la autenticación falló.  
   * **Ejemplo:** `No autorizado. Token inválido o expirado. O contraseña incorrecta`
 
-#### `ValidationPasswordErrorResponse`
+`ValidationPasswordErrorResponse`
 
 * **Descripcion:** Respuesta específica para errores de validación de campos (HTTP 400).
 * **Tipo:** `object`
@@ -2018,7 +2018,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Ejemplo:** `["La contraseña no debe ser igual a la anterior", "La nueva contraseña debe tener entre 8 y 100 caracteres"]`
 * **Items:** `string`
 
-#### `RequiredErrorResponse`
+`RequiredErrorResponse`
 
 * **Descripcion:** Respuesta específica para errores de validación de campos (HTTP 400).
 * **Tipo:** `object`
@@ -2029,7 +2029,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Ejemplo:** `El recurso es obligatorio.`
 * **Items:** `string`
 
-#### `TooLargeResponse`
+`TooLargeResponse`
 
 * **Descripcion:** Respuesta específica para errores de validación de campos (HTTP 413).
 * **Tipo:** `object`
@@ -2040,7 +2040,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Ejemplo:** `El recurso es demasiado grande. El tamaño máximo permitido es de 500KB.`
 * **Items:** `string`
 
-#### `UserProfileUpdateDTO`
+`UserProfileUpdateDTO`
 
 * **Descripcion:** DTO para actualizar el perfil de un usuario. Solo los campos presentes y no nulos (o que cumplan @NotNull) serán considerados para la actualización. Para campos como 'foto_perfil', enviar un nuevo valor actualiza, enviar null o no enviar el campo lo deja sin cambios.
 * **Tipo:** `object`
@@ -2069,7 +2069,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Enum:** `PUBLICO`, `PRIVADO`, `SOLO_AMIGOS`
 * **Ejemplo:** `SOLO_AMIGOS`
 
-#### `UserDTO`
+`UserDTO`
 
 * **Descripcion:** DTO que representa la información pública y de preferencias de un usuario. Se devuelve tras un registro o al solicitar datos de usuario.
 * **Tipo:** `object`
@@ -2109,7 +2109,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Enum:** `PUBLICO`, `PRIVADO`, `SOLO_AMIGOS`
 * **Ejemplo:** `PUBLICO`
 
-#### `PasswordChangeDTO`
+`PasswordChangeDTO`
 
 * **Descripcion:** DTO para solicitar un cambio de contraseña. Requiere la contraseña actual del usuario y la nueva contraseña deseada.
 * **Tipo:** `object`
@@ -2124,7 +2124,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** La nueva contraseña deseada para la cuenta. Debe tener entre 8 y 100 caracteres.  
   * **Ejemplo:** `NuevaContraseñaS3gur@`
 
-#### `GameListRequestDTO`
+`GameListRequestDTO`
 
 * **Descripcion:** DTO para crear o actualizar una lista de juegos personalizada.
 * **Tipo:** `object`
@@ -2143,7 +2143,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Indica si la lista de juegos es pública (true) o privada (false).  
   * **Ejemplo:** `false`
 
-#### `GameListResponseDTO`
+`GameListResponseDTO`
 
 * **Descripcion:** DTO que representa una lista de juegos personalizada, incluyendo sus detalles y los juegos que contiene.
 * **Tipo:** `object`
@@ -2185,7 +2185,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Fecha y hora de la última actualización de la lista (formato ISO 8601).  
   * **Ejemplo:** `2024-05-15T14:30:00Z`
 
-#### `UserGameResponseDTO`
+`UserGameResponseDTO`
 
 * **Descripcion:** DTO que representa una entrada en la biblioteca de juegos de un usuario, incluyendo sus datos personales sobre un juego específico.
 * **Tipo:** `object` (nullable)
@@ -2249,7 +2249,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Fecha y hora de la última actualización de esta entrada.  
   * **Ejemplo:** `2023-07-15T18:30:00Z`
 
-#### `TierListUpdateRequestDTO`
+`TierListUpdateRequestDTO`
 
 * **Descripcion:** DTO para actualizar los metadatos de una Tier List existente (nombre, descripción, visibilidad). Solo los campos proporcionados (no nulos) serán actualizados.
 * **Tipo:** `object`
@@ -2267,7 +2267,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Nuevo estado de visibilidad para la Tier List (true para pública, false para privada). Si se proporciona, se actualizará el estado.  
   * **Ejemplo:** `true`
 
-#### `TierListItemGameInfoDTO`
+`TierListItemGameInfoDTO`
 
 * **Tipo:** `object`
 * **Propiedades:**
@@ -2278,7 +2278,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `game_cover_url`: `string`
 * `item_order`: `integer` (int32)
 
-#### `TierListResponseDTO`
+`TierListResponseDTO`
 
 * **Descripcion:** DTO que representa una Tier List, incluyendo sus secciones y los ítems (juegos) clasificados en ellas.
 * **Tipo:** `object`
@@ -2326,7 +2326,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Fecha y hora de la última actualización de la Tier List (formato ISO 8601).  
   * **Ejemplo:** `2024-05-21T15:30:00Z`
 
-#### `TierSectionResponseDTO`
+`TierSectionResponseDTO`
 
 * **Descripcion:** Sección especial para ítems (juegos) que aún no han sido clasificados en ninguna tier. Contiene el nombre 'Juegos por Clasificar' y orden 0. (Note: Descripcion seems to refer to a specific instance, general schema is below)
 * **Tipo:** `object` (nullable)
@@ -2348,7 +2348,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Nombre de la nueva sección (tier). Debe tener entre 1 y 100 caracteres.  
   * **Ejemplo:** `S Tier`
 
-#### `TierListItemMoveRequestDTO`
+`TierListItemMoveRequestDTO`
 
 * **Descripcion:** DTO para especificar el movimiento de un ítem (juego) a una nueva sección y/o posición dentro de una Tier List.
 * **Tipo:** `object`
@@ -2363,7 +2363,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Nueva posición (orden basado en cero) para el ítem dentro de la sección destino. Es obligatorio.  
   * **Ejemplo:** `0`
 
-#### `FriendshipResponseDTO`
+`FriendshipResponseDTO`
 
 * **Descripcion:** DTO que representa el estado de una amistad o solicitud de amistad.
 * **Tipo:** `object`
@@ -2402,7 +2402,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Fecha y hora de la última actualización del estado (ej. aceptación).  
   * **Ejemplo:** `2024-05-27T10:05:00Z`
 
-#### `UserCreateDTO`
+`UserCreateDTO`
 
 * **Descripcion:** DTO para la creación de un nuevo usuario. Contiene los campos obligatorios para el registro.
 * **Tipo:** `object`
@@ -2421,7 +2421,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Contraseña para la cuenta del usuario. Debe tener entre 8 y 100 caracteres.  
   * **Ejemplo:** `ContraseñaS3gur@`
 
-#### `TierListCreateRequestDTO`
+`TierListCreateRequestDTO`
 
 * **Descripcion:** DTO para crear una nueva Tier List. Se utiliza principalmente para Tier Lists de perfil.
 * **Tipo:** `object`
@@ -2440,7 +2440,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Indica si la Tier List será pública (true) o privada (false). Por defecto es false (privada).  
   * **Ejemplo:** `false`
 
-#### `UserGameDataDTO`
+`UserGameDataDTO`
 
 * **Descripcion:** DTO para proporcionar o actualizar los datos específicos de un usuario para un juego en su biblioteca.
 * **Tipo:** `object`
@@ -2492,7 +2492,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Duración estimada en horas para completar el juego al 100%.  
   * **Ejemplo:** `120`
 
-#### `AddGameToCustomListRequestDTO`
+`AddGameToCustomListRequestDTO`
 
 * **Descripcion:** DTO para añadir un juego existente de la biblioteca del usuario a una lista de juegos personalizada.
 * **Tipo:** `object`
@@ -2503,7 +2503,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** ID interno de la entrada 'UserGame' (juego en la biblioteca del usuario) que se desea añadir a la lista. Es obligatorio.  
   * **Ejemplo:** `101`
 
-#### `TierListItemAddRequestDTO`
+`TierListItemAddRequestDTO`
 
 * **Descripcion:** DTO para añadir un ítem (juego de la biblioteca del usuario) a una sección de una Tier List.
 * **Tipo:** `object`
@@ -2518,7 +2518,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Posición (orden basado en cero) deseada para el ítem dentro de la sección destino. Si es nulo o está fuera de rango, el ítem se añadirá al final de la sección. Opcional.  
   * **Ejemplo:** `0`
 
-#### `ResetPasswordDTO`
+`ResetPasswordDTO`
 
 * **Descripcion:** DTO para la solicitud de restablecimiento de contraseña. Contiene el token recibido por email y la nueva contraseña.
 * **Tipo:** `object`
@@ -2533,7 +2533,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** La nueva contraseña deseada para la cuenta. Debe tener entre 8 y 100 caracteres.  
   * **Ejemplo:** `NuevaContraseñaS3gur@!`
 
-#### `LoginRequestDTO`
+`LoginRequestDTO`
 
 * **Descripcion:** DTO para la solicitud de inicio de sesión. Requiere un identificador (email o nombre de usuario) y una contraseña.
 * **Tipo:** `object`
@@ -2548,7 +2548,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Contraseña del usuario.  
   * **Ejemplo:** `P@$$wOrd`
 
-#### `JwtResponseDTO`
+`JwtResponseDTO`
 
 * **Descripcion:** DTO para la respuesta de inicio de sesión exitoso. Contiene el token de acceso JWT.
 * **Tipo:** `object`
@@ -2562,7 +2562,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Tipo de token, generalmente 'Bearer'.  
   * **Ejemplo:** `Bearer`
 
-#### `ForgotPasswordDTO`
+`ForgotPasswordDTO`
 
 * **Descripcion:** DTO para la solicitud de restablecimiento de contraseña. Requiere el correo electrónico asociado a la cuenta.
 * **Tipo:** `object`
@@ -2573,7 +2573,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
   * **Descripcion:** Correo electrónico del usuario que solicita el restablecimiento de contraseña. Debe ser un formato de email válido.  
   * **Ejemplo:** `usuario@example.com`
 
-#### `UserSearchResultDTO`
+`UserSearchResultDTO`
 
 * **Descripcion:** DTO que representa un resultado de búsqueda de usuario, mostrando información pública básica.
 * **Tipo:** `object`
@@ -2591,7 +2591,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** URL de la foto de perfil del usuario encontrado. Puede ser nulo.  
   * **Ejemplo:** `/profile-pictures/a1b2c3d4-e5f6-7890-1234-567890abcdef.png`
 
-#### `ArtworkDto`
+`ArtworkDto`
 
 * **Descripcion:** Información de los artes del juego.
 * **Tipo:** `object` (nullable)
@@ -2599,21 +2599,21 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `url`: `string`
 * `id`: `integer` (int64)
 
-#### `CompanyInfoDto`
+`CompanyInfoDto`
 
 * **Tipo:** `object`
 * **Propiedades:**
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `CoverDto`
+`CoverDto`
 
 * **Tipo:** `object`
 * **Propiedades:**
 * `url`: `string`
 * `id`: `integer` (int64)
 
-#### `DlcInfoDto`
+`DlcInfoDto`
 
 * **Descripcion:** Lista de remasters de este juego. (Note: this Descripcion seems to be a copy-paste error from `remasters` field in `GameDto`, actual `DlcInfoDto` usually refers to DLCs themselves).
 * **Tipo:** `object` (nullable)
@@ -2625,7 +2625,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
     * `game_type`: `string` (enum: 0-15)
     * `slug`: `string`
 
-#### `FranchiseDto`
+`FranchiseDto`
 
 * **Descripcion:** Franquicias a las que pertenece el juego.
 * **Tipo:** `object` (nullable)
@@ -2633,7 +2633,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `GameDetailDTO`
+`GameDetailDTO`
 
 * **Descripcion:** DTO que contiene los detalles completos de un juego, incluyendo información general, datos específicos del usuario (si está autenticado y el juego está en su biblioteca), y comentarios públicos.
 * **Tipo:** `object`
@@ -2645,7 +2645,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * **Descripcion:** Lista de comentarios públicos realizados por otros usuarios sobre este juego. Puede estar vacía si no hay comentarios o si el juego no existe en la base de datos local para asociar comentarios.  
   * **Items:** `#/components/schemas/PublicGameCommentDTO`
 
-#### `GameDto`
+`GameDto`
 
 * **Tipo:** `object`
 * **Propiedades:**
@@ -2682,7 +2682,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
     * `involved_companies` (nullable): Array of `#/components/schemas/InvolvedCompanyDto` (Compañías involucradas)
     * `game_status`: `#/components/schemas/GameStatusDto`
 
-#### `GameEngineDto`
+`GameEngineDto`
 
 * **Descripcion:** Motores de juego utilizados.
 * **Tipo:** `object` (nullable)
@@ -2690,7 +2690,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `GameModeDto`
+`GameModeDto`
 
 * **Descripcion:** Modos de juego disponibles (ej. Un jugador, Multijugador).
 * **Tipo:** `object` (nullable)
@@ -2698,14 +2698,14 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `GameStatusDto`
+`GameStatusDto`
 
 * **Descripcion:** Estado numérico del juego según IGDB (mapeado a ReleaseStatus).
 * **Tipo:** `object` (nullable)
 * **Propiedades:**
 * `id`: `integer` (int32)
 
-#### `GenreDto`
+`GenreDto`
 
 * **Descripcion:** Géneros a los que pertenece el juego (ej. RPG, Acción).
 * **Tipo:** `object` (nullable)
@@ -2713,7 +2713,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `InvolvedCompanyDto`
+`InvolvedCompanyDto`
 
 * **Descripcion:** Compañías involucradas en el desarrollo/publicación del juego.
 * **Tipo:** `object` (nullable)
@@ -2725,7 +2725,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `supporting`: `boolean`
 * `id`: `integer` (int64)
 
-#### `KeywordDto`
+`KeywordDto`
 
 * **Descripcion:** Palabras clave asociadas al juego.
 * **Tipo:** `object` (nullable)
@@ -2733,7 +2733,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `PlatformDto`
+`PlatformDto`
 
 * **Descripcion:** Plataformas en las que el juego está disponible.
 * **Tipo:** `object` (nullable)
@@ -2743,14 +2743,14 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
     * `alternative_name`: `string`
 * `platform_logo`: `#/components/schemas/PlatformLogoDto`
 
-#### `PlatformLogoDto`
+`PlatformLogoDto`
 
 * **Tipo:** `object`
 * **Propiedades:**
 * `url`: `string`
 * `id`: `integer` (int64)
 
-#### `PublicGameCommentDTO`
+`PublicGameCommentDTO`
 
 * **Descripcion:** Lista de comentarios públicos realizados por otros usuarios sobre este juego. Puede estar vacía si no hay comentarios o si el juego no existe en la base de datos local para asociar comentarios.
 * **Tipo:** `object` (nullable)
@@ -2760,7 +2760,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
     * `comment_text`: `string`
 * `comment_date`: `string` (date-time)
 
-#### `ScreenshotDto`
+`ScreenshotDto`
 
 * **Descripcion:** Capturas de pantalla del juego.
 * **Tipo:** `object` (nullable)
@@ -2768,7 +2768,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `url`: `string`
 * `id`: `integer` (int64)
 
-#### `SimilarGameInfoDto`
+`SimilarGameInfoDto`
 
 * **Descripcion:** Lista de juegos similares a este.
 * **Tipo:** `object` (nullable)
@@ -2780,7 +2780,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `id`: `integer` (int64)
     * `total_rating`: `number` (double)
 
-#### `ThemeDto`
+`ThemeDto`
 
 * **Descripcion:** Temas principales del juego (ej. Fantasía, Ciencia Ficción).
 * **Tipo:** `object` (nullable)
@@ -2788,7 +2788,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `name`: `string`
 * `id`: `integer` (int64)
 
-#### `VideoDto`
+`VideoDto`
 
 * **Descripcion:** Vídeos relacionados con el juego.
 * **Tipo:** `object` (nullable)
@@ -2797,7 +2797,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `id`: `integer` (int64)
     * `video_id`: `string`
 
-#### `WebsiteDto`
+`WebsiteDto`
 
 * **Descripcion:** Sitios web relacionados con el juego.
 * **Tipo:** `object` (nullable)
@@ -2805,7 +2805,7 @@ Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer con
 * `url`: `string`
 * `id`: `integer` (int64)
 
-#### `AccountDeleteDTO`
+`AccountDeleteDTO`
 
 * **Descripcion:** DTO utilizado para confirmar la solicitud de eliminación de cuenta. Requiere la contraseña actual del usuario.
 * **Tipo:** `object`
