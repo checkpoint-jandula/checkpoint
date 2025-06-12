@@ -496,8 +496,68 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 
 # Bibliografía
 
-Siempre que hagáis una afirmación, necesitáis respaldarla. Por ejemplo, si decís que los usuarios están descontentos con las plataformas de reviews, tenéis que proporcionar una fuente para esa afirmación. No puede haber afirmación sin cita que la respalde, ni citas sin mencionar en el texto.  
-Además, en esta sección irán todos los enlaces y páginas webs visitadas. Recoged toda la información que sea posible para cada entrada, y luego las vamos a formatear usando ChatGPT en algún formato estándar. A mi me gusta IEEE, pero probablemente quede mejor APA. No es importante hasta que formateemos el documento, pero recopiladlas bien porque si no el trabajo será el triple.
+### Frameworks y Tecnologías Backend
+
+- Java: https://www.oracle.com/java/
+- Spring Boot: https://spring.io/projects/spring-boot
+- Spring Data JPA: https://spring.io/projects/spring-data-jpa
+- Spring Security: https://spring.io/projects/spring-security
+- Documentación oficial de Spring Web (MVC): https://docs.spring.io/spring-framework/reference/web/webmvc.html
+- Documentación oficial de Spring WebFlux (WebClient): https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-client
+- Hibernate: https://hibernate.org/
+- PostgreSQL: https://www.postgresql.org/
+- JSON Web Tokens (JWT): https://jwt.io/
+- MapStruct: https://mapstruct.org/
+- Spring Boot Starter Mail: https://docs.spring.io/spring-boot/docs/current/reference/html/io.html#io.email
+- Springdoc OpenAPI: https://springdoc.org/
+- Lombok: https://projectlombok.org/
+- Maven: https://maven.apache.org/
+
+### Frameworks y Tecnologías Frontend
+
+- Vue.js 3: https://vuejs.org/
+- Vite: https://vitejs.dev/
+- Vue Router 4: https://router.vuejs.org/
+- Pinia 3: https://pinia.vuejs.org/
+- Axios: https://axios-http.com/
+- OpenAPI Generator Client (TypeScript-Axios): https://openapi-generator.tech/docs/generators/typescript-axios/
+
+### Herramientas de Desarrollo y DevOps
+
+- Intellij IDEA: https://www.jetbrains.com/idea/
+- Visual Studio Code: https://code.visualstudio.com/
+- Git: https://git-scm.com/
+- GitHub: https://github.com/
+- Node.js: https://nodejs.org/
+- Postman: https://www.postman.com/
+- DataGrip: https://www.jetbrains.com/es-es/datagrip/
+
+### Plataformas y APIs de Videojuegos (Fuentes y Referencias)
+
+- IGDB: https://www.igdb.com/
+- Documentación oficial de la API de IGDB: https://api-docs.igdb.com/#getting-started
+- Metacritic: https://www.metacritic.com/
+- OpenCritic: https://opencritic.com/
+- Steam: https://store.steampowered.com/
+- Epic Games Store: https://store.epicgames.com/es-ES/
+- GOG: https://www.gog.com/en/
+- Ubisoft: https://www.ubisoft.com/es-es
+
+### Plataformas de Referencia (Otros Sectores)
+
+- Filmaffinity: https://www.filmaffinity.com/
+- IMDB: https://www.imdb.com/
+- Letterboxd: https://letterboxd.com/
+- Goodreads: https://www.goodreads.com/
+- Pitchfork: https://pitchfork.com/
+
+### Artículos, Medios y Recursos Adicionales
+
+- IGN: https://www.ign.com/
+- Polygon: https://www.polygon.com/
+- Artículo - Twitch adquiere la plataforma Internet Games Database (IGDB): https://areajugones.sport.es/videojuegos/twitch-adquiere-la-plataforma-internet-games-database/
+- Vídeo - Crítica a Metacritic: https://youtu.be/QqLGF_ghc8A?feature=shared 
+- Vídeo - Drag and Drop (Referencia técnica): https://www.youtube.com/watch?v=76pYx_ND_zo 
 
 # Anexos
 
