@@ -182,6 +182,17 @@ nav a.router-link-exact-active {
   background-position: center;
 }
 
+.icon-search{
+  width: 35px;  /* Ajusta el tamaño según necesites */
+  height: 35px; /* Ajusta el tamaño según necesites */
+  
+  /* Aquí está la magia: usamos tu SVG como fondo */
+  background-image: url('/src/assets/icons/search_icon.svg');
+  background-size: contain; /* Asegura que la imagen quepa completa */
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 
 /* --- ESTILOS PARA EL MENÚ DE USUARIO --- */
 .user-menu-container {

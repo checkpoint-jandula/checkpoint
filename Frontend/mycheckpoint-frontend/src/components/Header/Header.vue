@@ -23,7 +23,7 @@
         <form @submit.prevent="performSearch" class="search-container">
           <input type="search" v-model="searchQuery" placeholder="Buscar por nombre..." @keyup.enter="performSearch" />
           <button type="button" @click="performSearch" class="search-button" aria-label="Buscar">
-            <span class="icon-search" aria-label="Buscar">🔍</span>
+            <span class="icon-search" aria-label="Buscar"></span>
           </button>
         </form>
 
