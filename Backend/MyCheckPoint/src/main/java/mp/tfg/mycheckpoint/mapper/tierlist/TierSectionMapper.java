@@ -27,6 +27,7 @@ public interface TierSectionMapper {
      */
     @Mapping(target = "internalId", source = "internalId")
     @Mapping(target = "name", source = "name")
+    @Mapping(target = "color", source = "color")
     @Mapping(target = "order", source = "sectionOrder")
     @Mapping(target = "isDefaultUnclassified", source = "defaultUnclassified") // MapStruct infiere 'isDefaultUnclassified()' como 'defaultUnclassified'
     @Mapping(target = "items", source = "items") // Usa TierListItemMapper para los elementos

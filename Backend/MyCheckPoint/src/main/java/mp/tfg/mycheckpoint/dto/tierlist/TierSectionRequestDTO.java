@@ -30,4 +30,11 @@ public class TierSectionRequestDTO {
     @Size(min = 1, max = 100, message = "El nombre de la sección debe tener entre 1 y 100 caracteres.")
     @JsonProperty("name")
     private String name;
+
+    @Schema(description = "Color de la sección (tier) en formato hexadecimal.",
+            example = "#FF5733", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "El color de la sección no puede estar vacío.")
+    @Size(min = 1, max = 7, message = "El color de la sección debe tener entre 1 y 7 caracteres (formato hexadecimal).")
+    @JsonProperty("color")
+    private String color;
 }

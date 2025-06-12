@@ -36,6 +36,14 @@ public class TierSectionResponseDTO {
     private String name;
 
     /**
+     * Color de la sección en formato hexadecimal (ej. "#FF5733").
+     * Este campo es opcional y puede ser nulo si no se especifica un color.
+     */
+    @Schema(description = "Color de la sección en formato hexadecimal.", example = "#FF5733", nullable = true)
+    @JsonProperty("color")
+    private String color;
+
+    /**
      * Orden de esta sección dentro de la Tier List.
      * La sección "Juegos por Clasificar" suele tener orden 0.
      */

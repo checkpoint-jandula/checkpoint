@@ -66,6 +66,14 @@ public class TierSection {
     private boolean isDefaultUnclassified = false;
 
     /**
+     * Color asociado a esta sección, utilizado para la representación visual.
+     * Puede ser nulo si no se especifica un color.
+     * La longitud máxima es de 20 caracteres.
+     */
+    @Column(name = "color", length = 7)
+    private String color;
+
+    /**
      * Lista de ítems (juegos) contenidos en esta sección.
      * La relación es uno a muchos. Las operaciones de persistencia se propagan (CascadeType.ALL)
      * y los ítems huérfanos se eliminan (orphanRemoval = true).
@@ -96,7 +104,7 @@ public class TierSection {
     private OffsetDateTime updatedAt;
 
     /**
-     * Método helper para añadir un ítem a esta sección,
+     * Metodo helper para añadir un ítem a esta sección,
      * estableciendo la relación bidireccional.
      * @param item El {@link TierListItem} a añadir.
      */

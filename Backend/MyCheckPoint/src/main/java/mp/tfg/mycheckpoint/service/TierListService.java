@@ -112,8 +112,8 @@ public interface TierListService {
     TierListResponseDTO addSectionToTierList(String userEmail, UUID tierListPublicId, TierSectionRequestDTO sectionRequestDTO);
 
     /**
-     * Actualiza el nombre de una sección (tier) específica en una Tier List.
-     * Solo el propietario puede actualizar secciones. La sección por defecto "Juegos por Clasificar" no puede ser renombrada.
+     * Actualiza una sección (tier) específica en una Tier List.
+     * Solo el propietario puede actualizar secciones. La sección por defecto "Juegos por Clasificar" no puede ser modificada.
      *
      * @param userEmail El email del usuario propietario.
      * @param tierListPublicId El ID público de la Tier List.
@@ -124,7 +124,7 @@ public interface TierListService {
      * @throws mp.tfg.mycheckpoint.exception.UnauthorizedOperationException Si el usuario no es el propietario.
      * @throws mp.tfg.mycheckpoint.exception.InvalidOperationException Si se intenta modificar una sección no permitida.
      */
-    TierListResponseDTO updateSectionName(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO);
+    TierListResponseDTO updateSection(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO);
 
     /**
      * Elimina una sección (tier) personalizada de una Tier List.

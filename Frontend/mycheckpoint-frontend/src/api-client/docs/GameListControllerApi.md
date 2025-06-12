@@ -65,12 +65,12 @@ const { status, data } = await apiInstance.addGameToMyCustomList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**403** | Prohibido. El juego que se intenta añadir no pertenece a la biblioteca del usuario autenticado. |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**404** | No encontrado. La lista de juegos especificada (&#x60;listPublicId&#x60;) o la entrada de juego de la biblioteca (&#x60;user_game_id&#x60;) no fueron encontradas, o el usuario autenticado no pudo ser verificado. |  -  |
+|**500** | Error interno del servidor. |  -  |
 |**200** | Juego añadido a la lista exitosamente (o ya estaba presente). Devuelve la lista actualizada. |  -  |
 |**400** | Datos de entrada inválidos. El &#x60;user_game_id&#x60; en el cuerpo de la solicitud es nulo o inválido. |  -  |
-|**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**404** | No encontrado. La lista de juegos especificada (&#x60;listPublicId&#x60;) o la entrada de juego de la biblioteca (&#x60;user_game_id&#x60;) no fueron encontradas, o el usuario autenticado no pudo ser verificado. |  -  |
+|**403** | Prohibido. El juego que se intenta añadir no pertenece a la biblioteca del usuario autenticado. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -122,11 +122,11 @@ const { status, data } = await apiInstance.createMyGameList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**201** | Lista de juegos creada exitosamente. Devuelve los detalles de la lista recién creada. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
-|**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;GameListRequestDTO&#x60; no pasan las validaciones (ej. nombre vacío). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**201** | Lista de juegos creada exitosamente. Devuelve los detalles de la lista recién creada. |  -  |
+|**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;GameListRequestDTO&#x60; no pasan las validaciones (ej. nombre vacío). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -177,10 +177,10 @@ void (empty response body)
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**204** | Lista de juegos eliminada exitosamente. No hay contenido en la respuesta. |  -  |
 |**404** | No encontrado. La lista de juegos con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
+|**204** | Lista de juegos eliminada exitosamente. No hay contenido en la respuesta. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -224,10 +224,10 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**200** | Listas de juegos recuperadas exitosamente. La lista puede estar vacía si el usuario no ha creado ninguna. |  -  |
-|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Listas de juegos recuperadas exitosamente. La lista puede estar vacía si el usuario no ha creado ninguna. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
+|**404** | No encontrado. El usuario autenticado no pudo ser verificado en la base de datos (caso anómalo). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -278,10 +278,10 @@ const { status, data } = await apiInstance.getMySpecificGameList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**404** | No encontrado. La lista de juegos con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
-|**200** | Lista de juegos específica recuperada exitosamente. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Lista de juegos específica recuperada exitosamente. |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -336,10 +336,10 @@ void (empty response body)
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**204** | Juego eliminado de la lista exitosamente (o no se encontraba en ella). No hay contenido en la respuesta. |  -  |
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 |**403** | Prohibido. El juego que se intenta eliminar de la lista no pertenece a la biblioteca del usuario autenticado (si esta verificación se realiza antes de intentar la eliminación de la lista). |  -  |
-|**404** | No encontrado. La lista de juegos (&#x60;listPublicId&#x60;) o la entrada de juego (&#x60;userGameInternalId&#x60;) no fueron encontradas, o el usuario actual no pudo ser verificado. También podría ocurrir si el juego especificado no estaba en la lista para ser eliminado (aunque el servicio actual no lanza error por esto). |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**404** | No encontrado. La lista de juegos (&#x60;listPublicId&#x60;) o la entrada de juego (&#x60;userGameInternalId&#x60;) no fueron encontradas, o el usuario actual no pudo ser verificado. También podría ocurrir si el juego especificado no estaba en la lista para ser eliminado (aunque el servicio actual no lanza error por esto). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -394,11 +394,11 @@ const { status, data } = await apiInstance.updateMyGameList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
-|**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;GameListRequestDTO&#x60; no pasan las validaciones (ej. nombre en blanco si se modifica, descripción demasiado larga). |  -  |
-|**404** | No encontrado. La lista de juegos con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
 |**200** | Lista de juegos actualizada exitosamente. Devuelve los detalles actualizados de la lista. |  -  |
+|**404** | No encontrado. La lista de juegos con el ID público especificado no fue encontrada para el usuario actual, o el usuario autenticado no pudo ser verificado. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**400** | Datos de entrada inválidos. Ocurre si los datos en &#x60;GameListRequestDTO&#x60; no pasan las validaciones (ej. nombre en blanco si se modifica, descripción demasiado larga). |  -  |
+|**401** | No autorizado. El token JWT es inválido, ha expirado o no se proporcionó. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -442,8 +442,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Listas de juegos públicas recuperadas exitosamente. La lista puede estar vacía si no hay ninguna. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Listas de juegos públicas recuperadas exitosamente. La lista puede estar vacía si no hay ninguna. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -494,9 +494,9 @@ const { status, data } = await apiInstance.viewPublicGameList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Lista de juegos pública recuperada exitosamente. |  -  |
 |**404** | No encontrado. La lista de juegos pública con el ID especificado no fue encontrada o no es pública. |  -  |
 |**500** | Error interno del servidor. |  -  |
+|**200** | Lista de juegos pública recuperada exitosamente. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

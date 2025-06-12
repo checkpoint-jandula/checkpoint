@@ -1250,6 +1250,12 @@ export interface TierSectionRequestDTO {
      * @memberof TierSectionRequestDTO
      */
     'name': string;
+    /**
+     * Color de la sección (tier) en formato hexadecimal.
+     * @type {string}
+     * @memberof TierSectionRequestDTO
+     */
+    'color': string;
 }
 /**
  * DTO para una sección (tier) de una Tier List, incluyendo sus ítems.
@@ -1269,6 +1275,12 @@ export interface TierSectionResponseDTO {
      * @memberof TierSectionResponseDTO
      */
     'name'?: string;
+    /**
+     * Color de la sección en formato hexadecimal.
+     * @type {string}
+     * @memberof TierSectionResponseDTO
+     */
+    'color'?: string | null;
     /**
      * Orden de la sección dentro de la Tier List.
      * @type {number}
@@ -2858,7 +2870,7 @@ export const GameControllerApiAxiosParamCreator = function (configuration?: Conf
          * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
          * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
          * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
-         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -3183,7 +3195,7 @@ export const GameControllerApiFp = function(configuration?: Configuration) {
          * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
          * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
          * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
-         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -3305,7 +3317,7 @@ export const GameControllerApiFactory = function (configuration?: Configuration,
          * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
          * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
          * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
-         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+         * @param {number} [limite] Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -3402,7 +3414,7 @@ export interface GameControllerApiInterface {
      * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
      * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
      * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
-     * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+     * @param {number} [limite] Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof GameControllerApiInterface
@@ -3501,7 +3513,7 @@ export class GameControllerApi extends BaseAPI implements GameControllerApiInter
      * @param {number} [idGenero] ID del género según IGDB para filtrar. Opcional.
      * @param {number} [idTema] ID del tema según IGDB para filtrar. Opcional.
      * @param {number} [idModoJuego] ID del modo de juego según IGDB para filtrar. Opcional.
-     * @param {number} [limite] Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500.
+     * @param {number} [limite] Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof GameControllerApi
@@ -4895,54 +4907,6 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             };
         },
         /**
-         * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
-         * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
-         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
-         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
-         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        updateSectionName: async (tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'tierListPublicId' is not null or undefined
-            assertParamExists('updateSectionName', 'tierListPublicId', tierListPublicId)
-            // verify required parameter 'sectionInternalId' is not null or undefined
-            assertParamExists('updateSectionName', 'sectionInternalId', sectionInternalId)
-            // verify required parameter 'tierSectionRequestDTO' is not null or undefined
-            assertParamExists('updateSectionName', 'tierSectionRequestDTO', tierSectionRequestDTO)
-            const localVarPath = `/api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}`
-                .replace(`{${"tierListPublicId"}}`, encodeURIComponent(String(tierListPublicId)))
-                .replace(`{${"sectionInternalId"}}`, encodeURIComponent(String(sectionInternalId)));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication bearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(tierSectionRequestDTO, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
          * @summary Actualizar los metadatos de una Tier List existente
          * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
@@ -4980,6 +4944,54 @@ export const TierListControllerApiAxiosParamCreator = function (configuration?: 
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(tierListUpdateRequestDTO, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. Requiere autenticación y ser el propietario de la Tier List.
+         * @summary Actualizar una sección (tier) específica de una Tier List
+         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateTierSection: async (tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'tierListPublicId' is not null or undefined
+            assertParamExists('updateTierSection', 'tierListPublicId', tierListPublicId)
+            // verify required parameter 'sectionInternalId' is not null or undefined
+            assertParamExists('updateTierSection', 'sectionInternalId', sectionInternalId)
+            // verify required parameter 'tierSectionRequestDTO' is not null or undefined
+            assertParamExists('updateTierSection', 'tierSectionRequestDTO', tierSectionRequestDTO)
+            const localVarPath = `/api/v1/{tierListPublicId}/sections/{sectionInternalId}`
+                .replace(`{${"tierListPublicId"}}`, encodeURIComponent(String(tierListPublicId)))
+                .replace(`{${"sectionInternalId"}}`, encodeURIComponent(String(sectionInternalId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication bearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(tierSectionRequestDTO, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -5159,21 +5171,6 @@ export const TierListControllerApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
-         * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
-         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
-         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
-         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async updateSectionName(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TierListResponseDTO>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateSectionName(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['TierListControllerApi.updateSectionName']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
          * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
          * @summary Actualizar los metadatos de una Tier List existente
          * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
@@ -5185,6 +5182,21 @@ export const TierListControllerApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.updateTierListMetadata(tierListPublicId, tierListUpdateRequestDTO, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['TierListControllerApi.updateTierListMetadata']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. Requiere autenticación y ser el propietario de la Tier List.
+         * @summary Actualizar una sección (tier) específica de una Tier List
+         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async updateTierSection(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TierListResponseDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateTierSection(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TierListControllerApi.updateTierSection']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -5324,18 +5336,6 @@ export const TierListControllerApiFactory = function (configuration?: Configurat
             return localVarFp.removeSectionFromTierList(tierListPublicId, sectionInternalId, options).then((request) => request(axios, basePath));
         },
         /**
-         * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
-         * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
-         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
-         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
-         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        updateSectionName(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO> {
-            return localVarFp.updateSectionName(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options).then((request) => request(axios, basePath));
-        },
-        /**
          * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
          * @summary Actualizar los metadatos de una Tier List existente
          * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
@@ -5345,6 +5345,18 @@ export const TierListControllerApiFactory = function (configuration?: Configurat
          */
         updateTierListMetadata(tierListPublicId: string, tierListUpdateRequestDTO: TierListUpdateRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO> {
             return localVarFp.updateTierListMetadata(tierListPublicId, tierListUpdateRequestDTO, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. Requiere autenticación y ser el propietario de la Tier List.
+         * @summary Actualizar una sección (tier) específica de una Tier List
+         * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+         * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+         * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        updateTierSection(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO> {
+            return localVarFp.updateTierSection(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -5482,18 +5494,6 @@ export interface TierListControllerApiInterface {
     removeSectionFromTierList(tierListPublicId: string, sectionInternalId: number, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
 
     /**
-     * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
-     * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
-     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
-     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
-     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TierListControllerApiInterface
-     */
-    updateSectionName(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
-
-    /**
      * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
      * @summary Actualizar los metadatos de una Tier List existente
      * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
@@ -5503,6 +5503,18 @@ export interface TierListControllerApiInterface {
      * @memberof TierListControllerApiInterface
      */
     updateTierListMetadata(tierListPublicId: string, tierListUpdateRequestDTO: TierListUpdateRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
+
+    /**
+     * Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Actualizar una sección (tier) específica de una Tier List
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApiInterface
+     */
+    updateTierSection(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig): AxiosPromise<TierListResponseDTO>;
 
 }
 
@@ -5664,20 +5676,6 @@ export class TierListControllerApi extends BaseAPI implements TierListController
     }
 
     /**
-     * Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. No se puede cambiar el nombre de la sección por defecto \'Juegos por Clasificar\'. Requiere autenticación y ser el propietario de la Tier List.
-     * @summary Actualizar el nombre de una sección (tier) específica en una Tier List
-     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
-     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
-     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TierListControllerApi
-     */
-    public updateSectionName(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig) {
-        return TierListControllerApiFp(this.configuration).updateSectionName(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
      * Permite al propietario autenticado de una Tier List modificar sus metadatos como el nombre, la descripción y el estado de visibilidad (pública/privada). Solo los campos proporcionados en el cuerpo de la solicitud serán actualizados. Requiere autenticación y ser el propietario de la Tier List.
      * @summary Actualizar los metadatos de una Tier List existente
      * @param {string} tierListPublicId ID público (UUID) de la Tier List a actualizar.
@@ -5688,6 +5686,20 @@ export class TierListControllerApi extends BaseAPI implements TierListController
      */
     public updateTierListMetadata(tierListPublicId: string, tierListUpdateRequestDTO: TierListUpdateRequestDTO, options?: RawAxiosRequestConfig) {
         return TierListControllerApiFp(this.configuration).updateTierListMetadata(tierListPublicId, tierListUpdateRequestDTO, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. Requiere autenticación y ser el propietario de la Tier List.
+     * @summary Actualizar una sección (tier) específica de una Tier List
+     * @param {string} tierListPublicId ID público (UUID) de la Tier List que contiene la sección a actualizar.
+     * @param {number} sectionInternalId ID interno (Long) de la sección (tier) cuyo nombre se va a actualizar.
+     * @param {TierSectionRequestDTO} tierSectionRequestDTO 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TierListControllerApi
+     */
+    public updateTierSection(tierListPublicId: string, sectionInternalId: number, tierSectionRequestDTO: TierSectionRequestDTO, options?: RawAxiosRequestConfig) {
+        return TierListControllerApiFp(this.configuration).updateTierSection(tierListPublicId, sectionInternalId, tierSectionRequestDTO, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

@@ -61,9 +61,9 @@ const { status, data } = await apiInstance.buscarJuegosEnIgdb(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. Devuelve una lista de juegos encontrados (puede estar vacía). |  -  |
 |**400** | Solicitud incorrecta. El parámetro \&#39;nombre\&#39; es obligatorio. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -88,7 +88,7 @@ let fechaFin: number; //Fecha de fin del rango de lanzamiento (timestamp Unix en
 let idGenero: number; //ID del género según IGDB para filtrar. Opcional. (optional) (default to undefined)
 let idTema: number; //ID del tema según IGDB para filtrar. Opcional. (optional) (default to undefined)
 let idModoJuego: number; //ID del modo de juego según IGDB para filtrar. Opcional. (optional) (default to undefined)
-let limite: number; //Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500. (optional) (default to 10)
+let limite: number; //Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500. (optional) (default to undefined)
 
 const { status, data } = await apiInstance.filtrarJuegosEnIgdb(
     fechaInicio,
@@ -109,7 +109,7 @@ const { status, data } = await apiInstance.filtrarJuegosEnIgdb(
 | **idGenero** | [**number**] | ID del género según IGDB para filtrar. Opcional. | (optional) defaults to undefined|
 | **idTema** | [**number**] | ID del tema según IGDB para filtrar. Opcional. | (optional) defaults to undefined|
 | **idModoJuego** | [**number**] | ID del modo de juego según IGDB para filtrar. Opcional. | (optional) defaults to undefined|
-| **limite** | [**number**] | Número máximo de resultados a devolver. Opcional. Valor por defecto es 10, máximo 500. | (optional) defaults to 10|
+| **limite** | [**number**] | Número máximo de resultados a devolver. Opcional. El valor por defecto se gestiona en el servidor (ej. 20), máximo 500. | (optional) defaults to undefined|
 
 
 ### Return type
@@ -129,9 +129,9 @@ const { status, data } = await apiInstance.filtrarJuegosEnIgdb(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**400** | Solicitud incorrecta. Ocurre si alguno de los parámetros numéricos no puede ser parseado correctamente (ej. texto en lugar de número). |  -  |
 |**200** | Búsqueda por filtros exitosa. Devuelve una lista de juegos encontrados (puede estar vacía). |  -  |
 |**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
-|**400** | Solicitud incorrecta. Ocurre si alguno de los parámetros numéricos no puede ser parseado correctamente (ej. texto en lugar de número). |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -175,8 +175,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -220,8 +220,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -265,8 +265,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -310,8 +310,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -355,8 +355,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -400,8 +400,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
@@ -445,8 +445,8 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 |**200** | Búsqueda exitosa. |  -  |
+|**500** | Error interno del servidor o error al comunicarse con la API de IGDB. |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

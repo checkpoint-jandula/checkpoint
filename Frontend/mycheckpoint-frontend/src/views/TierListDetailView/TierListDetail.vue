@@ -72,7 +72,7 @@
         </div>
 
         <div v-for="section in sortedCustomSections" :key="section.internal_id" class="tier-row">
-          <div class="tier-label" :style="{ backgroundColor: getTierColor(section.name) }">
+          <div class="tier-label" :style="{ backgroundColor: section.color || getTierColor(section.name) }">
             <span v-if="
               !editingSectionName || editingSectionId !== section.internal_id
             ">{{ section.name }}</span>
@@ -81,43 +81,40 @@
               editingSectionName &&
               editingSectionId === section.internal_id &&
               !section.is_default_unclassified
-            " v-model="currentSectionNameEdit" @keyup.enter="saveSectionName(section.internal_id)"
+            " v-model="currentSectionNameEdit" @keyup.enter="saveSectionName(section)"
               @blur="saveSectionName(section.internal_id)" @keyup.esc="cancelEditSectionName" class="section-name-input"
               v-focus />
             <div v-if="isOwner && !section.is_default_unclassified" class="tier-actions">
               <button @click="startEditSectionName(section)" class="icon-button" title="Editar nombre tier">
                 &#9998;
               </button>
+              <label class="icon-button" title="Cambiar color">
+                🎨
+                <input type="color" v-model="section.color" @change="handleUpdateSectionDetails(section)" class="color-input-hidden" />
+              </label>
               <button @click="confirmRemoveSection(section.internal_id)" class="icon-button danger"
                 title="Eliminar tier">
                 &times;
               </button>
             </div>
           </div>
-          <div class="tier-items-droppable-area"
-              :class="{ 
-              'drag-over-active': dragOverSectionId === section.internal_id && dragOverItemId === null && isOwner,
-              'can-drop': isOwner && draggedItemInfo /* Añade clase si se puede soltar */
-            }"
-              @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
-              @dragleave="isOwner ? handleDragLeaveSection($event, section.internal_id) : null"
-              @drop="isOwner ? handleDropOnSection($event, section.internal_id) : null">
+          <div class="tier-items-droppable-area" :class="{
+            'drag-over-active': dragOverSectionId === section.internal_id && dragOverItemId === null && isOwner,
+            'can-drop': isOwner && draggedItemInfo /* Añade clase si se puede soltar */
+          }" @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
+            @dragleave="isOwner ? handleDragLeaveSection($event, section.internal_id) : null"
+            @drop="isOwner ? handleDropOnSection($event, section.internal_id) : null">
             <div v-if="!section.items || section.items.length === 0" class="tier-empty-placeholder">
               {{ isOwner ? "Arrastra o añade juegos aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div 
-                v-for="(item, index) in section.items" 
-                :key="item.tier_list_item_id" 
-                class="tier-item-compact"
+              <div v-for="(item, index) in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
                 :class="{ 'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner }"
-                :draggable="isOwner"
-                @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
+                :draggable="isOwner" @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
                 @dragend="isOwner ? handleDragEnd($event) : null"
-                @dragover.prevent.stop="isOwner ? handleDragOver($event, section.internal_id, item.tier_list_item_id) : null" 
+                @dragover.prevent.stop="isOwner ? handleDragOver($event, section.internal_id, item.tier_list_item_id) : null"
                 @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
-                @drop.stop="isOwner ? handleDrop($event, section.internal_id, item.tier_list_item_id) : null"
-              >
+                @drop.stop="isOwner ? handleDrop($event, section.internal_id, item.tier_list_item_id) : null">
                 <RouterLink :to="{
                   name: 'game-details',
                   params: { igdbId: item.game_igdb_id },
@@ -125,9 +122,8 @@
                   <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
                     class="tier-item-cover-compact" @error="onTierItemCoverError" />
                 </RouterLink>
-                <button 
-                  v-if="isEditableTierList" @click.stop="handleRemoveItemFromTierList(item.tier_list_item_id)" class="remove-item-button-compact" 
-                  title="Quitar ítem de la tier list">
+                <button v-if="isEditableTierList" @click.stop="handleRemoveItemFromTierList(item.tier_list_item_id)"
+                  class="remove-item-button-compact" title="Quitar ítem de la tier list">
                   &times;
                 </button>
               </div>
@@ -151,15 +147,13 @@
               Añadir Juegos de Biblioteca
             </button>
           </div>
-          <div class="tier-items-droppable-area" 
-            :class="{ 
-              'drag-over-active': dragOverSectionId === tierListDetails.unclassified_section.internal_id && dragOverItemId === null && isOwner,
-              'can-drop': isOwner && draggedItemInfo
-            }"
+          <div class="tier-items-droppable-area" :class="{
+            'drag-over-active': dragOverSectionId === tierListDetails.unclassified_section.internal_id && dragOverItemId === null && isOwner,
+            'can-drop': isOwner && draggedItemInfo
+          }"
             @dragover.prevent="isOwner ? handleDragOver($event, tierListDetails.unclassified_section.internal_id) : null"
             @dragleave="isOwner ? handleDragLeaveSection($event, tierListDetails.unclassified_section.internal_id) : null"
-            @drop="isOwner ? handleDropOnSection($event, tierListDetails.unclassified_section.internal_id) : null"
-          >
+            @drop="isOwner ? handleDropOnSection($event, tierListDetails.unclassified_section.internal_id) : null">
             <div v-if="
               !tierListDetails.unclassified_section ||
               !tierListDetails.unclassified_section.items ||
@@ -172,9 +166,7 @@
               }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div 
-                v-for="item in tierListDetails.unclassified_section.items" 
-                :key="item.tier_list_item_id" 
+              <div v-for="item in tierListDetails.unclassified_section.items" :key="item.tier_list_item_id"
                 class="tier-item-compact"
                 :class="{ 'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner }"
                 :draggable="isOwner"
@@ -182,8 +174,7 @@
                 @dragend="isOwner ? handleDragEnd($event) : null"
                 @dragover.prevent.stop="isOwner ? handleDragOver($event, tierListDetails.unclassified_section.internal_id, item.tier_list_item_id) : null"
                 @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
-                @drop.stop="isOwner ? handleDrop($event, tierListDetails.unclassified_section.internal_id, item.tier_list_item_id) : null"
-              >
+                @drop.stop="isOwner ? handleDrop($event, tierListDetails.unclassified_section.internal_id, item.tier_list_item_id) : null">
                 <RouterLink :to="{
                   name: 'game-details',
                   params: { igdbId: item.game_igdb_id },
@@ -343,7 +334,7 @@ import {
   updateMyTierListMetadata,
   deleteMyTierList,
   addSectionToMyTierList,
-  updateMySectionName,
+  updateMyTierSection,
   removeSectionFromMyTierList,
   addItemToMyUnclassifiedSection,
   removeItemFromMyTierList,
@@ -398,7 +389,7 @@ const isLoadingSectionAction = ref(false);
 
 // --- NUEVO: Estado para Modal de "Añadir Sección" ---
 const showAddSectionModal = ref(false);
-const newSectionForm = reactive({ name: "" }); // TierSectionRequestDTO tiene 'name'
+const newSectionForm = reactive({ name: "", color: "" }); // TierSectionRequestDTO tiene 'name'
 const isAddingSection = ref(false);
 const addSectionErrorMessage = ref("");
 
@@ -486,6 +477,16 @@ watch(
     }
   }
 );
+
+watch(
+  () => newSectionForm.name,
+  (newName) => {
+    // Cuando el usuario escribe el nombre de la nueva sección,
+    // actualizamos el color sugerido en tiempo real.
+    newSectionForm.color = getTierColor(newName);
+  }
+);
+
 
 const vFocus = {
   mounted: (el) => {
@@ -656,14 +657,13 @@ const handleDeleteTierList = async () => {
   }
 };
 
-// --- LÓGICA ACTUALIZADA PARA EDITAR NOMBRE DE SECCIÓN ---
+// --- LÓGICA PARA EDITAR SECCIONES ---
 const startEditSectionName = (section) => {
-  if (!isOwner.value) return; // Solo el propietario puede intentar editar
-  // La restricción de "is_default_unclassified" se maneja en saveSectionName
+  if (!isOwner.value) return; 
   editingSectionId.value = section.internal_id;
   currentSectionNameEdit.value = section.name;
   editingSectionName.value = true;
-  sectionEditMessage.value = ""; // Limpiar mensajes previos
+  sectionEditMessage.value = ""; 
   sectionEditError.value = false;
   // El foco se maneja con v-focus en el template
 };
@@ -676,82 +676,61 @@ const cancelEditSectionName = () => {
   sectionEditError.value = false;
 };
 
-const saveSectionName = async (sectionId) => {
-  if (!editingSectionName.value || editingSectionId.value !== sectionId) {
-    // No es un guardado activo o es para otra sección
-    return;
-  }
-
-  const section =
-    tierListDetails.value?.sections?.find((s) => s.internal_id === sectionId) ||
-    (tierListDetails.value?.unclassified_section?.internal_id === sectionId
-      ? tierListDetails.value.unclassified_section
-      : null);
-
-  const newName = currentSectionNameEdit.value.trim();
-
-  if (!section || newName === "" || newName === section.name) {
-    // Si no hay cambios, o el nombre está vacío, o no se encontró la sección, cancelar edición.
-    cancelEditSectionName();
-    if (newName === "" && section) {
-      // Si se intentó guardar vacío
-      sectionEditMessage.value =
-        "El nombre de la sección no puede estar vacío.";
-      sectionEditError.value = true;
-      // No ocultar inmediatamente para que se vea el mensaje
-      setTimeout(() => {
-        sectionEditMessage.value = "";
-        sectionEditError.value = false;
-      }, 3000);
-    }
-    return;
-  }
-
-  // No se puede editar el nombre de la sección "Sin Clasificar" por defecto
-  if (section.is_default_unclassified) {
-    alert("El nombre de la sección 'Sin Clasificar' no se puede cambiar.");
+const handleUpdateSectionDetails = async (section) => {
+  if (!isOwner.value || section.is_default_unclassified || !section.internal_id) {
+    console.error("Actualización prevenida: Sin permisos, o la sección o su ID no son válidos.");
     cancelEditSectionName();
     return;
   }
 
-  isLoadingSectionAction.value = true;
-  sectionEditMessage.value = "";
-  sectionEditError.value = false;
+  // Determina el nombre final.
+  const newName = (editingSectionId.value === section.internal_id)
+    ? currentSectionNameEdit.value.trim()
+    : section.name;
 
-  try {
-    const requestDTO = { name: newName }; // TierSectionRequestDTO
-    const response = await updateMySectionName(
-      props.tierListPublicId,
-      sectionId,
-      requestDTO
-    );
-    // Actualizar los detalles de la tier list completa con la respuesta
-    tierListDetails.value = response.data;
-    sectionEditMessage.value = "Nombre de la sección actualizado.";
-    sectionEditError.value = false;
-    setTimeout(() => {
-      sectionEditMessage.value = "";
-    }, 3000);
-  } catch (error) {
-    console.error(
-      `Error actualizando nombre de sección ID ${sectionId}:`,
-      error
-    );
-    sectionEditError.value = true;
-    if (error.response?.data) {
-      sectionEditMessage.value =
-        error.response.data.errors?.join(", ") ||
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo actualizar el nombre de la sección.";
-    } else {
-      sectionEditMessage.value = "Error de red al actualizar el nombre.";
-    }
-  } finally {
-    isLoadingSectionAction.value = false;
-    editingSectionName.value = false; // Salir del modo edición
+  if (newName === "") {
+    alert("El nombre de la sección no puede estar vacío.");
+    return;
+  }
+
+  // Salir del modo edición de texto
+  if (editingSectionId.value === section.internal_id) {
+    editingSectionName.value = false;
     editingSectionId.value = null;
   }
+
+  const requestDTO = { 
+    name: newName,
+    color: section.color || '#CCCCCC' // Aseguramos que el color nunca es nulo
+  };
+
+  console.log('Enviando actualización para sección ID:', section.internal_id, 'con datos:', JSON.stringify(requestDTO));
+  isLoadingSectionAction.value = true;
+  sectionEditMessage.value = "";
+
+  try {
+    const response = await updateMyTierSection(
+      props.tierListPublicId,
+      section.internal_id, // Usamos la propiedad correcta: 'internal_id'
+      requestDTO
+    );
+    
+    tierListDetails.value = response.data;
+    sectionEditMessage.value = "Sección actualizada.";
+    setTimeout(() => { sectionEditMessage.value = "" }, 3000);
+
+  } catch (error) {
+    console.error(`Error actualizando sección ID ${section.internal_id}:`, error);
+    const errorMessage = error.response?.data?.message || "No se pudo actualizar la sección.";
+    sectionEditError.value = true;
+    sectionEditMessage.value = errorMessage;
+  } finally {
+    isLoadingSectionAction.value = false;
+  }
+};
+
+const saveSectionName = (section) => {
+  handleUpdateSectionDetails(section);
 };
 
 // --- LÓGICA ACTUALIZADA PARA ELIMINAR SECCIÓN ---
@@ -819,6 +798,7 @@ const openAddSectionModal = () => {
     return;
   }
   newSectionForm.name = ""; // Resetear el nombre
+  newSectionForm.color = "#CCCCCC";
   addSectionErrorMessage.value = "";
   showAddSectionModal.value = true;
 };
@@ -836,7 +816,10 @@ const handleAddSection = async () => {
   isAddingSection.value = true;
   addSectionErrorMessage.value = "";
 
-  const requestDTO = { name: newSectionForm.name.trim() }; // TierSectionRequestDTO
+   const requestDTO = { 
+      name: newSectionForm.name.trim(),
+      color: newSectionForm.color 
+  }; // TierSectionRequestDTO
 
   try {
     const response = await addSectionToMyTierList(
@@ -949,9 +932,9 @@ const handleAddSelectedGamesToUnclassified = async () => { // Nombre específico
 // --- LÓGICA ACTUALIZADA PARA QUITAR ÍTEM DE TIER LIST (PROFILE_GLOBAL) ---
 const handleRemoveItemFromTierList = async (tierListItemId) => {
   // Esta acción solo está permitida para Tier Lists de tipo PROFILE_GLOBAL y si el usuario es el propietario.
-  if (!isEditableTierList.value) { 
-    alert("Solo puedes quitar ítems directamente de Tier Lists de tipo 'Perfil Global' que te pertenezcan."); 
-    return; 
+  if (!isEditableTierList.value) {
+    alert("Solo puedes quitar ítems directamente de Tier Lists de tipo 'Perfil Global' que te pertenezcan.");
+    return;
   }
   if (!tierListItemId) {
     console.error("ID del ítem de la tier list no proporcionado.");
@@ -984,13 +967,13 @@ const handleDragStart = (event, item, originalSectionInternalId) => {
   if (!isOwner.value) { event.preventDefault(); return; }
   event.dataTransfer.effectAllowed = 'move';
   // Guardamos el ID del TierListItem y su sección original
-  event.dataTransfer.setData('application/json', JSON.stringify({ 
-    tierListItemId: item.tier_list_item_id, 
-    originalSectionId: originalSectionInternalId 
+  event.dataTransfer.setData('application/json', JSON.stringify({
+    tierListItemId: item.tier_list_item_id,
+    originalSectionId: originalSectionInternalId
   }));
-  draggedItemInfo.value = { 
-    tierListItemId: item.tier_list_item_id, 
-    originalSectionId: originalSectionInternalId 
+  draggedItemInfo.value = {
+    tierListItemId: item.tier_list_item_id,
+    originalSectionId: originalSectionInternalId
   };
   event.target.closest('.tier-item-compact')?.classList.add('dragging-item');
 };
@@ -1055,7 +1038,7 @@ const handleDrop = async (event, targetSectionId, beforeItemId = null) => {
     // Se soltó en el área de la sección, no sobre un ítem específico -> añadir al final
     newOrder = itemsInTargetSection.length;
   }
-  
+
   // Ajuste si se mueve dentro de la misma sección hacia una posición posterior
   // Si el item se movió de la misma sección Y su orden original era menor que el nuevo orden de destino,
   // y el nuevo orden se calculó como 'length', hay que restar 1 porque el item "desaparece" temporalmente.
@@ -1064,13 +1047,13 @@ const handleDrop = async (event, targetSectionId, beforeItemId = null) => {
   // Por ahora, el DTO solo pide 'new_order'. Un 'new_order' simple (como el índice) debería ser manejado por el backend.
 
   console.log(`Drop: Mover item ID ${tierListItemIdToMove} (originalmente en ${originalSectionId}) a sección ID ${targetSectionId}. ¿Antes del item ID ${beforeItemId}? Nuevo orden objetivo: ${newOrder}`);
-  
+
   isLoadingTierItemAction.value = true;
   errorMessageApi.value = '';
 
   const moveDTO = {
     target_section_internal_id: targetSectionId,
-    new_order: newOrder 
+    new_order: newOrder
   };
 
   try {
@@ -1105,9 +1088,9 @@ const handleDragEnd = (event) => { // event puede ser opcional si se llama desde
 const handleDragLeaveSection = (event, sectionId) => {
   // Si el cursor sale del área de drop de esta sección, quitar el highlight
   if (dragOverSectionId.value === sectionId) {
-      // Podrías necesitar una lógica más compleja si hay elementos anidados
-      // Por ahora, simple:
-      dragOverSectionId.value = null;
+    // Podrías necesitar una lógica más compleja si hay elementos anidados
+    // Por ahora, simple:
+    dragOverSectionId.value = null;
   }
 };
 
@@ -1116,7 +1099,7 @@ const handleDropOnSection = async (event, targetSectionId) => {
   if (!draggedItemInfo.value) return;
 
   const tierListItemIdToMove = draggedItemInfo.value.tierListItemId;
-  
+
   // Determinar el nuevo orden (por defecto al final de la nueva sección)
   let newOrder = 0;
   let targetSection;
@@ -1129,18 +1112,18 @@ const handleDropOnSection = async (event, targetSectionId) => {
     newOrder = targetSection.items.length;
     // Si el ítem se mueve dentro de la misma sección, y no es el último, su nuevo orden podría ser su longitud - 1
     if (draggedItemInfo.value.originalSectionId === targetSectionId) {
-        newOrder = Math.max(0, targetSection.items.length -1);
+      newOrder = Math.max(0, targetSection.items.length - 1);
     }
   }
 
   console.log(`Drop: Mover item ID ${tierListItemIdToMove} a sección ID ${targetSectionId}, nuevo orden (estimado): ${newOrder}`);
-  
+
   isLoadingTierItemAction.value = true; // Usar un loader
   errorMessageApi.value = '';
 
   const moveDTO = { // TierListItemMoveRequestDTO
     target_section_internal_id: targetSectionId,
-    new_order: newOrder 
+    new_order: newOrder
   };
 
   try {
@@ -1212,16 +1195,18 @@ const formatTierListType = (type) => {
 };
 
 const getTierColor = (sectionName) => {
-  if (!sectionName) return "rgba(200, 200, 200, 0.5)";
+  if (!sectionName) return "#CCCCCC"; // Un gris neutro por defecto
   const name = String(sectionName).toUpperCase();
-  if (name.includes("S")) return "rgba(255, 100, 100, 0.7)";
-  if (name.includes("A")) return "rgba(255, 170, 85, 0.7)";
-  if (name.includes("B")) return "rgba(255, 223, 100, 0.7)";
-  if (name.includes("C")) return "rgba(150, 220, 130, 0.7)";
-  if (name.includes("D")) return "rgba(120, 170, 255, 0.7)";
-  if (name.includes("E") || name.includes("F"))
-    return "rgba(180, 150, 220, 0.7)";
-  return "rgba(200, 200, 200, 0.5)";
+  
+  // Paleta de colores hexadecimales
+  if (name.includes("S")) return "#FF7F7F"; // Rojo claro
+  if (name.includes("A")) return "#FFBF7F"; // Naranja
+  if (name.includes("B")) return "#FFFF7F"; // Amarillo
+  if (name.includes("C")) return "#BFFF7F"; // Verde claro
+  if (name.includes("D")) return "#7FBFFF"; // Azul claro
+  if (name.includes("E") || name.includes("F")) return "#BDB0D0"; // Lavanda grisáceo
+  
+  return "#CCCCCC"; // Gris por defecto para nombres no reconocidos
 };
 </script>
 <style src="./TierListDetail.css" scoped></style>

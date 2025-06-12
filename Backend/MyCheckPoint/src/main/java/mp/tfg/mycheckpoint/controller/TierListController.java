@@ -403,43 +403,42 @@ public class TierListController {
     }
 
     /**
-     * Actualiza el nombre de una sección (tier) específica en una Tier List.
-     * Solo el propietario autenticado puede realizar esta operación. No se puede modificar la sección "Juegos por Clasificar".
+     * Actualiza las propiedades de una sección (tier) específica en una Tier List.
+     * Solo el propietario autenticado puede realizar esta operación. Permite cambiar el nombre y el color de la sección.
      *
      * @param currentUser El principal del usuario autenticado.
      * @param tierListPublicId El ID público (UUID) de la Tier List que contiene la sección.
      * @param sectionInternalId El ID interno de la sección (tier) a actualizar.
-     * @param sectionRequestDTO DTO que contiene el nuevo nombre para la sección.
-     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List actualizada y el código HTTP 200 OK.
+     * @param sectionRequestDTO DTO que contiene los nuevos datos (nombre, color) para la sección.
+     * @return ResponseEntity con un {@link TierListResponseDTO} representando la Tier List completa y actualizada, y el código HTTP 200 OK.
      */
-    @PutMapping("/tierlists/{tierListPublicId}/sections/{sectionInternalId}")
-    @Operation(summary = "Actualizar el nombre de una sección (tier) específica en una Tier List",
-            description = "Permite al propietario autenticado de una Tier List cambiar el nombre de una de sus secciones personalizadas. " +
-                    "No se puede cambiar el nombre de la sección por defecto 'Juegos por Clasificar'. " +
+    @PutMapping("/{tierListPublicId}/sections/{sectionInternalId}")
+    @Operation(summary = "Actualizar una sección (tier) específica de una Tier List",
+            description = "Permite al propietario autenticado de una Tier List cambiar las propiedades de una de sus secciones, como el nombre y el color. " +
                     "Requiere autenticación y ser el propietario de la Tier List.",
-            operationId = "updateSectionName",
+            operationId = "updateTierSection", // operationId actualizado
             security = { @SecurityRequirement(name = "bearerAuth") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Nombre de la sección actualizado exitosamente. Devuelve la Tier List completa y actualizada.",
+            @ApiResponse(responseCode = "200", description = "Sección actualizada exitosamente. Devuelve la Tier List completa y actualizada.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = TierListResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos. El nuevo nombre de la sección no cumple las validaciones (ej. vacío o demasiado largo).",
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos. El DTO de la sección no cumple con las validaciones (ej. nombre vacío, formato de color inválido).",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ValidationErrorResponse"))),
             @ApiResponse(responseCode = "401", description = "No autorizado. El token JWT es inválido, ha expirado o no se proporcionó.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/UnauthorizedResponse"))),
-            @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el propietario de la Tier List o intenta modificar una sección no permitida (ej. la sección 'Sin Clasificar' si se implementara tal restricción aquí).",
+            @ApiResponse(responseCode = "403", description = "Prohibido. El usuario autenticado no es el propietario de la Tier List.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
-            @ApiResponse(responseCode = "404", description = "No encontrado. La Tier List con el ID público especificado o la sección con el ID interno no fueron encontradas para el usuario actual, o el usuario autenticado no pudo ser verificado.",
+            @ApiResponse(responseCode = "404", description = "No encontrado. La Tier List con el ID público especificado o la sección con el ID interno no fueron encontradas.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse"))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(ref = "#/components/schemas/ErrorResponse")))
     })
-    public ResponseEntity<TierListResponseDTO> updateSectionName(
+    public ResponseEntity<TierListResponseDTO> updateSection(
             @AuthenticationPrincipal UserDetailsImpl currentUser,
             @Parameter(name = "tierListPublicId",
                     description = "ID público (UUID) de la Tier List que contiene la sección a actualizar.",
@@ -456,7 +455,7 @@ public class TierListController {
                     schema = @Schema(type = "integer", format = "int64"))
             @PathVariable Long sectionInternalId,
             @Valid @org.springframework.web.bind.annotation.RequestBody TierSectionRequestDTO sectionRequestDTO) {
-        TierListResponseDTO updatedTierList = tierListService.updateSectionName(currentUser.getEmail(), tierListPublicId, sectionInternalId, sectionRequestDTO);
+        TierListResponseDTO updatedTierList = tierListService.updateSection(currentUser.getEmail(), tierListPublicId, sectionInternalId, sectionRequestDTO);
         return ResponseEntity.ok(updatedTierList);
     }
 

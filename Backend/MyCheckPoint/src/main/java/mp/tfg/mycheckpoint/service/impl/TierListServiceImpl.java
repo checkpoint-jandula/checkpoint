@@ -685,13 +685,13 @@ public class TierListServiceImpl implements TierListService {
 
     /**
      * {@inheritDoc}
-     * Esta implementación actualiza el nombre de la sección especificada dentro de la TierList del usuario.
+     * Esta implementación actualiza la sección especificada dentro de la TierList del usuario.
      *
      * @throws ResourceNotFoundException si el usuario, la TierList o la sección no se encuentran.
      */
     @Override
     @Transactional
-    public TierListResponseDTO updateSectionName(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO) {
+    public TierListResponseDTO updateSection(String userEmail, UUID tierListPublicId, Long sectionInternalId, TierSectionRequestDTO sectionRequestDTO) {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
 
@@ -711,6 +711,7 @@ public class TierListServiceImpl implements TierListService {
             throw new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId);
         }
         section.setName(sectionRequestDTO.getName());
+        section.setColor(sectionRequestDTO.getColor());
         TierList updatedTierList = tierListRepository.save(tierList);
         initializeTierListDetails(updatedTierList);
 
@@ -1105,7 +1106,7 @@ public class TierListServiceImpl implements TierListService {
         if (section != null) {
             Hibernate.initialize(section.getItems()); // Asegurar que la colección esté cargada
 
-            // 3. Eliminar el ítem de la colección usando un iterador (forma segura en bucles)
+            // Eliminar el ítem de la colección usando un iterador (forma segura en bucles)
             boolean removed = false;
             Iterator<TierListItem> iterator = section.getItems().iterator();
             while (iterator.hasNext()) {
