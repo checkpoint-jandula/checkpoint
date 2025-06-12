@@ -452,6 +452,8 @@ La solución requirió una intervención quirúrgica en la lógica de negocio. R
 
 Esta incidencia fue una lección profunda sobre la necesidad de gestionar explícitamente las dependencias indirectas y la propagación de cambios en arquitecturas donde el estado de una entidad se deriva de otra. Reforzó nuestra comprensión del ciclo de vida de las entidades en JPA/Hibernate y nos enseñó el valor de las verificaciones defensivas y el logging detallado para diagnosticar y prevenir problemas de integridad en sistemas complejos.
 
+Otro desafío notable fue la gestión del estado de lanzamiento de los videojuegos. Detectamos que la API de IGDB no diferencia con un estado específico entre los juegos ya disponibles y aquellos cuya fecha de salida es futura. Para solventar esta ambigüedad y mejorar la claridad para el usuario, implementamos una lógica personalizada en el frontend. Esta solución compara la fecha de lanzamiento de cada juego con la fecha actual; si la fecha es futura, la interfaz de MyCheckPoint asigna y muestra un estado propio de "Próximamente", distinguiendo así visualmente estos títulos. Esta implementación subraya la necesidad de procesar y enriquecer los datos de una API en la capa de cliente para satisfacer requisitos de usabilidad que el proveedor no cubre de forma nativa.
+
 # Conclusiones
 
 El proyecto MyCheckPoint surge de una necesidad personal y compartida por muchos aficionados a los videojuegos: la de contar con un espacio digital unificado para catalogar sus experiencias lúdicas, organizar sus colecciones de forma detallada y compartir su pasión con otros jugadores. Inspirado en la práctica de registrar manualmente los juegos completados y crear clasificaciones personales, este Trabajo de Fin de Ciclo se propuso desarrollar una plataforma web que ofreciera estas funcionalidades de manera integrada y enriquecida, superando las limitaciones observadas en las herramientas existentes y sirviendo como una "cápsula del tiempo" digital para la trayectoria lúdica de cada usuario.
@@ -512,6 +514,7 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Springdoc OpenAPI: https://springdoc.org/
 - Lombok: https://projectlombok.org/
 - Maven: https://maven.apache.org/
+- Repositorio de Clase Entorno-Cliente: https://majprofe.github.io/dwec/
 
 ### Frameworks y Tecnologías Frontend
 
@@ -521,6 +524,7 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Pinia 3: https://pinia.vuejs.org/
 - Axios: https://axios-http.com/
 - OpenAPI Generator Client (TypeScript-Axios): https://openapi-generator.tech/docs/generators/typescript-axios/
+- Repositorio de Clase Entorno-Servidor: https://majprofe.github.io/dwes/
 
 ### Herramientas de Desarrollo y DevOps
 
@@ -532,6 +536,13 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Postman: https://www.postman.com/
 - DataGrip: https://www.jetbrains.com/es-es/datagrip/
 
+### Herramientas de Diseño
+
+- Simple Icons: https://simpleicons.org/
+- Icons8: https://icons8.com/icons
+- Figma: https://www.figma.com/
+- 
+
 ### Plataformas y APIs de Videojuegos (Fuentes y Referencias)
 
 - IGDB: https://www.igdb.com/
@@ -542,7 +553,9 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Epic Games Store: https://store.epicgames.com/es-ES/
 - GOG: https://www.gog.com/en/
 - Ubisoft: https://www.ubisoft.com/es-es
-
+- IGN: https://www.ign.com/
+- Polygon: https://www.polygon.com/
+  
 ### Plataformas de Referencia (Otros Sectores)
 
 - Filmaffinity: https://www.filmaffinity.com/
@@ -551,10 +564,8 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Goodreads: https://www.goodreads.com/
 - Pitchfork: https://pitchfork.com/
 
-### Artículos, Medios y Recursos Adicionales
+### Artículos y Recursos Adicionales
 
-- IGN: https://www.ign.com/
-- Polygon: https://www.polygon.com/
 - Artículo - Twitch adquiere la plataforma Internet Games Database (IGDB): https://areajugones.sport.es/videojuegos/twitch-adquiere-la-plataforma-internet-games-database/
 - Vídeo - Crítica a Metacritic: https://youtu.be/QqLGF_ghc8A?feature=shared 
 - Vídeo - Drag and Drop (Referencia técnica): https://www.youtube.com/watch?v=76pYx_ND_zo 
