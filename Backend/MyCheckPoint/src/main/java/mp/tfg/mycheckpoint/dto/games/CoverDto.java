@@ -8,7 +8,7 @@ import lombok.Data;
  * DTO que representa la información de la carátula (cover) de un juego.
  */
 @Schema(description = "DTO para la información de la carátula de un juego.") // Añadido Schema a nivel de clase
-@Data // Lombok: genera getters, setters, toString, equals, hashCode
+@Data
 public class CoverDto {
     /**
      * ID único de la carátula, generalmente proveniente de una fuente externa como IGDB.

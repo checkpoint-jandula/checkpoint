@@ -7,19 +7,19 @@ import lombok.Data;
 /**
  * DTO que representa un género de videojuego.
  */
-@Schema(description = "DTO para un género de videojuego.") // Añadido Schema a nivel de clase
+@Schema(description = "DTO para un género de videojuego.")
 @Data
 public class GenreDto {
     /**
      * ID único del género, generalmente proveniente de IGDB.
      */
-    @Schema(description = "ID del género desde IGDB.", example = "12") // Añadido Schema
+    @Schema(description = "ID del género desde IGDB.", example = "12")
     @JsonProperty("id")
     private Long igdbId;
 
     /**
      * Nombre del género.
      */
-    @Schema(description = "Nombre del género.", example = "Role-playing (RPG)") // Añadido Schema
+    @Schema(description = "Nombre del género.", example = "Role-playing (RPG)")
     private String name;
 }

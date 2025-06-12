@@ -90,7 +90,6 @@ public class EmailServiceImpls implements EmailService {
             logger.info("Correo de verificación enviado a {} desde {}", user.getEmail(), fromEmail);
         } catch (MailException e) {
             logger.error("Error al enviar correo de verificación a {} desde {}: {}", user.getEmail(), fromEmail, e.getMessage(), e);
-            // Considerar una estrategia de reintento o notificación si el envío es crítico
         }
     }
 
@@ -101,7 +100,7 @@ public class EmailServiceImpls implements EmailService {
      * que manejará el proceso de restablecimiento utilizando el token proporcionado.
      * También incluye el token directamente en el cuerpo del correo para copia manual si es necesario.
      */
-    @Override //Asegúrate que la interfaz EmailService tenga este método definido
+    @Override
     public void sendPasswordResetEmail(User user, String token) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -119,12 +118,11 @@ public class EmailServiceImpls implements EmailService {
                             "Para restablecer tu contraseña, por favor haz clic en el siguiente enlace o cópialo en tu navegador:\n" +
                             "%s\n\n" +
                             "Si no puedes hacer clic en el enlace, también puedes ir a la sección de restablecer contraseña de nuestra web e introducir manualmente el siguiente token:\n" +
-                            //"Token: %s\n\n" +
                             "Este token expirará en %d minutos.\n\n" +
                             "Saludos,\nEl equipo de MyCheckPoint",
                     user.getNombreUsuario(),
-                    frontendResetUrl, // El enlace directo al frontend
-                    token,            // El token para copia manual
+                    frontendResetUrl,
+                    token,
                     PasswordResetToken.EXPIRATION_MINUTES
             );
 

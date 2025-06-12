@@ -46,7 +46,7 @@ public class Franchise {
      * Conjunto de juegos que pertenecen a esta franquicia.
      * Mapea la relación inversa con la entidad {@link Game}.
      */
-    @ManyToMany(mappedBy = "franchises") //campo en la entidad Game
+    @ManyToMany(mappedBy = "franchises")
     private Set<Game> games = new HashSet<>();
 
     /**

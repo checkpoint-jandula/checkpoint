@@ -84,7 +84,6 @@ public class FileStorageServiceImpl implements FileStorageService {
             logger.info("Directorio de almacenamiento para fotos de perfil inicializado en: {}", this.profilePictureStorageLocation.toString());
         } catch (Exception ex) {
             logger.error("No se pudo crear el directorio de almacenamiento para fotos de perfil: {}", this.profilePictureStorageLocation.toString(), ex);
-            // Este es un error crítico de configuración del servidor.
             throw new FileStorageException("No se pudo crear el directorio donde se guardarán los archivos subidos.", ex, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -103,7 +102,6 @@ public class FileStorageServiceImpl implements FileStorageService {
      * @return El tamaño equivalente en bytes.
      */
     private long parseSizeToBytes(String sizeString) {
-        // Implementación sin cambios respecto a la versión anterior...
         if (sizeString == null || sizeString.isBlank()) {
             long defaultSizeBytes = 1024L * 1024L; // 1MB por defecto
             logger.warn("La propiedad 'app.profile-picture.max-size' no está configurada o está vacía. Usando un valor por defecto de {} bytes (1MB).", defaultSizeBytes);

@@ -72,20 +72,15 @@ public abstract class TierListMapper {
      * @param responseDTO El DTO de respuesta a poblar.
      */
     protected void mapSectionsLogic(TierList tierList, TierListResponseDTO responseDTO) {
-        // System.out.println("TierListMapper - INICIO mapSectionsLogic para TierList ID: " + (tierList != null ? tierList.getPublicId() : "null"));
         if (responseDTO == null) {
-            // System.err.println("TierListMapper - mapSectionsLogic: responseDTO es null.");
             return;
         }
         if (tierList == null || tierList.getSections() == null) {
-            // System.out.println("TierListMapper - mapSectionsLogic: TierList o sus secciones son null.");
             responseDTO.setSections(new ArrayList<>());
             responseDTO.setUnclassifiedSection(null);
             return;
         }
         if (this.tierSectionMapper == null) {
-            // System.err.println("TierListMapper - mapSectionsLogic: tierSectionMapper es null. La inyección falló.");
-            // Esto indicaría un problema de configuración de Spring si ocurre.
             responseDTO.setSections(new ArrayList<>());
             responseDTO.setUnclassifiedSection(null);
             return;
@@ -96,7 +91,6 @@ public abstract class TierListMapper {
                 .map(this.tierSectionMapper::toResponseDTO) // Utiliza la instancia inyectada
                 .collect(Collectors.toList());
         responseDTO.setSections(userDefinedSections);
-        // System.out.println("TierListMapper - mapSectionsLogic: Mapeadas " + userDefinedSections.size() + " secciones definidas por el usuario.");
 
         TierSectionResponseDTO unclassified = tierList.getSections().stream()
                 .filter(TierSection::isDefaultUnclassified)

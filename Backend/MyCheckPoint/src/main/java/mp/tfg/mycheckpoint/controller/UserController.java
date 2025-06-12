@@ -216,8 +216,7 @@ public class UserController {
     public ResponseEntity<UserDTO> getCurrentAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetailsImpl)) {
-            // Este caso debería ser manejado por el filtro de seguridad antes de llegar aquí si el endpoint está protegido.
-            // Sin embargo, es una buena práctica de defensa en profundidad.
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -454,7 +453,7 @@ public class UserController {
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (IllegalStateException e) { // Por ejemplo, si la cuenta ya está programada para eliminación
+        } catch (IllegalStateException e) { // Cambiar estas excepciones.
             return ResponseEntity.badRequest()
                     .body(java.util.Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
@@ -510,11 +509,7 @@ public class UserController {
                     schema = @Schema(type = "string", minLength = 2))
             @RequestParam("username") String usernameQuery,
             @AuthenticationPrincipal UserDetailsImpl currentUser) {
-        // La validación de la longitud de usernameQuery (>2 caracteres) la maneja el servicio,
-        // pero se podría añadir aquí también si se desea un fallo más temprano.
         List<UserSearchResultDTO> users = userService.searchUsersByUsername(usernameQuery, currentUser.getEmail());
-        // El servicio podría lanzar ResourceNotFoundException si no hay resultados (y la query es válida),
-        // o devolver una lista vacía. El controlador simplemente devuelve lo que el servicio proporcione.
         return ResponseEntity.ok(users);
     }
 }

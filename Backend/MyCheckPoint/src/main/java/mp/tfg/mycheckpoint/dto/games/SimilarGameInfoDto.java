@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
  * DTO que contiene información resumida sobre un juego similar.
  * Utilizado para listar juegos que podrían ser de interés para el usuario.
  */
-@Schema(description = "DTO con información resumida de un juego similar.") // Añadido Schema a nivel de clase
+@Schema(description = "DTO con información resumida de un juego similar.")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,38 +18,38 @@ public class SimilarGameInfoDto {
     /**
      * ID único del juego similar, generalmente proveniente de IGDB.
      */
-    @Schema(description = "ID del juego similar desde IGDB.", example = "19560") // Añadido Schema
+    @Schema(description = "ID del juego similar desde IGDB.", example = "19560")
     @JsonProperty("id")
     private Long igdbId;
 
     /**
      * Información de la carátula del juego similar.
      */
-    @Schema(description = "Carátula del juego similar.") // Añadido Schema
+    @Schema(description = "Carátula del juego similar.")
     private CoverDto cover;
 
     /**
      * Nombre del juego similar.
      */
-    @Schema(description = "Nombre del juego similar.", example = "The Elder Scrolls V: Skyrim") // Añadido Schema
+    @Schema(description = "Nombre del juego similar.", example = "The Elder Scrolls V: Skyrim")
     private String name;
 
     /**
      * Identificador URL amigable (slug) del juego similar.
      */
-    @Schema(description = "Slug del juego similar.", example = "the-elder-scrolls-v-skyrim") // Añadido Schema
+    @Schema(description = "Slug del juego similar.", example = "the-elder-scrolls-v-skyrim")
     private String slug;
 
     /**
      * Resumen breve del juego similar. Puede ser nulo.
      */
-    @Schema(description = "Resumen del juego similar.", example = "An open-world action role-playing video game.", nullable = true) // Añadido Schema
+    @Schema(description = "Resumen del juego similar.", example = "An open-world action role-playing video game.", nullable = true)
     private String summary;
 
     /**
      * Calificación total del juego similar. Puede ser nulo.
      */
-    @Schema(description = "Calificación total del juego similar.", example = "96.0", nullable = true) // Añadido Schema
+    @Schema(description = "Calificación total del juego similar.", example = "96.0", nullable = true)
     @JsonProperty("total_rating")
     private Double totalRating;
 

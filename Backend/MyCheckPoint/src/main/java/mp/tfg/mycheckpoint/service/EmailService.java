@@ -28,6 +28,4 @@ public interface EmailService {
      */
     void sendPasswordResetEmail(User user, String token);
 
-    // Ejemplo de un método futuro para correos genéricos:
-    // void sendGenericEmail(String to, String subject, String body);
 }

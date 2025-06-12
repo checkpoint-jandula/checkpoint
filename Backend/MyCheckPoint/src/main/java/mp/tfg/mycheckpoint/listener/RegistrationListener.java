@@ -37,7 +37,6 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
      * los detalles del usuario registrado y el token de verificación.
      */
     @Override
-    // @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT) // Alternativa si el listener es parte de la misma transacción
     public void onApplicationEvent(OnRegistrationCompleteEvent event) {
         this.confirmRegistration(event);
     }

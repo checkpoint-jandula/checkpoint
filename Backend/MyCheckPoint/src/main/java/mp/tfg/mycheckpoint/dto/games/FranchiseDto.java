@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * DTO que representa una franquicia de videojuegos.
  */
-@Schema(description = "DTO para una franquicia de videojuegos.") // Añadido Schema a nivel de clase
+@Schema(description = "DTO para una franquicia de videojuegos.")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,7 +18,7 @@ public class FranchiseDto {
     /**
      * ID único de la franquicia, generalmente proveniente de IGDB.
      */
-    @Schema(description = "ID de la franquicia desde IGDB.", example = "136") // Añadido Schema
+    @Schema(description = "ID de la franquicia desde IGDB.", example = "136")
     @JsonProperty("id")
     private Long igdbId;
 
@@ -26,6 +26,6 @@ public class FranchiseDto {
     /**
      * Nombre de la franquicia.
      */
-    @Schema(description = "Nombre de la franquicia.", example = "The Legend of Zelda") // Añadido Schema
+    @Schema(description = "Nombre de la franquicia.", example = "The Legend of Zelda")
     private String name;
 }

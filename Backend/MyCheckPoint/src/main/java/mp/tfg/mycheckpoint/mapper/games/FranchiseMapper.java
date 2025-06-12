@@ -38,6 +38,6 @@ public interface FranchiseMapper {
      */
     @Mapping(target = "internalId", ignore = true)
     @Mapping(target = "games", ignore = true) // Ignorar la colección inversa
-    @Mapping(source = "name", target = "name") // Mapeo explícito no es necesario si los nombres coinciden
+    @Mapping(source = "name", target = "name")
     Franchise toEntity(FranchiseDto franchiseDto);
 }

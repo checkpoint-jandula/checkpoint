@@ -30,7 +30,7 @@ public class OnRegistrationCompleteEvent extends ApplicationEvent {
      * @param token El token de verificación de correo electrónico generado para este usuario.
      */
     public OnRegistrationCompleteEvent(User user, String token) {
-        super(user); // El 'source' del evento
+        super(user);
         this.user = user;
         this.token = token;
     }

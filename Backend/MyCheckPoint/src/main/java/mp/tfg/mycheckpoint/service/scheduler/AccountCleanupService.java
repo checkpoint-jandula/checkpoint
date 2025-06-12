@@ -65,18 +65,15 @@ public class AccountCleanupService {
      * las cuentas de usuario cuya fecha de eliminación programada (soft delete)
      * ya ha pasado. La ejecución está definida por una expresión Cron.
      * Esta operación es transaccional para asegurar la atomicidad de los borrados.
-     * <p>
      * El proceso de eliminación incluye:
-     * <ol>
-     * <li>Entradas de {@link UserGame} (biblioteca de juegos del usuario).</li>
-     * <li>Entradas de {@link GameList} (listas de juegos creadas por el usuario).</li>
-     * <li>Entradas de {@link mp.tfg.mycheckpoint.entity.Friendship} (amistades y solicitudes).</li>
-     * <li>Tokens de verificación y de reseteo de contraseña asociados al usuario.</li>
-     * <li>Finalmente, la entidad {@link User} misma.</li>
-     * </ol>
+     * Entradas de {@link UserGame} (biblioteca de juegos del usuario).
+     * Entradas de {@link GameList} (listas de juegos creadas por el usuario).
+     * Entradas de {@link mp.tfg.mycheckpoint.entity.Friendship} (amistades y solicitudes).
+     * Tokens de verificación y de reseteo de contraseña asociados al usuario.
+     * Finalmente, la entidad {@link User} misma.
      * Se registran logs detallados del proceso y de cualquier error que pueda ocurrir.
      */
-    @Scheduled(cron = "0 0 2 * * ?") // Ajusta la expresión Cron según tus necesidades
+    @Scheduled(cron = "0 0 2 * * ?")
     @Transactional // Importante para que la operación de borrado sea atómica
     public void performScheduledAccountDeletions() {
         OffsetDateTime now = OffsetDateTime.now();

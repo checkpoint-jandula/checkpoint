@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  * utilizando el ID numérico proporcionado por IGDB.
  * Este ID se mapea internamente al enum {@link mp.tfg.mycheckpoint.dto.enums.ReleaseStatus}.
  */
-@Schema(description = "DTO para el estado de lanzamiento de un juego (ID numérico de IGDB).") // Añadido Schema a nivel de clase
+@Schema(description = "DTO para el estado de lanzamiento de un juego (ID numérico de IGDB).")
 @Data
-@NoArgsConstructor // Lombok para constructor sin argumentos
+@NoArgsConstructor
 public class GameStatusDto {
 
     /**
@@ -21,7 +21,7 @@ public class GameStatusDto {
      * Ver la documentación de IGDB o el enum {@link mp.tfg.mycheckpoint.dto.enums.ReleaseStatus#mapFromIgdbValue(Integer)}
      * para el mapeo completo.
      */
-    @Schema(description = "ID numérico del estado del juego según IGDB.", example = "0") // Añadido Schema
+    @Schema(description = "ID numérico del estado del juego según IGDB.", example = "0")
     @JsonProperty("id")
     private Integer id;
 }

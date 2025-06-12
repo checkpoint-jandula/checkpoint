@@ -197,11 +197,6 @@ public class IgdbService {
                     return gameDto;
                 })
                 .doOnError(error -> logger.error("Error during IGDB custom filter call or deserialization: {}", error.getMessage(), error));
-//        String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
-//        String queryBody = String.format(
-//                "%s sort hypes desc; where total_rating != null & total_rating_count > 100; limit 10;",
-//                fields
-//        );
     }
 
     /**

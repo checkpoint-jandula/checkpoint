@@ -26,7 +26,7 @@ public interface InvolvedCompanyMapper {
      * @param involvement La entidad GameCompanyInvolvement a convertir.
      * @return El InvolvedCompanyDto resultante.
      */
-    @Mapping(source = "involvementIgdbId", target = "involvementIgdbId") // Mapeo explícito si los nombres difieren o por claridad.
+    @Mapping(source = "involvementIgdbId", target = "involvementIgdbId")
     InvolvedCompanyDto toDto(GameCompanyInvolvement involvement);
 
     /**

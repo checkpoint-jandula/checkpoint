@@ -256,8 +256,6 @@ public class FriendshipServiceImpl implements FriendshipService {
         List<FriendshipResponseDTO> responseDTOs = new ArrayList<>();
 
         for (Friendship friendship : friendships) {
-            // 5. Convertir cada entidad a DTO y añadirla a la lista de respuesta.
-            // Se pasa 'currentUser' como contexto al mapper.
             responseDTOs.add(friendshipMapper.toDto(friendship, currentUser));
         }
 

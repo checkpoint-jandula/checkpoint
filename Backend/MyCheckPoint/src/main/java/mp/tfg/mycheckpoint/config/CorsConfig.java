@@ -25,13 +25,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/v1/") // Aplica a todos tus endpoints bajo /api/v1
-                        .allowedOrigins("http://localhost:5173") // URL del frontend Vite
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
-                        .allowedHeaders("*") // Cabeceras permitidas
-                        .allowCredentials(true); // Si usas cookies o autenticación basada en sesión
+                registry.addMapping("/api/v1/**")
+                        .allowedOrigins("http://localhost:5173")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
 
-                registry.addMapping("/api/juegos/")
+                registry.addMapping("/api/juegos/**")
                         .allowedOrigins("http://localhost:5173")
                         .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")

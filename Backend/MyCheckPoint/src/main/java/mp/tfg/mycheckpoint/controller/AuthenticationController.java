@@ -220,11 +220,7 @@ public class AuthenticationController {
                     schema = @Schema(type = "string"))
             @RequestParam("token") String token) {
 
-        // URL base de frontend.
-        // Para desarrollo, es http://localhost:5173 (el puerto de Vite)
-        // Para producción, esta debería ser la URL pública de tu frontend.
-        // Hacerla configurable a través de application.properties.
-        //Fichero de configuracion.
+
         String frontendLoginUrl = frontendBaseUrl + "login";
 
         try {
@@ -365,7 +361,7 @@ public class AuthenticationController {
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(java.util.Collections.singletonMap("error", e.getMessage()));
-        } catch (InvalidTokenException | IllegalStateException | IllegalArgumentException e) { // InvalidTokenException fue añadida
+        } catch (InvalidTokenException | IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(java.util.Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {

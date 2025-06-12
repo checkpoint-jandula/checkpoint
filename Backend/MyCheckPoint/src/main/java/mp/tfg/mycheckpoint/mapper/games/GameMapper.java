@@ -68,11 +68,11 @@ public interface GameMapper {
      */
     @Mapping(source = "parentGame", target = "parentGameInfo")
     @Mapping(source = "versionParentGame", target = "versionParent")
-    @Mapping(source = "remakeVersions", target = "remakes") // Utilizará gameEntityToDlcInfoDto para elementos de la colección
-    @Mapping(source = "remasterVersions", target = "remasters") // Utilizará gameEntityToDlcInfoDto para elementos de la colección
-    @Mapping(source = "similarGames", target = "similarGames") // Utilizará gameEntityToSimilarGameInfoDto para elementos
-    @Mapping(source = "involvedCompanies", target = "involvedCompanies") // Utilizará InvolvedCompanyMapper
-    @Mapping(source = "firstReleaseStatus", target = "firstReleaseStatus") // Mapeo directo del enum
+    @Mapping(source = "remakeVersions", target = "remakes")
+    @Mapping(source = "remasterVersions", target = "remasters")
+    @Mapping(source = "similarGames", target = "similarGames")
+    @Mapping(source = "involvedCompanies", target = "involvedCompanies")
+    @Mapping(source = "firstReleaseStatus", target = "firstReleaseStatus")
     GameDto toDto(Game game);
 
     /**
@@ -105,7 +105,6 @@ public interface GameMapper {
                             bundleList.add(infoDto);
                             break;
                         default:
-                            // Otros tipos de childGames podrían no categorizarse aquí
                             break;
                     }
                 }

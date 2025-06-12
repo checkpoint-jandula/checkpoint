@@ -145,15 +145,14 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             Game existingGameEntity = gameOpt.get();
             if (!existingGameEntity.isFullDetails()) {
                 logger.info("Juego con IGDB ID {} existe localmente pero es parcial. Obteniendo detalles completos de IGDB para actualizar.", igdbId);
-                GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block(); // Bloqueante, considerar manejo reactivo si es cuello de botella
+                GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block();
 
                 if (gameDtoFromIgdb == null) {
                     logger.error("No se pudo encontrar el juego con IGDB ID {} en IGDB para completar detalles, aunque existía parcialmente.", igdbId);
                     throw new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId + " para completar detalles.");
                 }
-                gameDtoFromIgdb.setFullDetails(true); // Marcar que el DTO tiene todos los detalles
+                gameDtoFromIgdb.setFullDetails(true);
 
-                // gameService.saveGames se encarga de la lógica de actualización o creación
                 List<Game> updatedGames = gameService.saveGames(Collections.singletonList(gameDtoFromIgdb));
                 if (updatedGames.isEmpty() || updatedGames.get(0) == null) {
                     logger.error("Error al actualizar el juego (IGDB ID {}) con detalles completos usando gameService.saveGames.", igdbId);
@@ -168,11 +167,11 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             }
         } else {
             logger.info("Juego con IGDB ID {} no encontrado en BD local. Obteniendo de IGDB y guardando.", igdbId);
-            GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block(); // Bloqueante
+            GameDto gameDtoFromIgdb = igdbService.findGameByIgdbId(igdbId).block();
             if (gameDtoFromIgdb == null) {
                 throw new ResourceNotFoundException("Juego no encontrado en IGDB con ID: " + igdbId);
             }
-            gameDtoFromIgdb.setFullDetails(true); // Nuevo juego de IGDB, se asume que se obtienen todos los detalles
+            gameDtoFromIgdb.setFullDetails(true);
 
             List<Game> savedGames = gameService.saveGames(Collections.singletonList(gameDtoFromIgdb));
             if (savedGames.isEmpty() || savedGames.get(0) == null) {
@@ -204,17 +203,14 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
         User user = getUserByEmail(userEmail);
         Game game = ensureGameExists(igdbId);
 
-        // 1. Buscamos la entrada en la biblioteca y la guardamos en un Optional
         Optional<UserGame> userGameOptional = userGameRepository.findByUserAndGame(user, game);
 
         UserGame userGame;
-        // 2. Usamos un if/else para comprobar si la entrada ya existe
+
         if (userGameOptional.isPresent()) {
-            // Si existe, la obtenemos del Optional para actualizarla
             userGame = userGameOptional.get();
             logger.debug("Entrada UserGame encontrada (ID: {}). Se procederá a actualizar.", userGame.getInternalId());
         } else {
-            // Si no existe, creamos una nueva instancia
             userGame = UserGame.builder().user(user).game(game).build();
             logger.debug("No se encontró entrada UserGame. Se creará una nueva.");
         }
@@ -222,7 +218,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
         userGameMapper.updateFromDto(userGameDataDTO, userGame);
         UserGame savedUserGame = userGameRepository.save(userGame);
 
-        // El log original para saber si se añadió o actualizó sigue siendo válido
         logger.info("Usuario {} {} el juego con IGDB ID {} (ID interno UserGame: {}) en su biblioteca.",
                 userEmail, (userGameOptional.isPresent()) ? "actualizó" : "añadió",
                 igdbId, savedUserGame.getInternalId());
@@ -243,21 +238,15 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     public List<UserGameResponseDTO> getUserGameLibrary(String userEmail) {
         User user = getUserByEmail(userEmail);
 
-        // 1. Obtener la lista de entidades desde el repositorio
         List<UserGame> userGames = userGameRepository.findByUser(user);
 
-        // 2. Crear una nueva lista vacía para los DTOs de respuesta
         List<UserGameResponseDTO> responseDTOs = new ArrayList<>();
 
-        // 3. Iterar sobre la lista de entidades con un bucle for-each
         for (UserGame userGame : userGames) {
-            // 4. Convertir cada entidad a su DTO correspondiente
             UserGameResponseDTO dto = userGameMapper.toResponseDto(userGame);
-            // 5. Añadir el DTO a la lista de respuesta
             responseDTOs.add(dto);
         }
 
-        // 6. Devolver la nueva lista de DTOs
         return responseDTOs;
     }
 
@@ -275,17 +264,12 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
     public UserGameResponseDTO getUserGameFromLibrary(String userEmail, Long igdbId) {
         User user = getUserByEmail(userEmail);
 
-        // 1. Buscar la entrada de juego en la biblioteca del usuario.
         Optional<UserGame> userGameOptional = userGameRepository.findByUserAndGame_IgdbId(user, igdbId);
 
-        // 2. Comprobar explícitamente si la entrada fue encontrada.
         if (userGameOptional.isPresent()) {
-            // 3. Si se encontró, obtener la entidad.
             UserGame userGame = userGameOptional.get();
-            // 4. Mapear la entidad a DTO y devolverla.
             return userGameMapper.toResponseDto(userGame);
         } else {
-            // 5. Si no se encontró, lanzar la excepción.
             throw new ResourceNotFoundException(
                     "Juego con IGDB ID " + igdbId + " no encontrado en la biblioteca del usuario " + userEmail);
         }
@@ -342,7 +326,6 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
             throw new ResourceNotFoundException("No se pudo obtener información del juego con IGDB ID: " + igdbId);
         }
 
-        // Este bloque se ejecuta después de obtener el DTO, sin importar de dónde vino.
         if (gameInfoDto.getGameStatus() != null && gameInfoDto.getGameStatus().getId() != null) {
             // Si IGDB nos da un estado, lo mapeamos.
             gameInfoDto.setFirstReleaseStatus(mp.tfg.mycheckpoint.dto.enums.ReleaseStatus.mapFromIgdbValue(gameInfoDto.getGameStatus().getId()));
@@ -486,19 +469,14 @@ public class UserGameLibraryServiceImpl implements UserGameLibraryService {
                 break;
         }
 
-        //Obtener la lista de entidades UserGame una vez pasados los filtros de visibilidad.
         List<UserGame> userGames = userGameRepository.findByUser(targetUser);
 
-        //Crear una nueva lista para almacenar los DTOs.
         List<UserGameResponseDTO> responseDTOs = new ArrayList<>();
 
-        //Iterar sobre las entidades con un bucle 'for-each'.
         for (UserGame userGame : userGames) {
-            //Mapear cada entidad a su DTO y añadirlo a la lista de respuesta.
             responseDTOs.add(userGameMapper.toResponseDto(userGame));
         }
 
-        //Devolver la lista de DTOs construida.
         return responseDTOs;
     }
 }

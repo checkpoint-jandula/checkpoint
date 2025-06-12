@@ -553,7 +553,6 @@ public class TierListServiceImpl implements TierListService {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
 
-        // Contar las secciones personalizadas existentes.
         long currentUserDefinedSections = 0;
         for (TierSection section : tierList.getSections()) {
             if (!section.isDefaultUnclassified()) {
@@ -565,7 +564,6 @@ public class TierListServiceImpl implements TierListService {
             throw new InvalidOperationException("No se pueden añadir más secciones. Límite de " + MAX_USER_DEFINED_SECTIONS + " secciones personalizables alcanzado.");
         }
 
-        // Encontrar el orden máximo actual.
         int maxOrder = USER_SECTION_START_ORDER - 1;
         for (TierSection section : tierList.getSections()) {
             if (!section.isDefaultUnclassified()) {
@@ -615,7 +613,6 @@ public class TierListServiceImpl implements TierListService {
 
         initializeTierListDetails(tierList);
 
-        //Encontrar la sección a eliminar
         TierSection sectionToRemove = null;
         for (TierSection section : tierList.getSections()) {
             if (section.getInternalId().equals(sectionInternalId)) {
@@ -627,12 +624,10 @@ public class TierListServiceImpl implements TierListService {
             throw new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId);
         }
 
-        //Validaciones iniciales
         if (sectionToRemove.isDefaultUnclassified()) {
             throw new InvalidOperationException("La sección 'Juegos por Clasificar' no puede ser eliminada.");
         }
 
-        //Contar las secciones personalizadas
         long userDefinedSectionsCount = 0;
         for (TierSection section : tierList.getSections()) {
             if (!section.isDefaultUnclassified()) {
@@ -643,7 +638,6 @@ public class TierListServiceImpl implements TierListService {
             throw new InvalidOperationException("No se puede eliminar la sección. Debe haber al menos " + MIN_USER_DEFINED_SECTIONS + " sección personalizable.");
         }
 
-        //Encontrar la sección "Sin Clasificar"
         TierSection unclassifiedSection = null;
         for (TierSection section : tierList.getSections()) {
             if (section.isDefaultUnclassified()) {
@@ -656,7 +650,6 @@ public class TierListServiceImpl implements TierListService {
         }
         Hibernate.initialize(unclassifiedSection.getItems());
 
-        //Mover los ítems de la sección a eliminar
         if (!sectionToRemove.getItems().isEmpty()) {
             List<TierListItem> itemsToMove = new ArrayList<>(sectionToRemove.getItems());
             for (TierListItem item : itemsToMove) {
@@ -670,7 +663,6 @@ public class TierListServiceImpl implements TierListService {
             tierSectionRepository.save(unclassifiedSection);
         }
 
-        //Eliminar la sección y reordenar
         tierList.getSections().remove(sectionToRemove);
         reorderSections(tierList);
 
@@ -695,18 +687,15 @@ public class TierListServiceImpl implements TierListService {
         User owner = getUserByEmailOrThrow(userEmail);
         TierList tierList = findTierListByPublicIdAndOwnerOrThrow(tierListPublicId, owner);
 
-        // Inicializar una variable para la sección a actualizar.
         TierSection section = null;
 
-        // Iterar sobre las secciones para encontrar la correcta por su ID.
         for (TierSection sect : tierList.getSections()) {
             if (Objects.equals(sect.getInternalId(), sectionInternalId)) {
                 section = sect;
-                break; // Salir del bucle una vez encontrada.
+                break;
             }
         }
 
-        // Comprobar si la sección no fue encontrada y lanzar una excepción.
         if (section == null) {
             throw new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId);
         }
@@ -739,10 +728,8 @@ public class TierListServiceImpl implements TierListService {
             throw new InvalidOperationException("Los juegos no se pueden añadir directamente a una TierList vinculada a una GameList. Modifica la GameList original.");
         }
 
-        //Inicializar la variable para la sección de destino.
         TierSection targetSection = null;
 
-        // Iterar sobre las secciones para encontrar la correcta por su ID.
         for (TierSection section : tierList.getSections()) {
             if (Objects.equals(section.getInternalId(), sectionInternalId)) {
                 targetSection = section;
@@ -750,7 +737,6 @@ public class TierListServiceImpl implements TierListService {
             }
         }
 
-        // Comprobar si la sección fue encontrada.
         if (targetSection == null) {
             throw new ResourceNotFoundException("Sección con ID " + sectionInternalId + " no encontrada en la TierList " + tierListPublicId);
         }
@@ -827,25 +813,22 @@ public class TierListServiceImpl implements TierListService {
      *                                        no pertenece al propietario de la {@code tierList}.
      */
     private TierListResponseDTO addItemToSectionLogic(TierList tierList, TierSection targetSection, Long userGameId, Integer requestedOrder, String userEmail) {
-        //Obtener UserGame
+
         Optional<UserGame> userGameOptional = userGameRepository.findById(userGameId);
         if (userGameOptional.isEmpty()) {
             throw new ResourceNotFoundException("UserGame con ID " + userGameId + " no encontrado.");
         }
         UserGame userGame = userGameOptional.get();
 
-        //Validación de propiedad
         if (!Objects.equals(userGame.getUser().getId(), tierList.getOwner().getId())) {
             throw new UnauthorizedOperationException("El UserGame ID " + userGameId + " no pertenece al propietario de la TierList.");
         }
 
-        //Inicializar colecciones
         Hibernate.initialize(targetSection.getItems());
         for (TierSection s : tierList.getSections()) {
             Hibernate.initialize(s.getItems());
         }
 
-        //Buscar si el ítem ya existe en alguna sección
         TierListItem existingItemAnywhere = null;
         for (TierSection section : tierList.getSections()) {
             for (TierListItem item : section.getItems()) {
@@ -860,15 +843,12 @@ public class TierListServiceImpl implements TierListService {
         }
 
         TierListItem itemToProcess;
-        // Lógica para crear o mover el ítem
         if (existingItemAnywhere != null) {
             itemToProcess = existingItemAnywhere;
             TierSection oldSection = itemToProcess.getTierSection();
 
             boolean sectionChanged = !Objects.equals(oldSection.getInternalId(), targetSection.getInternalId());
             if (sectionChanged) {
-                // Mover de oldSection a targetSection
-                // Usamos un iterador para eliminar de forma segura mientras se itera
                 Iterator<TierListItem> iterator = oldSection.getItems().iterator();
                 while (iterator.hasNext()) {
                     TierListItem item = iterator.next();
@@ -881,17 +861,13 @@ public class TierListServiceImpl implements TierListService {
                 itemToProcess.setTierSection(targetSection);
             }
         } else {
-            // Crear un nuevo ítem si no existía
             itemToProcess = TierListItem.builder()
                     .userGame(userGame)
                     .tierSection(targetSection)
                     .build();
         }
 
-        // Colocar el ítem en la sección de destino
         List<TierListItem> targetItems = targetSection.getItems();
-        // Quitar la instancia si ya estaba (para manejar el reordenamiento dentro de la misma sección)
-        // Usamos un iterador para la eliminación segura
         Iterator<TierListItem> targetIterator = targetItems.iterator();
         while (targetIterator.hasNext()) {
             TierListItem item = targetIterator.next();
@@ -901,12 +877,10 @@ public class TierListServiceImpl implements TierListService {
             }
         }
 
-        // Añadir el ítem en la posición correcta y reordenar
         int targetIdx = (requestedOrder == null || requestedOrder < 0 || requestedOrder > targetItems.size()) ? targetItems.size() : requestedOrder;
         targetItems.add(targetIdx, itemToProcess);
         reorderItemsAndUpdate(targetItems);
 
-        // Guardar y devolver
         TierList updatedTierList = tierListRepository.saveAndFlush(tierList);
         logger.info("Item (UserGame ID: {}) {} sección '{}' en TierList '{}'. Usuario: {}",
                 userGameId, (existingItemAnywhere != null) ? "movido/reordenado en" : "añadido a",
@@ -947,28 +921,24 @@ public class TierListServiceImpl implements TierListService {
         logger.info("INICIO moveItemInTierList - User: {}, TierListID: {}, ItemID: {}, TargetSectionID: {}, NewOrder: {}",
                 userEmail, tierListPublicId, tierListItemInternalId, itemMoveRequestDTO.getTargetSectionInternalId(), itemMoveRequestDTO.getNewOrder());
 
-        // Obtener TierList
         Optional<Object> tierListOptional = tierListRepository.findByPublicIdAndOwner(tierListPublicId, owner);
         if (tierListOptional.isEmpty()) {
             throw new ResourceNotFoundException("TierList con ID público " + tierListPublicId + " no encontrada para el usuario " + owner.getNombreUsuario());
         }
         TierList tierList = (TierList) tierListOptional.get();
 
-        // Obtener TierListItem a mover
         Optional<TierListItem> itemToMoveOptional = tierListItemRepository.findById(tierListItemInternalId);
         if (itemToMoveOptional.isEmpty()) {
             throw new ResourceNotFoundException("TierListItem con ID " + tierListItemInternalId + " no encontrado.");
         }
         TierListItem itemToMove = itemToMoveOptional.get();
 
-        // Verificaciones
         if (itemToMove.getTierSection() == null || !Objects.equals(itemToMove.getTierSection().getTierList().getInternalId(), tierList.getInternalId())) {
             throw new InvalidOperationException("El ítem no pertenece a la TierList especificada o su sección es nula.");
         }
 
         TierSection oldSection = itemToMove.getTierSection();
 
-        // Encontrar la sección de destino
         TierSection newSection = null;
         for (TierSection section : tierList.getSections()) {
             if (Objects.equals(section.getInternalId(), itemMoveRequestDTO.getTargetSectionInternalId())) {
@@ -985,12 +955,10 @@ public class TierListServiceImpl implements TierListService {
 
         boolean sectionChanged = !Objects.equals(oldSection.getInternalId(), newSection.getInternalId());
 
-        // Eliminar el ítem de la colección de la sección antigua
         if (sectionChanged) {
             oldSection.getItems().remove(itemToMove);
         }
 
-        // Eliminar el ítem de la colección de la sección nueva (para reinsertarlo)
         Iterator<TierListItem> iterator = newSection.getItems().iterator();
         while (iterator.hasNext()) {
             TierListItem it = iterator.next();
@@ -1000,7 +968,6 @@ public class TierListServiceImpl implements TierListService {
             }
         }
 
-        // Actualizar el ítem y añadirlo a la nueva posición
         itemToMove.setTierSection(newSection);
 
         List<TierListItem> targetItems = newSection.getItems();
@@ -1104,9 +1071,8 @@ public class TierListServiceImpl implements TierListService {
 
         TierSection section = itemToRemove.getTierSection();
         if (section != null) {
-            Hibernate.initialize(section.getItems()); // Asegurar que la colección esté cargada
+            Hibernate.initialize(section.getItems());
 
-            // Eliminar el ítem de la colección usando un iterador (forma segura en bucles)
             boolean removed = false;
             Iterator<TierListItem> iterator = section.getItems().iterator();
             while (iterator.hasNext()) {

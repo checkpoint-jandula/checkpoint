@@ -49,7 +49,7 @@ public interface UserGameMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "game", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true) // MapStruct lo actualizará por @UpdateTimestamp
+    @Mapping(target = "updatedAt", ignore = true) // MapStruct lo actualiza por @UpdateTimestamp
     @Mapping(target = "deletedAt", ignore = true)
     void updateFromDto(UserGameDataDTO dto, @MappingTarget UserGame entity);
 }

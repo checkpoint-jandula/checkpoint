@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
  * Contiene el ID de la carátula de una fuente externa y su URL.
  * Esta clase se integra directamente en la tabla de la entidad {@link Game}.
  */
-@Embeddable // esta clase será parte de otra entidad
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +23,7 @@ public class Cover {
      * ID de la carátula proveniente de una fuente externa (ej. IGDB).
      * Se utiliza para identificar de forma única la carátula.
      */
-    @Column(name = "cover_igdb_id") // evitar colisión con Game.igdbId en la tabla game
+    @Column(name = "cover_igdb_id")
     private Long igdbId;
 
     /**
