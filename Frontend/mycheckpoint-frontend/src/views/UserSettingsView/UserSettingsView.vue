@@ -362,7 +362,7 @@ const onFileSelected = (event) => {
 };
 
 const handleUploadPhoto = async () => {
-  if (!selectedFile.value) {
+ if (!selectedFile.value) {
     photoMessage.value = 'Por favor, selecciona un archivo primero.';
     photoError.value = true;
     return;
@@ -373,9 +373,8 @@ const handleUploadPhoto = async () => {
   try {
     const response = await uploadUserProfilePicture(selectedFile.value);
     console.log('handleUploadPhoto: Respuesta de API al subir foto:', response.data);
-    authStore.user = response.data;
+    authStore.updateUser(response.data); // Usar la nueva acción del store
     localStorage.setItem('user', JSON.stringify(response.data));
-    console.log('handleUploadPhoto: authStore.user actualizado. Nuevo foto_perfil:', authStore.currentUser?.foto_perfil);
     photoMessage.value = 'Foto de perfil actualizada correctamente.';
     photoError.value = false;
     selectedFile.value = null;

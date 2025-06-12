@@ -157,7 +157,8 @@ const profilePictureUrl = computed(() => {
       return fotoPerfil;
     }
     const baseApiUrl = BASE_PATH ? BASE_PATH.replace(/\/$/, '') : 'http://localhost:8080';
-    return `${baseApiUrl}/profile-pictures/${fotoPerfil}`;
+    const url = `${baseApiUrl}/profile-pictures/${fotoPerfil}`;
+    return `${url}?t=${authStore.imageUpdateTrigger}`; // Añadir el cache buster
   }
   return defaultAvatar;
 });

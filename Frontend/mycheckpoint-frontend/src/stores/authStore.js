@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', {
     token_acceso: localStorage.getItem('token_acceso') || null,
     /** @type {import('@/api-client').UserDTO | null} */
     user: JSON.parse(localStorage.getItem('user')) || null,
+    imageUpdateTrigger: 0, // Para forzar la actualización de la imagen del usuario
   }),
   getters: {
     isAuthenticated: (state) => !!state.token_acceso && !!state.user,
@@ -51,6 +52,17 @@ export const useAuthStore = defineStore('auth', {
       // Opcional: Redirigir al login. Esto se puede hacer también desde el componente que llama a logout.
       // import router from '@/router'; // Cuidado con importaciones cíclicas si el router usa el store
       // router.push('/login');
+    },
+
+    triggerImageUpdate() {
+      this.imageUpdateTrigger++;
+    },
+
+    updateUser(userData) {
+      this.user = userData;
+      if (userData?.foto_perfil) {
+        this.triggerImageUpdate();
+      }
     },
 
     // Acción para cargar el estado desde localStorage al iniciar la app (si es necesario)

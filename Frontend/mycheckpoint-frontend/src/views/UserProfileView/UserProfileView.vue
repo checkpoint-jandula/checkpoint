@@ -311,7 +311,9 @@ const profilePictureUrl = computed(() => {
     }
     const baseApiUrl = BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH;
     const relativeImagePath = fotoPerfilValue.startsWith('/') ? fotoPerfilValue.substring(1) : fotoPerfilValue;
-    return `${baseApiUrl}/profile-pictures/${relativeImagePath}`;
+    const url = `${baseApiUrl}/profile-pictures/${relativeImagePath}`;
+    // Añadir el cache buster solo si es el perfil del usuario actual
+    return isOwnProfile.value ? `${url}?t=${authStore.imageUpdateTrigger}` : url;
   }
   return defaultAvatar;
 });
