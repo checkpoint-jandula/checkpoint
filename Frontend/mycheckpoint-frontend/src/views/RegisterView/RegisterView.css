@@ -1,10 +1,13 @@
 .register-container {
     max-width: 400px;
     margin: 2rem auto;
-    padding: 2rem;
-    border: 1px solid #ccc;
+    padding: .3rem;
+    
     border-radius: 8px;
     background-color: var(--color-background-soft);
+
+    position: relative;
+  overflow: hidden;
 }
 
 .form-group {
@@ -40,7 +43,7 @@
 button {
     width: 100%;
     padding: 0.75rem;
-    background-color: hsla(160, 100%, 37%, 1);
+    background-color: var(--color-azul);
     color: white;
     border: none;
     border-radius: 4px;
@@ -50,7 +53,7 @@ button {
 }
 
 button:hover {
-    background-color: hsla(160, 100%, 30%, 1);
+    background-color: var(--color-azul-hover);
 }
 
 button:disabled {
@@ -82,3 +85,48 @@ button:disabled {
     border: 1px solid rgba(0, 255, 0, 0.3);
     color: green;
 }
+
+
+/* --- INICIO: NUEVA Animación de Borde con Gradiente Cónico --- */
+
+/* 1. Registramos una propiedad custom para poder animar el ángulo del gradiente */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* 2. Definimos la animación que rotará el ángulo de 0 a 360 grados */
+@keyframes border-rotation {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+/* 3. Preparamos el contenedor exterior */
+.register-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  position: relative;
+  border: none; /* Eliminamos cualquier borde estático */
+  border-radius: 12px; /* Un radio un poco más grande para que se vea mejor */
+
+  /* La magia ocurre aquí: el fondo es el gradiente cónico animado */
+  background: conic-gradient(
+    from var(--gradient-angle), 
+    #ce2aa5, /* Tu primer color */
+    #21bad6, /* Tu segundo color */
+    #ce2aa5  /* Repetimos el primero para que el bucle sea perfecto */
+  );
+  
+  /* Aplicamos la animación de rotación */
+  animation: border-rotation 2s linear infinite;
+}
+
+/* 4. Creamos un "agujero" en el medio con el contenido */
+.register-container .register-content {
+  background-color: var(--color-background-soft);
+  padding: 2rem;
+  border-radius: 8px; /* Un radio ligeramente menor para el efecto de borde */
+}
+
+/* --- FIN: Animación de Borde con Gradiente Cónico --- */

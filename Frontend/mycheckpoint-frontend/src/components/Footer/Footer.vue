@@ -5,7 +5,7 @@
       <div class="footer-section about-section">
         <h4 class="footer-title">Fuente de Datos</h4>
         <a href="https://www.igdb.com/" target="_blank" rel="noopener noreferrer" class="igdb-logo-link">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/IGDB_logo.svg/1280px-IGDB_logo.svg.png" alt="IGDB Logo" class="igdb-logo">
+          <img src="../../assets/img/igdb.svg" alt="IGDB Logo" class="igdb-logo">
         </a>
         <p class="data-notice">
           Los datos y las imágenes de los videojuegos han sido extraídos gratuitamente a través de la API de IGDB.
