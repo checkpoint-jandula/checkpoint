@@ -6,11 +6,22 @@
       <h2>Más Populares</h2>
       <div v-if="isLoading.hyped" class="loading-message">Cargando...</div>
       <div v-if="errors.hyped" class="error-message">{{ errors.hyped }}</div>
-      <div v-else class="games-carousel">
-        <RouterLink v-for="game in mostHyped" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
-          <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
-          <span class="game-name">{{ game.name }}</span>
-        </RouterLink>
+      
+      <div v-else class="carousel-wrapper">
+        <button @click="scrollCarousel(mostHypedCarouselRef, 'prev')" class="carousel-arrow prev" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        </button>
+        
+        <div class="games-carousel" ref="mostHypedCarouselRef">
+          <RouterLink v-for="game in mostHyped" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+            <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
+            <span class="game-name">{{ game.name }}</span>
+          </RouterLink>
+        </div>
+        
+        <button @click="scrollCarousel(mostHypedCarouselRef, 'next')" class="carousel-arrow next" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
       </div>
     </section>
 
@@ -19,23 +30,45 @@
       <h2>Próximos Lanzamientos</h2>
       <div v-if="isLoading.upcoming" class="loading-message">Cargando...</div>
       <div v-if="errors.upcoming" class="error-message">{{ errors.upcoming }}</div>
-      <div v-else class="games-carousel">
-        <RouterLink v-for="game in upcomingReleases" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
-          <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
-          <span class="game-name">{{ game.name }}</span>
-        </RouterLink>
+
+      <div v-else class="carousel-wrapper">
+        <button @click="scrollCarousel(upcomingReleasesCarouselRef, 'prev')" class="carousel-arrow prev" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        </button>
+        
+        <div class="games-carousel" ref="upcomingReleasesCarouselRef">
+          <RouterLink v-for="game in upcomingReleases" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+            <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
+            <span class="game-name">{{ game.name }}</span>
+          </RouterLink>
+        </div>
+        
+        <button @click="scrollCarousel(upcomingReleasesCarouselRef, 'next')" class="carousel-arrow next" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
       </div>
     </section>
 
     <section class="game-row">
-      <h2>Más Esperados</h2>
+      <h2>Más Esperado</h2>
       <div v-if="isLoading.anticipated" class="loading-message">Cargando...</div>
       <div v-if="errors.anticipated" class="error-message">{{ errors.anticipated }}</div>
-      <div v-else class="games-carousel">
-        <RouterLink v-for="game in highlyAnticipated" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
-          <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
-          <span class="game-name">{{ game.name }}</span>
-        </RouterLink>
+      
+      <div v-else class="carousel-wrapper">
+        <button @click="scrollCarousel(highlyAnticipatedCarouselRef, 'prev')" class="carousel-arrow prev" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        </button>
+        
+        <div class="games-carousel" ref="highlyAnticipatedCarouselRef">
+          <RouterLink v-for="game in highlyAnticipated" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+            <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
+            <span class="game-name">{{ game.name }}</span>
+          </RouterLink>
+        </div>
+        
+        <button @click="scrollCarousel(highlyAnticipatedCarouselRef, 'next')" class="carousel-arrow next" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
       </div>
     </section>
 
@@ -43,11 +76,22 @@
       <h2>Lanzados Recientemente</h2>
       <div v-if="isLoading.recently" class="loading-message">Cargando...</div>
       <div v-if="errors.recently" class="error-message">{{ errors.recently }}</div>
-      <div v-else class="games-carousel">
-        <RouterLink v-for="game in recentlyReleased" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
-          <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
-          <span class="game-name">{{ game.name }}</span>
-        </RouterLink>
+      
+      <div v-else class="carousel-wrapper">
+        <button @click="scrollCarousel(recentlyReleasedCarouselRef, 'prev')" class="carousel-arrow prev" aria-label="Anterior">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+        </button>
+        
+        <div class="games-carousel" ref="recentlyReleasedCarouselRef">
+          <RouterLink v-for="game in recentlyReleased" :key="game.id" :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+            <img :src="getCoverUrl(game.cover)" :alt="game.name" class="game-cover" @error.self="onImageError">
+            <span class="game-name">{{ game.name }}</span>
+          </RouterLink>
+        </div>
+        
+        <button @click="scrollCarousel(recentlyReleasedCarouselRef, 'next')" class="carousel-arrow next" aria-label="Siguiente">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+        </button>
       </div>
     </section>
 
@@ -70,6 +114,11 @@ const recentlyReleased = ref([]);
 const mostHyped = ref([]);
 const highlyAnticipated = ref([]);
 const upcomingReleases = ref([]);
+
+const mostHypedCarouselRef = ref(null);
+const upcomingReleasesCarouselRef = ref(null);
+const highlyAnticipatedCarouselRef = ref(null);
+const recentlyReleasedCarouselRef = ref(null);
 
 // Estado de carga para cada sección
 const isLoading = reactive({
@@ -148,6 +197,20 @@ const getCoverUrl = (cover) => {
 
 const onImageError = (event) => {
   event.target.src = defaultGameCover;
+};
+
+
+const scrollCarousel = (carouselRef, direction) => {
+  if (carouselRef) {
+    // Calculamos cuánto nos vamos a desplazar (ej: 80% del ancho visible)
+    const scrollAmount = carouselRef.clientWidth * 0.5;
+    
+    // Usamos el método scrollBy para un desplazamiento suave
+    carouselRef.scrollBy({
+      left: direction === 'next' ? scrollAmount : -scrollAmount,
+      behavior: 'smooth'
+    });
+  }
 };
 </script>
 

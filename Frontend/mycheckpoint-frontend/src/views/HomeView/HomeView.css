@@ -1,3 +1,4 @@
+/* --- VISTA GENERAL Y TÍTULOS --- */
 .home-view {
   padding: 1rem 2rem;
   max-width: 1400px;
@@ -22,44 +23,40 @@ h1 {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* --- ESTILOS DEL CARRUSEL --- */
+.carousel-wrapper {
+  position: relative;
+  padding: 0 1.5rem; /* Espacio para que las flechas no se peguen a los bordes */
+}
+
 .games-carousel {
   display: flex;
   overflow-x: auto;
-  padding-bottom: 1rem; /* Espacio para la barra de scroll */
-  padding-top: 0.5rem;
   gap: 1.5rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) var(--color-background-soft);
-}
+  padding: 0.5rem 0.3rem 1rem 0.3rem; /* Añadimos padding vertical para la animación de hover */
+  
+  /* Hacemos que el scroll se ajuste a las tarjetas para una mejor experiencia */
+  scroll-snap-type: x mandatory;
 
+  /* Ocultamos la barra de scroll */
+  scrollbar-width: none; /* Para Firefox */
+}
 .games-carousel::-webkit-scrollbar {
-  height: 8px;
+  display: none; /* Para Chrome, Safari, Opera */
 }
 
-.games-carousel::-webkit-scrollbar-track {
-  background: var(--color-background-soft);
-  border-radius: 4px;
-}
-
-.games-carousel::-webkit-scrollbar-thumb {
-  background-color: var(--color-border-hover);
-  border-radius: 4px;
-}
-
+/* --- TARJETAS DE JUEGO --- */
 .game-card {
-  flex: 0 0 160px; /* No crece, no se encoge, base de 160px */
+  flex: 0 0 160px;
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 8px; /* Un radio de borde un poco más pronunciado */
   overflow: hidden;
   background-color: var(--color-background-soft);
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.game-card:hover {
-  scale: 1.05;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.2s ease-in-out;
+  position: relative; /* Necesario para la animación de borde */
+  scroll-snap-align: start; /* Para que el scroll se alinee con el inicio de la tarjeta */
 }
 
 .game-cover {
@@ -76,16 +73,129 @@ h1 {
   padding: 0.75rem 0.5rem;
   text-align: center;
   line-height: 1.3;
+  transition: color 0.2s ease-in-out;
 }
 
+/* --- MENSAJES DE ESTADO --- */
 .loading-message, .error-message {
   padding: 2rem;
   text-align: center;
   color: var(--color-text-light-2);
 }
-
 .error-message {
     color: #d8000c;
     background-color: #ffbaba;
     border-radius: 4px;
+}
+
+
+/* --- ANIMACIÓN DE BORDE EN HOVER (ESCRITORIO) --- */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes card-border-rotation {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+/* Efecto hover: levanta la tarjeta y cambia el color del título */
+.game-card:hover {
+  transform: translateY(-5px);
+}
+.game-card:hover .game-name {
+  color: white;
+  font-size: 0.95rem; /* Un poco más grande al hacer hover */
+}
+
+/* El borde animado aparece al hacer hover */
+.game-card::before {
+  content: "";
+  position: absolute;
+  top: -2px; left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  z-index: -1;
+  border-radius: 10px; /* Un poco más grande que el de la tarjeta */
+  background: conic-gradient(
+    from var(--gradient-angle), 
+    #ce2aa5, #21bad6, #ce2aa5
+  );
+  animation: card-border-rotation 3s linear infinite;
+  animation-play-state: paused;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.game-card:hover::before {
+  animation-play-state: running;
+  opacity: 1;
+}
+
+/* --- FLECHAS DE NAVEGACIÓN DEL CARRUSEL (ESCRITORIO) --- */
+.carousel-arrow {
+  position: absolute;
+  top: 45%; /* Ajustado para centrarse con la imagen */
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  width: 44px;
+  height: 84px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s, background-color 0.2s;
+  pointer-events: none;
+}
+.carousel-wrapper:hover .carousel-arrow {
+  opacity: 1;
+  pointer-events: all;
+}
+.carousel-arrow:hover {
+  background: rgba(0, 0, 0, 1);
+}
+.carousel-arrow.prev { left: -5px; }
+.carousel-arrow.next { right: -5px; }
+.carousel-arrow svg { width: 24px; height: 24px; }
+
+
+/* ------------------------------------------- */
+/* --- ESTILOS PARA DISPOSITIVOS MÓVILES --- */
+/* ------------------------------------------- */
+@media (max-width: 767px) {
+
+  /* 1. Ajustamos el espaciado general */
+  .home-view {
+    padding: 1rem;
+  }
+  h1 { font-size: 1.8rem; }
+  .game-row h2 { font-size: 1.4rem; }
+
+  /* 2. Eliminamos las flechas de navegación, la interacción es por swipe */
+  .carousel-arrow {
+    display: none;
+  }
+  
+  /* 3. Quitamos el padding del wrapper que era para las flechas */
+  .carousel-wrapper {
+    padding: 0;
+  }
+
+  /* 4. Hacemos la animación de hover más sutil o la eliminamos para rendimiento */
+  .game-card:hover {
+    transform: none; /* Sin efecto de elevación en táctil */
+  }
+  .game-card:hover::before {
+    opacity: 0; /* Desactivamos el borde animado en móvil */
+    animation-play-state: paused;
+  }
+  .game-card:hover .game-name {
+    color: var(--color-text); /* El nombre no cambia de color */
+  }
 }

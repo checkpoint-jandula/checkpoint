@@ -87,7 +87,7 @@ public class IgdbService {
      */
     public Flux<GameDto> findGamesByName(String gameName) {
         String fields = "fields name, total_rating, cover.url, first_release_date,game_type,summary, id;";
-        String queryBody = fields + "search \"" + gameName.replace("\"", "\\\"") + "\"; limit 15;";
+        String queryBody = fields + "search \"" + gameName.replace("\"", "\\\"") + "\"; limit 500;";
         logger.info("Querying IGDB (findGamesByName) with body: {}", queryBody);
         return igdbWebClient.post()
                 .uri("/games")
@@ -173,7 +173,7 @@ public class IgdbService {
         String sortClause = "sort hypes desc;";
         String whereCondition = whereClauses.isEmpty() ? "" : "where " + String.join(" & ", whereClauses) + ";";
 
-        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 20;
+        int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, 500) : 300;
         String limitCondition = "limit " + effectiveLimit + ";";
 
         String queryBody = fields + " " + sortClause+ " "+ whereCondition + " " + limitCondition;
@@ -213,7 +213,7 @@ public class IgdbService {
         long thirtyDaysAgo = Instant.now().minus(30, ChronoUnit.DAYS).getEpochSecond();
         String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
         String queryBody = String.format(
-                "%s sort first_release_date desc; where first_release_date < %d & first_release_date >= %d; limit 10;",
+                "%s sort first_release_date desc; where first_release_date < %d & first_release_date >= %d; limit 40;",
                 fields, now, thirtyDaysAgo
         );
 
@@ -234,7 +234,7 @@ public class IgdbService {
     public Flux<GameDto> findMostHypedGames() {
         String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
         String queryBody = String.format(
-                "%s sort hypes desc; where total_rating != null & total_rating_count > 100; limit 10;",
+                "%s sort hypes desc; where total_rating != null & total_rating_count > 100; limit 40;",
                 fields
         );
 
@@ -256,7 +256,7 @@ public class IgdbService {
         long now = Instant.now().getEpochSecond();
         String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
         String queryBody = String.format(
-                "%s sort hypes desc; where first_release_date > %d & hypes > 50; limit 10;",
+                "%s sort hypes desc; where first_release_date > %d & hypes > 50; limit 40;",
                 fields, now
         );
 
@@ -278,7 +278,7 @@ public class IgdbService {
         long now = Instant.now().getEpochSecond();
         String fields = "fields name, total_rating, cover.url, first_release_date, game_type, summary, id;";
         String queryBody = String.format(
-                "%s sort first_release_date asc; where first_release_date > %d; limit 10;",
+                "%s sort first_release_date asc; where first_release_date > %d; limit 40;",
                 fields, now
         );
 
