@@ -114,32 +114,32 @@ export const removeFriend = (friendPublicId) => {
 
 //Bibliotecas / Buscar Juego
 export const fetchGameDetailsByIgdbId = (igdbId) => {
-  return userGameLibraryApi.getGameDetails(igdbId); //
+  return userGameLibraryApi.getGameDetails(igdbId); 
 };
 
 export const getMyUserGameLibrary = () => {
-  return userGameLibraryApi.getMyGameLibrary(); //
+  return userGameLibraryApi.getMyGameLibrary(); 
 };
 
 export const getPublicUserLibrary = (publicId) => {
-  return userGameLibraryApi.getPublicUserLibrary(publicId); //
+  return userGameLibraryApi.getPublicUserLibrary(publicId); 
 }
 
 export const addOrUpdateGameInUserLibrary = (igdbId, userGameDataDTO) => {
-  return userGameLibraryApi.addOrUpdateGameInMyLibrary(igdbId, userGameDataDTO); //
+  return userGameLibraryApi.addOrUpdateGameInMyLibrary(igdbId, userGameDataDTO); 
 };
 
-export const removeGameFromUserLibrary = (igdbId) => { // Usado en GameDetailsView
-    return userGameLibraryApi.removeGameFromMyLibrary(igdbId); //
+export const removeGameFromUserLibrary = (igdbId) => { 
+    return userGameLibraryApi.removeGameFromMyLibrary(igdbId); 
 };
 
 //Listas de Juegos
 export const fetchAllPublicGameLists = () => {
-  return gameListsApi.viewAllPublicGameLists(); //
+  return gameListsApi.viewAllPublicGameLists(); 
 };
 
 export const getMyGameLists = () => {
-  return gameListsApi.getMyGameLists(); // OperationId: getMyGameLists
+  return gameListsApi.getMyGameLists(); 
 };
 
 export const createMyGameList = (gameListRequestDTO) => {
@@ -171,7 +171,6 @@ export const removeGameFromMyGameList = (listPublicId, userGameInternalId) => {
 };
 
 export const getOrCreateTierListFromGameList = (gameListPublicId) => {
-  // Llama al método específico generado, no a un .get() genérico
   return tierListsApi.getOrCreateTierListForGameList(gameListPublicId);
 };
 

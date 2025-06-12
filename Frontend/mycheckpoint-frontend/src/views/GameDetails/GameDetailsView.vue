@@ -512,7 +512,7 @@
               <button @click="setStatusCategoryAndContinue('archived')"
                 :class="{ 'selected': mainStatusCategory === 'archived' }">Archivado</button>
               <button @click="setStatusCategoryAndContinue('wishlist')"
-                :class="{ 'selected': mainStatusCategory === 'wishlist' }">Lista de Deseados</button>
+                :class="{ 'selected': mainStatusCategory === 'wishlist' }">Deseado</button>
             </div>
           </div>
 

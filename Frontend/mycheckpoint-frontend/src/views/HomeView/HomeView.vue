@@ -28,7 +28,7 @@
     </section>
 
     <section class="game-row">
-      <h2>Más Anticipados</h2>
+      <h2>Más Esperados</h2>
       <div v-if="isLoading.anticipated" class="loading-message">Cargando...</div>
       <div v-if="errors.anticipated" class="error-message">{{ errors.anticipated }}</div>
       <div v-else class="games-carousel">
