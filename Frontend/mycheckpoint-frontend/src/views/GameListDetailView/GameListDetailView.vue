@@ -189,7 +189,7 @@ import {
   deleteMyGameList,
   getOrCreateTierListFromGameList
 } from '@/services/apiInstances';
-import defaultLibraryCover from '@/assets/img/default-game-cover.png';
+import defaultLibraryCover from '@/assets/img/default-game-cover.svg';
 
 const props = defineProps({
   listPublicId: {

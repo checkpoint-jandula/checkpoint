@@ -695,8 +695,8 @@ import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
 import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary } from '@/services/apiInstances.js';
 import { useAuthStore } from '@/stores/authStore.js';
-import defaultGameCoverLarge from '@/assets/img/default-game-cover-large.png'; // Placeholder para portada principal
-import defaultRelatedCover from '@/assets/img/default-related-cover.png'; // Placeholder para portadas pequeñas
+import defaultGameCoverLarge from '@/assets/img/default-game-cover.svg'; // Placeholder para portada principal
+import defaultRelatedCover from '@/assets/img/default-game-cover.svg'; // Placeholder para portadas pequeñas
 
 
 

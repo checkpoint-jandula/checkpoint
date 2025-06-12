@@ -78,7 +78,7 @@ import { ref, onMounted, computed } from 'vue';
 import { RouterLink } from 'vue-router'; 
 import { getMyUserGameLibrary } from '@/services/apiInstances';
 import { useAuthStore } from '@/stores/authStore';
-import defaultLibraryCover from '@/assets/img/default-game-cover.png'; 
+import defaultLibraryCover from '@/assets/img/default-game-cover.svg'; 
 
 const authStore = useAuthStore();
 const myLibraryGames = ref([]);

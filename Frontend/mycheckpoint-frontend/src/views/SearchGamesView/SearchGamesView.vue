@@ -38,7 +38,7 @@ import { ref, watch, computed } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 // MODIFICADO: Importamos las funciones específicas de apiInstances
 import { buscarJuegosEnIgdb, filtrarJuegosEnIgdb } from '@/services/apiInstances'; 
-import defaultGameCover from '@/assets/img/default-game-cover.png';
+import defaultGameCover from '@/assets/img/default-game-cover.svg';
 
 const route = useRoute();
 const searchResults = ref([]);

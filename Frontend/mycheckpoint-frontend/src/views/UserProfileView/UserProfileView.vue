@@ -136,7 +136,7 @@ import {
 } from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
 import defaultAvatar from '@/assets/img/default-avatar.png';
-import defaultLibraryCover from '@/assets/img/default-game-cover.png';
+import defaultLibraryCover from '@/assets/img/default-game-cover.svg';
 
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue';
 import MyGameListsView from '../MyGameListsView/MyGameListsView.vue';

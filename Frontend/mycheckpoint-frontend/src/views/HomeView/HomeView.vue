@@ -107,7 +107,7 @@ import {
   findHighlyAnticipatedGames,
   findUpcomingReleases
 } from '@/services/apiInstances';
-import defaultGameCover from '@/assets/img/default-game-cover.png';
+import defaultGameCover from '@/assets/img/default-game-cover.svg';
 
 // Estado para cada lista de juegos
 const recentlyReleased = ref([]);

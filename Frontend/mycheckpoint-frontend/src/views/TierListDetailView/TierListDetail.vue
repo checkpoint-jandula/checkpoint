@@ -341,7 +341,7 @@ import {
   moveItemInMyTierList,
   getMyUserGameLibrary,
 } from "@/services/apiInstances";
-import defaultTierItemCover from "@/assets/img/default-game-cover.png"; // Placeholder para ítems de tier
+import defaultTierItemCover from "@/assets/img/default-game-cover.svg"; // Placeholder para ítems de tier
 
 const props = defineProps({
   tierListPublicId: {
