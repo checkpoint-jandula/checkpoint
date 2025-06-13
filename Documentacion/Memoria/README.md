@@ -589,8 +589,6 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 
 # Anexos
 
-Cosas muy amplias que no interesen a todo el mundo pero alguien puede querer consultar. Ejemplo: UML completo. Los anexos tienen número. Es decir:
-
 ## Anexo 1
 ### Especificación OpenAPI
  MyCheckPoint API Documentation
