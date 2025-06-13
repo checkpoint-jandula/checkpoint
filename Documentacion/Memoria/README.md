@@ -33,8 +33,8 @@ first-chapter: 1
 
 \begin{minipage}{15cm}
 \textbf{Nombre: Mario Ferro Cobo y Pablo Granero Alcalá} \\[.3cm]
-\textbf{DNI: 1122334455A y 987654321B} \hfill \textbf{Curso Académico:} 2024 / 2025 \\[.3cm]
-\textbf{Profesor tutor del Proyecto: Maribel y Humberto}
+\hfill \textbf{Curso Académico:} 2024 / 2025 \\[.3cm]
+\textbf{Profesor tutor del Proyecto: María Isabel Ruíz Andrés y Humberto Rivillas Molina}
 \end{minipage}
 
 \vfill
@@ -48,9 +48,6 @@ first-chapter: 1
     \raggedleft
     \includegraphics[width=4cm]{fpa.png}
 \end{minipage}
-
-# Resumen {-}
-Este documento describe MyCheckPoint, una aplicación web diseñada para ayudar a los aficionados a los videojuegos a organizar
 
 # MyCheckpoint
 
