@@ -265,7 +265,7 @@ MyCheckPoint se ha desarrollado siguiendo una arquitectura de aplicación web mo
 
 ### Backend
 
-El backend de MyCheckPoint es el encargado de gestionar toda la lógica de negocio, la persistencia de datos, la seguridad y la exposición de una API RESTful para ser consumida por el frontend y para una futura versión de movil para android y iOS.
+El backend de MyCheckPoint es el encargado de gestionar toda la lógica de negocio, la persistencia de datos, la seguridad y la exposición de una API RESTful para ser consumida por el frontend.
 
 **Responsabilidades Principales:**
 
@@ -338,7 +338,7 @@ El backend sigue un patrón de diseño por capas, que en nuestro caso se traduce
 
 Las relaciones muchos-a-muchos (ej. `Game` con `Genre`, `Platform`, `GameList` con `UserGame`) se gestionan mediante tablas de unión implícitas o explícitas definidas por JPA. Las relaciones uno-a-muchos (ej. `TierList` con `TierSection`) y muchos-a-uno (ej. `UserGame` con `User` y `Game`) también son fundamentales en el modelo.
 
-### 4.5.2. Frontend
+### Frontend
 
 El frontend de MyCheckPoint es una Single Page Application (SPA) desarrollada con Vue.js, responsable de presentar la interfaz de usuario, gestionar la interacción del usuario y comunicarse con la API del backend.
 
@@ -369,30 +369,53 @@ El frontend de MyCheckPoint es una Single Page Application (SPA) desarrollada co
 
 **Diseño de Interfaz y Pantallas Principales:**
 
-A continuación, se presentan algunas de las pantallas clave de la aplicación MyCheckPoint, ilustrando el diseño y la experiencia de usuario implementada.
+A continuación, se presentan las pantallas clave de la aplicación MyCheckPoint.
 
-1.  **Inicio (`HomeView`):** Página principal de la aplicación. _Descripción breve de la pantalla de inicio y sus elementos._
-2.  **Login (`LoginView`):** Formulario para que los usuarios inicien sesión. _Descripción breve de la pantalla de login._
-3.  **Registro (`RegisterView`):** Formulario para la creación de nuevas cuentas. _Descripción breve de la pantalla de registro._
-4.  **Solicitar Restablecimiento de Contraseña (`RequestPasswordResetView`):** _Descripción breve de la pantalla de solicitud de restablecimiento._
-5.  **Restablecer Contraseña (`ResetPasswordView`):** _Descripción breve de la pantalla para introducir el nuevo password._
-6.  **Perfil de Usuario (`UserProfileView`):** Vista del perfil de un usuario. _Descripción de los elementos del perfil: información, biblioteca, listas, etc._
-7.  **Ajustes de Usuario (`UserSettingsView`):** _Descripción de las opciones de configuración del perfil._
-8.  **Página de Amigos (`FriendsPageView`):** _Descripción de la gestión de amistades._
-9.  **Búsqueda de Juegos (`SearchGamesView`):** _Descripción de la interfaz de búsqueda de juegos._
-10. **Detalles del Juego (`GameDetailsView`):** _Descripción de la vista detallada de un juego, incluyendo información de IGDB y datos del usuario._
+Vistas Principales y de Autenticación
 
-11. **Visualización de Listas de Juegos (`ViewPublicGameListsView` o similar):** _Descripción de cómo se muestran las listas de juegos (propias o públicas)._
+1.  **Inicio (`HomeView`):** Página de inicio de la aplicación.
+   
+3.  **Login (`LoginView`):** Formulario para que los usuarios inicien sesión.
+   
+5.  **Registro (`RegisterView`):** Formulario para la creación de nuevas cuentas de usuario.
+   
+7.  **Solicitar Restablecimiento de Contraseña (`RequestPasswordResetView`):** Formulario donde el usuario introduce su email para iniciar el proceso de recuperación de contraseña.
+   
+9.  **Restablecer Contraseña (`ResetPasswordView`):** Vista a la que se accede desde el enlace del correo, donde el usuario puede establecer una nueva contraseña.
 
-12. **Visualización de Tier Lists (`ViewPublicTierListsView` o similar):** _Descripción de cómo se muestran las tier lists (propias o públicas)._
+Vistas de Usuario y Sociales
 
-13. **Creación/Edición de Tier Lists:** _Descripción de la interfaz para crear y organizar juegos en tier lists._
+6.  **Perfil de Usuario (`UserProfileView`):** Muestra el perfil del usuario o el perfil de otro usuario al que se ha accedido (en caso de que lo tenga en publico o solo amigos y el usuario logueado sea un amigo.)
+   
+8.  **Ajustes de Usuario (`UserSettingsView`):** Panel donde el usuario puede cambiar su información personal, contraseña, foto de perfil.
+   
+10.  **Página de Amigos (`FriendsPageView`):** Interfaz para ver la lista de amigos, así como las solicitudes de amistad pendientes y enviadas.
+    
+12.  **Búsqueda de Usuarios (`SearchUsersView`):** Página con una barra de búsqueda para encontrar a otros usuarios de la plataforma por su nombre de usuario.
 
-14. **Búsqueda de Usuarios (`SearchUsersView`):** _Descripción de la interfaz de búsqueda de usuarios._
+Vistas de Juegos y Biblioteca
 
-_(Añadir más capturas y descripciones según sea necesario para cubrir las funcionalidades más importantes y visuales del frontend)._
+10. **Búsqueda de Juegos (`SearchGamesView`):** Interfaz principal para buscar juegos en la base de datos de IGDB antes de añadirlos a la biblioteca o a una lista.
 
-### 4.5.3. Base de Datos
+12. **Detalles del Juego (`GameDetailsView`):** Muestra toda la información de un juego específico, incluyendo su descripción, capturas, plataformas y datos relacionados.
+
+14. **Mi Biblioteca (`MyLibraryView`):** Una de las vistas centrales. Muestra la colección de juegos personal del usuario, permitiendo filtrarlos por estado (Jugando, Completado, etc.) y ver sus puntuaciones.
+
+Vistas de Listas Personalizadas (Game Lists & Tier Lists)
+
+13. **Mis Listas de Juegos (`MyGameListsView`):** Vista que muestra una colección de las listas de juegos personalizadas que el usuario ha creado.
+
+15. **Detalle de Lista de Juegos (`GameListDetailView`):** Vista para ver el contenido de una lista de juegos específica. Desde aquí se pueden añadir o eliminar juegos, y editar el nombre o la descripción de la lista.
+
+17. **Mis Tier Lists (`MyTierListsView`):** Muestra una colección de las "Tier Lists" que el usuario ha creado.
+
+19. **Detalle de Tier List (`TierListDetailView`):** La interfaz interactiva para editar una "Tier List". Permite crear y nombrar/color las secciones (tiers) y arrastrar los juegos desde la biblioteca personal para clasificarlos.
+
+21. **Listas de Juegos Públicas (`ViewPublicGameListsView`):** Una vista para explorar las listas de juegos que otros usuarios han decidido hacer públicas.
+
+23. **Tier Lists Públicas (`ViewPublicTierListsView`):** Vista para explorar las "Tier Lists" públicas de la comunidad.
+
+### Base de Datos
 
 La base de datos es un componente crucial que almacena toda la información persistente de MyCheckPoint. Se ha utilizado PostgreSQL, un sistema de gestión de bases de datos relacional objeto-relacional. Todo el ciclo de vida y mantenimiento de la base de datos (creación de tablas, actualizaciones de esquemas, relaciones, etc.) se ha delegado a JPA y Spring Boot, lo que permite una gestión automática y coherente del modelo de datos a partir de las entidades del dominio.
 
@@ -410,7 +433,7 @@ El modelo de datos se estructura en torno a varias entidades principales y sus r
 - **Biblioteca de Usuario (`user_games`):** Tabla de unión entre `usuario` (`user_internal_id`) y `games` (`game_internal_id`), que además contiene atributos específicos de la relación (`internal_id`, `status`, `personal_platform`, `has_possession`, `score`, `comment`, `private_comment`, `start_date`, `end_date`, `story_duration_hours`, etc.).
 - **Listas de Juegos (`game_lists`):** Cada registro (`internal_id`, `public_id`, `name`, `description`, `is_public`) pertenece a un `usuario` (propietario, `user_internal_id`) y tiene una relación muchos-a-muchos con `user_games` (a través de la tabla de unión `game_list_user_games` que vincula `game_list_internal_id` con `user_game_internal_id`).
 - **Tier Lists (`tier_lists`):** Cada `tier_list` (`internal_id`, `public_id`, `name`, `description`, `type`, `is_public`) pertenece a un `usuario` (`owner_user_internal_id`) y puede estar opcionalmente vinculada a una `game_list` (`source_game_list_internal_id`) si es de tipo `FROM_GAMELIST`.
-- **Secciones de Tier List (`tier_sections`):** Cada `tier_section` (`internal_id`, `name`, `section_order`, `is_default_unclassified`) pertenece a una `tier_list` (`tier_list_internal_id`).
+- **Secciones de Tier List (`tier_sections`):** Cada `tier_section` (`internal_id`, `name`, `color`, `section_order`, `is_default_unclassified`) pertenece a una `tier_list` (`tier_list_internal_id`).
 - **Ítems de Tier List (`tier_list_items`):** Tabla de unión entre `tier_section` (`tier_section_internal_id`) y `user_games` (`user_game_internal_id`), que representa un juego específico colocado en una sección de una tier list, con un `item_order` definido.
 - **Amistades (`friendships`):** Modela la relación entre dos `usuario`, indicando quién solicitó la amistad (`requester_user_internal_id`), quién la recibió (`receiver_user_internal_id`) y el `status` de la relación.
 - **Tokens (`verification_tokens`, `password_reset_tokens`):** Almacenan los tokens temporales (`token`, `expiry_date`, `used`) para la verificación de correo y el restablecimiento de contraseñas, vinculados a un `usuario` (`user_id`).
@@ -433,8 +456,16 @@ En esta sección se describen los pasos necesarios para configurar y ejecutar el
 Antes de comenzar, asegúrate de tener instalado el siguiente software:
 - Java Development Kit (JDK): Versión 17 o superior.
 - Apache Maven: Para gestionar y ejecutar el proyecto backend.
+  
+        https://dev.to/vanessa_corredor/instalar-manualmente-maven-en-windows-10-50pb
+  
 - Node.js y npm: Para gestionar las dependencias y ejecutar el proyecto frontend.
+  
+          https://kinsta.com/es/blog/como-instalar-node-js/
+  
 - PostgreSQL: Como base de datos local.
+
+      https://www.youtube.com/watch?v=cHGaDfzJyY4
 
 2. Configuración de la Base de Datos
 
