@@ -2847,6 +2847,8 @@ Schemas
 **Diagrama UML de Clases (Reducido):**
 ![imagen](https://github.com/user-attachments/assets/147ca004-faab-401f-aa18-beabb8acaabf)
 
+## Anexo 3
+
 **Diagramas de Casos de Uso:**
 - Diagrama de Caso de Uso: Gestión de la Biblioteca Personal
 Este diagrama detalla las acciones que un usuario registrado puede realizar sobre su propia biblioteca de juegos.
@@ -2868,6 +2870,7 @@ La acción de Ver Perfil de Usuario es una extensión (extend) opcional de la b�
 
 ![imagen](https://github.com/user-attachments/assets/1c99421b-5234-40e0-a28c-67ac5daac9b9)
 
+## Anexo 4
 **Diagrama de Secuencia (Llamada a API IGDB para Búsqueda):**
 
 El siguiente diagrama ilustra el flujo para buscar un juego, donde el backend de MyCheckPoint actúa como cliente de la API de IGDB.
