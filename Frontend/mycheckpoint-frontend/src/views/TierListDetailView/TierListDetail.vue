@@ -72,53 +72,43 @@
         </div>
 
         <div v-for="section in sortedCustomSections" :key="section.internal_id" class="tier-row">
+
           <div class="tier-label" :style="{ backgroundColor: section.color || getTierColor(section.name) }">
-            <span v-if="
-              !editingSectionName || editingSectionId !== section.internal_id
-            ">{{ section.name }}</span>
-            <input v-if="
-              isOwner &&
-              editingSectionName &&
-              editingSectionId === section.internal_id &&
-              !section.is_default_unclassified
-            " v-model="currentSectionNameEdit" @keyup.enter="saveSectionName(section)"
-              @blur="saveSectionName(section.internal_id)" @keyup.esc="cancelEditSectionName" class="section-name-input"
-              v-focus />
+            <span v-if="!editingSectionName || editingSectionId !== section.internal_id">{{ section.name }}</span>
+
+            <input
+              v-if="isOwner && editingSectionName && editingSectionId === section.internal_id && !section.is_default_unclassified"
+              v-model="currentSectionNameEdit" @keyup.enter="saveSectionName(section)" @blur="saveSectionName(section)"
+              @keyup.esc="cancelEditSectionName" class="section-name-input" v-focus />
+
             <div v-if="isOwner && !section.is_default_unclassified" class="tier-actions">
               <button @click="startEditSectionName(section)" class="icon-button" title="Editar nombre tier">
                 &#9998;
               </button>
               <label class="icon-button" title="Cambiar color">
                 🎨
-                <input type="color" v-model="section.color" @change="handleUpdateSectionDetails(section)" class="color-input-hidden" />
+                <input type="color" v-model="section.color" @change="handleUpdateSectionDetails(section)"
+                  class="color-input-hidden" />
               </label>
-              <button @click="confirmRemoveSection(section.internal_id)" class="icon-button danger"
-                title="Eliminar tier">
-                &times;
-              </button>
             </div>
           </div>
-          <div class="tier-items-droppable-area" :class="{
-            'drag-over-active': dragOverSectionId === section.internal_id && dragOverItemId === null && isOwner,
-            'can-drop': isOwner && draggedItemInfo /* Añade clase si se puede soltar */
-          }" @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
-            @dragleave="isOwner ? handleDragLeaveSection($event, section.internal_id) : null"
-            @drop="isOwner ? handleDropOnSection($event, section.internal_id) : null">
+
+          <div class="tier-items-droppable-area"
+            :class="{ 'drag-over-active': dragOverSectionId === section.internal_id && isOwner }"
+            @dragover.prevent="isOwner ? handleDragOver($event, section.internal_id) : null"
+            @dragleave.prevent="isOwner ? handleDragLeaveItemOrSection($event) : null"
+            @drop.prevent="isOwner ? handleDrop($event, section.internal_id, null) : null">
+
             <div v-if="!section.items || section.items.length === 0" class="tier-empty-placeholder">
-              {{ isOwner ? "Arrastra o añade juegos aquí" : "(Vacío)" }}
+              {{ isOwner ? "Arrastra un juego aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div v-for="(item, index) in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
-                :class="{ 'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner }"
+              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
+                :class="{ 'dragging-item': draggedItemInfo?.tierListItemId === item.tier_list_item_id }"
                 :draggable="isOwner" @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
-                @dragend="isOwner ? handleDragEnd($event) : null"
-                @dragover.prevent.stop="isOwner ? handleDragOver($event, section.internal_id, item.tier_list_item_id) : null"
-                @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
-                @drop.stop="isOwner ? handleDrop($event, section.internal_id, item.tier_list_item_id) : null">
-                <RouterLink :to="{
-                  name: 'game-details',
-                  params: { igdbId: item.game_igdb_id },
-                }" :title="item.game_name">
+                @dragend="isOwner ? handleDragEnd($event) : null">
+                <RouterLink :to="{ name: 'game-details', params: { igdbId: item.game_igdb_id } }"
+                  :title="item.game_name">
                   <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
                     class="tier-item-cover-compact" @error="onTierItemCoverError" />
                 </RouterLink>
@@ -129,6 +119,15 @@
               </div>
             </div>
           </div>
+
+          <button v-if="isOwner && !section.is_default_unclassified" @click="confirmRemoveSection(section.internal_id)"
+            class="tier-row-delete-button" title="Eliminar Tier">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
+              <path fill-rule="evenodd"
+                d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.046a12.705 12.705 0 011.834 5.926.75.75 0 001.492-.232l-.15-.463a11.205 11.205 0 00-1.5-5.112l.149-.046a.75.75 0 00.23-1.482A12.722 12.722 0 016 4.193V3.75A1.25 1.25 0 017.25 2.5h5.5A1.25 1.25 0 0114 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.046a12.705 12.705 0 011.834 5.926.75.75 0 001.492-.232l-.15-.463a11.205 11.205 0 00-1.5-5.112l.149-.046a.75.75 0 00.23-1.482A12.722 12.722 0 0114 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM12.5 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5a.75.75 0 01.75-.75zM7.5 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017.5 10z"
+                clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
 
         <div class="tier-row unclassified-tier-row" v-if="
@@ -203,25 +202,48 @@
             aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
-          <div v-if="isLoadingLibraryForSelection" class="loading-message">Cargando tu biblioteca...</div>
-          <div v-if="addItemsErrorMessage" class="error-message modal-error">{{ addItemsErrorMessage }}</div>
-
-          <div v-if="!isLoadingLibraryForSelection && libraryForSelection.length === 0 && !addItemsErrorMessage"
-            class="empty-message">
-            No hay juegos en tu biblioteca para añadir (o ya están todos en la Tier List).
+          <div class="modal-filters-panel">
+            <div class="modal-filter-group search-group">
+              <input type="search" v-model="modalFilters.searchQuery" placeholder="Buscar en mi biblioteca..."
+                class="modal-search-input">
+            </div>
+            <div class="modal-filter-group">
+              <select v-model="modalFilters.status">
+                <option v-for="opt in gameStatusOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+              </select>
+            </div>
+            <div class="modal-filter-group">
+              <select v-model="modalFilters.platform">
+                <option v-for="opt in personalPlatformOptions" :key="opt.value" :value="opt.value">{{ opt.text }}
+                </option>
+              </select>
+            </div>
           </div>
 
-          <ul class="add-games-list" v-if="libraryForSelection.length > 0">
-            <li v-for="game in libraryForSelection" :key="game.internal_id"
+          <div v-if="isLoadingLibraryForSelection" class="loading-message">Cargando tu biblioteca...</div>
+          <div v-if="addItemsErrorMessage" class="error-message modal-error">{{ addItemsErrorMessage }}</div>
+          <div v-if="!isLoadingLibraryForSelection && filteredLibraryForModal.length === 0 && !addItemsErrorMessage"
+            class="empty-message">
+            No hay juegos que coincidan con tus filtros.
+          </div>
+
+          <div class="library-grid modal-games-grid" v-if="filteredLibraryForModal.length > 0">
+            <div v-for="game in filteredLibraryForModal" :key="game.internal_id" class="library-game-card selectable"
               :class="{ 'selected-for-add': gamesToAdd.has(game.internal_id) }"
-              @click="toggleGameForAdditionInternal(game.internal_id)"> <img
-                :src="getItemCoverUrl(game.game_cover.url, 'cover_big')" :alt="game.game_name"
-                class="add-game-cover-thumb" @error="onTierItemCoverError" />
-              <span class="add-game-name-text">{{ game.game_name || `ID: ${game.game_igdb_id}` }}</span>
-              <input type="checkbox" :checked="gamesToAdd.has(game.internal_id)" @click.stop readonly
-                class="add-game-checkbox" />
-            </li>
-          </ul>
+              @click="toggleGameForAdditionInternal(game.internal_id)">
+
+              <div class="card-cover-container">
+                <img :src="getItemCoverUrl(game.game_cover?.url, 'cover_big')" :alt="game.game_name"
+                  class="library-game-cover" @error="onTierItemCoverError" />
+                <div v-if="gamesToAdd.has(game.internal_id)" class="selection-overlay">
+                  <span class="checkmark-icon">✔</span>
+                </div>
+              </div>
+              <div class="card-content">
+                <h3 class="game-title">{{ game.game_name }}</h3>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <div v-if="addItemsErrorMessage && !isLoadingLibraryForSelection"
@@ -303,7 +325,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="newSectionName">Nombre de la Tier:</label>
-              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="100" />
+              <input type="text" id="newSectionName" v-model="newSectionForm.name" required maxlength="30" />
               <small>Ej: S, A, Buenos, Mis Favoritos...</small>
             </div>
             <div v-if="addSectionErrorMessage" class="error-message modal-error">
@@ -400,6 +422,40 @@ const libraryForSelection = ref([]);             //
 const gamesToAdd = ref(new Set());      // Set de internal_id de UserGame a añadir
 const addItemsErrorMessage = ref('');           // (Renombrado de addGamesErrorMessage)
 const isLoadingTierItemAction = ref(false);     // (Renombrado de isLoadingActionOnGame)
+
+
+
+const modalFilters = reactive({
+  searchQuery: '',
+  status: null,
+  platform: null
+});
+
+
+const gameStatusOptions = [
+  { value: null, text: 'Todos los Estados' }, { value: 'PLAYING', text: 'Jugando' }, { value: 'PLAYING_PAUSED', text: 'En Pausa' }, { value: 'PLAYING_ENDLESS', text: 'Sin Fin' }, { value: 'COMPLETED_MAIN_STORY', text: 'Completado' }, { value: 'COMPLETED_100_PERCENT', text: 'Completado 100%' }, { value: 'WISHLIST', text: 'En Deseos' }, { value: 'ARCHIVED_ABANDONED', text: 'Abandonado' }
+];
+const personalPlatformOptions = [
+  { value: null, text: 'Todas las Plataformas' }, { value: 'STEAM', text: 'Steam' }, { value: 'EPIC_GAMES', text: 'Epic Games Store' }, { value: 'GOG_GALAXY', text: 'GOG Galaxy' }, { value: 'XBOX', text: 'Xbox' }, { value: 'PLAYSTATION', text: 'PlayStation' }, { value: 'NINTENDO', text: 'Nintendo' }, { value: 'OTHER', text: 'Otra' }
+];
+
+// Nueva propiedad computada que aplica los filtros del modal en tiempo real
+const filteredLibraryForModal = computed(() => {
+  if (!libraryForSelection.value) return [];
+
+  return libraryForSelection.value.filter(game => {
+    const query = modalFilters.searchQuery.toLowerCase();
+    const status = modalFilters.status;
+    const platform = modalFilters.platform;
+
+    // Comprobación de coincidencias
+    const nameMatch = !query || (game.game_name && game.game_name.toLowerCase().includes(query));
+    const statusMatch = !status || game.status === status;
+    const platformMatch = !platform || game.personal_platform === platform;
+
+    return nameMatch && statusMatch && platformMatch;
+  });
+});
 
 const isOwner = computed(() => {
   if (
@@ -659,11 +715,11 @@ const handleDeleteTierList = async () => {
 
 // --- LÓGICA PARA EDITAR SECCIONES ---
 const startEditSectionName = (section) => {
-  if (!isOwner.value) return; 
+  if (!isOwner.value) return;
   editingSectionId.value = section.internal_id;
   currentSectionNameEdit.value = section.name;
   editingSectionName.value = true;
-  sectionEditMessage.value = ""; 
+  sectionEditMessage.value = "";
   sectionEditError.value = false;
   // El foco se maneja con v-focus en el template
 };
@@ -699,7 +755,7 @@ const handleUpdateSectionDetails = async (section) => {
     editingSectionId.value = null;
   }
 
-  const requestDTO = { 
+  const requestDTO = {
     name: newName,
     color: section.color || '#CCCCCC' // Aseguramos que el color nunca es nulo
   };
@@ -714,7 +770,7 @@ const handleUpdateSectionDetails = async (section) => {
       section.internal_id, // Usamos la propiedad correcta: 'internal_id'
       requestDTO
     );
-    
+
     tierListDetails.value = response.data;
     sectionEditMessage.value = "Sección actualizada.";
     setTimeout(() => { sectionEditMessage.value = "" }, 3000);
@@ -816,9 +872,9 @@ const handleAddSection = async () => {
   isAddingSection.value = true;
   addSectionErrorMessage.value = "";
 
-   const requestDTO = { 
-      name: newSectionForm.name.trim(),
-      color: newSectionForm.color 
+  const requestDTO = {
+    name: newSectionForm.name.trim(),
+    color: newSectionForm.color
   }; // TierSectionRequestDTO
 
   try {
@@ -1197,7 +1253,7 @@ const formatTierListType = (type) => {
 const getTierColor = (sectionName) => {
   if (!sectionName) return "#CCCCCC"; // Un gris neutro por defecto
   const name = String(sectionName).toUpperCase();
-  
+
   // Paleta de colores hexadecimales
   if (name.includes("S")) return "#FF7F7F"; // Rojo claro
   if (name.includes("A")) return "#FFBF7F"; // Naranja
@@ -1205,7 +1261,7 @@ const getTierColor = (sectionName) => {
   if (name.includes("C")) return "#BFFF7F"; // Verde claro
   if (name.includes("D")) return "#7FBFFF"; // Azul claro
   if (name.includes("E") || name.includes("F")) return "#BDB0D0"; // Lavanda grisáceo
-  
+
   return "#CCCCCC"; // Gris por defecto para nombres no reconocidos
 };
 </script>

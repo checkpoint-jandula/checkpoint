@@ -27,7 +27,11 @@
           <li><a href="mailto:pgraalc112@g.educaand.es">Pablo Granero Alcalá</a></li>
           <li><a href="mailto:mfercob430@g.educaand.es">Mario Ferro Cobo</a></li>
         </ul>
-        <h4 class="footer-title support-title">Soporte Técnico</h4>
+        
+      </div>
+
+      <div class="footer-section team-section">
+        <h4 class="footer-title">Soporte Técnico</h4>
         <p><a href="mailto:mycheckpoint.supp@gmail.com">mycheckpoint.supp@gmail.com</a></p>
       </div>
 
