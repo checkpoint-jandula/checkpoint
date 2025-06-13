@@ -78,21 +78,7 @@ Esta sección detalla el proceso de desarrollo de la plataforma MyCheckPoint, ab
 
 La planificación del proyecto MyCheckPoint se ha estructurado en varias fases clave, desde la concepción inicial y la investigación hasta el desarrollo iterativo y la documentación final. Para visualizar esta planificación, se ha elaborado un diagrama de Gantt que refleja las principales etapas y su duración estimada.
 
-```mermaid
-gantt
-    title Plan del proyecto
-    dateFormat  YYYY-MM-DD
-    section Investigación
-    Estado del arte      :a1, 2025-04-02, 8d
-    Planificacion y Definición de objetivos :a2, after a1, 12d
-    section Desarrollo
-    Backend                :b1, 2025-04-23, 5d
-    Backend                :b1, 2025-04-29, 19d
-    Frontend               :b2, after b1, 9d
-    Ajustes finales       :b3, after b2, 4d
-    section Documentación
-    Redacción del informe :c1, 2025-05-14, 31d
-```
+![imagen](https://github.com/user-attachments/assets/cefff9c2-c275-4f6c-8282-c65d69aa48dc)
 
 ## Metodología
 
@@ -381,17 +367,72 @@ El modelo de datos se estructura en torno a varias entidades principales y sus r
 
 Las relaciones se definen mediante claves primarias (`id` o `internal_id`) y foráneas, asegurando la integridad referencial. Se utilizan tipos de datos apropiados para cada campo (ej. `UUID` para identificadores públicos, `TEXT` para descripciones largas, `TIMESTAMP WITH TIME ZONE` para fechas). Las relaciones muchos-a-muchos se implementan mediante tablas de asociación intermedias (ej. `game_genres`, `game_list_user_games`).
 
-### Security Schemes
+### Esquemas de Seguridad
 
 #### `bearerAuth`
 
-- **Type:** http
-- **Scheme:** bearer
-- **Bearer Format:** JWT
+- **Tipo:** http
+- **Esquema:** bearer
+- **Formato Bearer:** JWT
 
 ## Despliegue
 
-Pasos necesarios para desplegar vuestro proyecto. Si no lo tenéis claro, lo vemos próximamente.
+En esta sección se describen los pasos necesarios para configurar y ejecutar el proyecto MyCheckPoint en un entorno de desarrollo local. Las instrucciones están pensadas para que un evaluador pueda poner en marcha la aplicación en su propio equipo, ya sea Windows o Linux.
+1. Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instalado el siguiente software:
+- Java Development Kit (JDK): Versión 17 o superior.
+- Apache Maven: Para gestionar y ejecutar el proyecto backend.
+- Node.js y npm: Para gestionar las dependencias y ejecutar el proyecto frontend.
+- PostgreSQL: Como base de datos local.
+
+2. Configuración de la Base de Datos
+
+La aplicación requiere una base de datos PostgreSQL para funcionar.
+- Instalar PostgreSQL en el equipo local.
+- Crear una base de datos con el nombre mycheckpoint_db y un usuario con credenciales para acceder a ella.
+- Configurar la conexión:
+- Navega al fichero de configuración del backend ubicado en: `checkpoint\Backend\MyCheckPoint\src\main\resources\application.properties`.
+- Modifica las siguientes líneas con el usuario y la contraseña que creaste:
+- Properties
+  
+        spring.datasource.username=TU_USUARIO_POSTGRES
+        spring.datasource.password=TU_CONTRASEÑA_POSTGRES
+
+3. Ejecución del Backend (API REST)
+
+El backend es una aplicación Spring Boot. La forma más sencilla de ejecutarlo es usando el plugin de Maven.
+- Abre una terminal o símbolo del sistema.
+- Navega hasta el directorio raíz del backend:
+- Comando: `cd checkpoint\Backend\MyCheckPoint`
+- Ejecuta el siguiente comando para iniciar la aplicación:
+
+      mvn spring-boot:run
+
+    El backend se compilará y se iniciará en el puerto 8080. Sabrás que está listo cuando veas en la consola un mensaje similar a "Started MyCheckPointApplication in X seconds". Deja esta terminal abierta.
+
+4. Ejecución del Frontend (Interfaz de Usuario)
+
+El frontend es una aplicación Vue.js que se ejecuta con Vite.
+- Abre una nueva terminal o símbolo del sistema (manteniendo la del backend abierta).
+- Navega hasta el directorio raíz del frontend:
+- Comando: `cd checkpoint\Frontend\mycheckpoint-frontend`
+- Instala todas las dependencias necesarias con npm:
+
+        npm install
+
+Una vez finalizada la instalación, ejecuta la aplicación en modo de desarrollo con el siguiente comando:
+Bash
+
+    npm run dev
+
+La consola te mostrará un mensaje indicando que el servidor de desarrollo está en marcha y te proporcionará una URL local para acceder. Normalmente será:
+
+        http://localhost:5173
+
+5. Acceso a la Aplicación
+
+Con el backend y el frontend en ejecución en sus respectivas terminales, abre un navegador web y visita la URL proporcionada por el servidor del frontend (generalmente http://localhost:5173). La aplicación MyCheckPoint debería cargarse y ser completamente funcional.
 
 ## Problemas encontrados y soluciones propuestas
 
@@ -486,7 +527,6 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Springdoc OpenAPI: https://springdoc.org/
 - Lombok: https://projectlombok.org/
 - Maven: https://maven.apache.org/
-- Repositorio de Clase Entorno-Cliente: https://majprofe.github.io/dwec/
 
 ### Frameworks y Tecnologías Frontend
 
@@ -496,9 +536,8 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Pinia 3: https://pinia.vuejs.org/
 - Axios: https://axios-http.com/
 - OpenAPI Generator Client (TypeScript-Axios): https://openapi-generator.tech/docs/generators/typescript-axios/
-- Repositorio de Clase Entorno-Servidor: https://majprofe.github.io/dwes/
 
-### Herramientas de Desarrollo y DevOps
+### Herramientas de Desarrollo 
 
 - Intellij IDEA: https://www.jetbrains.com/idea/
 - Visual Studio Code: https://code.visualstudio.com/
@@ -513,7 +552,13 @@ Estas líneas de trabajo representan una visión a medio y largo plazo para MyCh
 - Simple Icons: https://simpleicons.org/
 - Icons8: https://icons8.com/icons
 - Figma: https://www.figma.com/
-- 
+
+### Otros Recursos Web Consultados
+
+- W3School: https://www.w3schools.com/
+- JavaScriptInfo: https://es.javascript.info/
+- Repositorio de Clase Entorno-Servidor: https://majprofe.github.io/dwes/
+- Repositorio de Clase Entorno-Cliente: https://majprofe.github.io/dwec/
 
 ### Plataformas y APIs de Videojuegos (Fuentes y Referencias)
 
