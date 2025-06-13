@@ -85,7 +85,7 @@ public class User {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "tema", nullable = false, length = 50)
-    private TemaEnum tema = TemaEnum.CLARO;
+    private TemaEnum tema = TemaEnum.OSCURO;
 
     /**
      * URL o identificador de la foto de perfil del usuario.
