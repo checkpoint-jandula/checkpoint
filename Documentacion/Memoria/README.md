@@ -1,3 +1,56 @@
+---
+title: "MyCheckPoint"
+subtitle: "Organiza tu progreso, vive tu pasión."
+author: [Mario Ferro, Pablo Granero]
+date: "14-06-2025"
+subject: "MyCheckPoint: Organiza tu progreso, vive tu pasión."
+keywords: [mycheckpoint, progreso, videojuegos, tracking]
+lang: "es"
+titlepage: true
+titlepage-logo: iesjandula.jpg
+titlepage-background: background1.pdf
+toc: true
+toc-title: "Índice de contenidos"
+toc-own-page: true
+book: true
+first-chapter: 1
+...
+
+\begin{minipage}{4cm}
+    \includegraphics[width=3.5cm]{iesjandula.jpg}
+\end{minipage}
+\hfill
+
+\vspace{1.5cm}
+
+\begin{center}
+    \Huge\textbf{PROYECTO} \\[.3cm]
+    \Huge\textbf{FIN DE CICLO} \\[2cm]
+    \Huge\textbf{MYCHECKPOINT} \\
+\end{center}
+
+\vspace{3cm}
+
+\begin{minipage}{15cm}
+\textbf{Nombre: Mario Ferro Cobo y Pablo Granero Alcalá} \\[.3cm]
+\textbf{DNI: 1122334455A y 987654321B} \hfill \textbf{Curso Académico:} 2024 / 2025 \\[.3cm]
+\textbf{Profesor tutor del Proyecto: Maribel y Humberto}
+\end{minipage}
+
+\vfill
+
+\noindent
+\begin{minipage}{5cm}
+    \includegraphics[width=4cm]{edificio.jpg}
+\end{minipage}
+\hfill
+\begin{minipage}{5cm}
+    \raggedleft
+    \includegraphics[width=4cm]{fpa.png}
+\end{minipage}
+
+# Resumen {-}
+Este documento describe MyCheckPoint, una aplicación web diseñada para ayudar a los aficionados a los videojuegos a organizar
 
 # MyCheckpoint
 
