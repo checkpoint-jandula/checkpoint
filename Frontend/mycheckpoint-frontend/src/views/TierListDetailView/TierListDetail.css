@@ -124,16 +124,18 @@
   border-bottom-right-radius: 5px;
 }
 
+.tier-row-delete-button img {
+  filter: invert(32%) sepia(72%) saturate(1231%) hue-rotate(325deg) brightness(87%) contrast(119%); /* Color rojo */
+  transition: filter 0.3s ease;
+}
+
+.tier-row-delete-button:hover img {
+  filter: brightness(0) invert(1); /* Cambia a blanco */
+}
+
 .tier-row-delete-button:hover {
-  background-color: #c94040; /* Fondo rojo al pasar el ratón */
-  color: white; /* Icono blanco */
+  background-color: #c94040; /* Fondo claro al pasar el ratón */
 }
-
-.tier-row-delete-button svg {
-  width: 20px;
-  height: 20px;
-}
-
 /* --- ETIQUETAS DE TIER (S, A, B...) --- */
 .tier-label {
   width: 140px;
@@ -163,7 +165,7 @@
     text-align: center;
     border: 1px dashed #fff;
     background-color: rgba(255, 255, 255, 0.2);
-    color: white;
+    color: rgb(0, 0, 0);
 }
 .unclassified-label {
     background-color: var(--color-background-mute) !important;
@@ -406,6 +408,26 @@
   color: white;
   border-color: #c94040;
 }
+
+.action-button.add-tier-section {
+  background-color: #3498db; /* Azul claro */
+  color: #ffffff;
+  border-color: #2980b9;
+  transition: all 0.3s ease;
+}
+
+.action-button.add-tier-section:hover:not(:disabled) {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+.action-button.edit-tierlist{
+  background-color: hsla(160, 100%, 37%, 1);
+  color: white;
+  border-color: var(--color-border-hover);
+}
+.action-button.edit-tierlist:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); }
+
 .action-button.danger:hover:not(:disabled) { background-color: #a53232; }
 .action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -585,6 +607,7 @@
 
   .remove-item-button-compact {
     background-color: #d8000c;
+    opacity: 1;
   }
   
 }

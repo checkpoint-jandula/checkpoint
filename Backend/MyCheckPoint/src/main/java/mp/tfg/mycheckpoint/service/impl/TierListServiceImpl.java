@@ -19,7 +19,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio {@link TierListService} para gestionar las operaciones

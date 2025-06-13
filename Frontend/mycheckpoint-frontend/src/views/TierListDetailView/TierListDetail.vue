@@ -54,10 +54,10 @@
             </div>
           </div>
           <div v-if="isOwner" class="header-actions-tierlist">
-            <button v-if="isEditableTierList" @click="openEditTierListMetadataModal" class="action-button secondary">
+            <button v-if="isEditableTierList" @click="openEditTierListMetadataModal" class="action-button add-tier-section">
               Editar Detalles
             </button>
-            <button @click="handleDeleteTierList" :disabled="isLoading" class="action-button secondary">
+            <button @click="handleDeleteTierList" :disabled="isLoading" class="action-button danger">
               Eliminar Tier List
             </button>
           </div>
@@ -66,7 +66,7 @@
 
       <div class="tier-maker-container section-block">
         <div class="add-section-controls" v-if="isOwner">
-          <button @click="openAddSectionModal" class="action-button secondary">
+          <button @click="openAddSectionModal" class="action-button edit-tierlist">
             Añadir Nueva Tier (Fila)
           </button>
         </div>
@@ -122,11 +122,7 @@
 
           <button v-if="isOwner && !section.is_default_unclassified" @click="confirmRemoveSection(section.internal_id)"
             class="tier-row-delete-button" title="Eliminar Tier">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
-              <path fill-rule="evenodd"
-                d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.046a12.705 12.705 0 011.834 5.926.75.75 0 001.492-.232l-.15-.463a11.205 11.205 0 00-1.5-5.112l.149-.046a.75.75 0 00.23-1.482A12.722 12.722 0 016 4.193V3.75A1.25 1.25 0 017.25 2.5h5.5A1.25 1.25 0 0114 3.75v.443c-.795.077-1.58.22-2.365.468a.75.75 0 10.23 1.482l.149-.046a12.705 12.705 0 011.834 5.926.75.75 0 001.492-.232l-.15-.463a11.205 11.205 0 00-1.5-5.112l.149-.046a.75.75 0 00.23-1.482A12.722 12.722 0 0114 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM12.5 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5a.75.75 0 01.75-.75zM7.5 10a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 017.5 10z"
-                clip-rule="evenodd" />
-            </svg>
+            <img src="/src/assets/icons/bing.svg" alt=""  width="20" height="20" fill="currentColor"/>
           </button>
         </div>
 

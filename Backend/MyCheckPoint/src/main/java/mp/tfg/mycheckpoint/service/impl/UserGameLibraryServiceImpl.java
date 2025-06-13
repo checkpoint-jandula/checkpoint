@@ -10,7 +10,6 @@ import mp.tfg.mycheckpoint.dto.usergame.UserGameDataDTO;
 import mp.tfg.mycheckpoint.dto.usergame.UserGameResponseDTO;
 import mp.tfg.mycheckpoint.entity.*;
 import mp.tfg.mycheckpoint.entity.games.Game;
-import mp.tfg.mycheckpoint.exception.InvalidOperationException;
 import mp.tfg.mycheckpoint.exception.ResourceNotFoundException;
 import mp.tfg.mycheckpoint.exception.UnauthorizedOperationException;
 import mp.tfg.mycheckpoint.mapper.games.GameMapper;
@@ -22,7 +21,6 @@ import mp.tfg.mycheckpoint.service.TierListService;
 import mp.tfg.mycheckpoint.service.UserGameLibraryService;
 import mp.tfg.mycheckpoint.service.games.GameService;
 import mp.tfg.mycheckpoint.service.games.IgdbService;
-import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +30,6 @@ import reactor.core.publisher.Mono;
 
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Implementación del servicio {@link UserGameLibraryService} para gestionar
