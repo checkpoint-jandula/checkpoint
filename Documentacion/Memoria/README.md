@@ -70,7 +70,7 @@ El presente Trabajo de Fin de Grado se centra en la concepción, diseño, desarr
 6.  **Crear** una herramienta interactiva para la elaboración y personalización de _'tier lists'_, facilitando a los usuarios la clasificación visual de videojuegos en diferentes niveles o categorías configurables, y permitiendo la compartición de estos rankings.
 7.  **Establecer** un sistema de interacciones sociales dentro de la plataforma, enfocado principalmente en la gestión de amistades, que permita a los usuarios enviar, aceptar, rechazar o cancelar solicitudes de amistad, y visualizar sus conexiones.
 
-# Desarrollo del proyecto
+# Codificación del proyecto
 
 Esta sección detalla el proceso de desarrollo de la plataforma MyCheckPoint, abarcando la planificación temporal, la metodología adoptada, las tecnologías empleadas, los requisitos funcionales que guiaron la implementación, y la estructura arquitectónica del sistema.
 
@@ -150,7 +150,7 @@ Los requisitos funcionales especifican las acciones y servicios que la plataform
 
 **RF-AUTH: Gestión de Usuarios y Autenticación**
 
-- **RF-AUTH-001:** El sistema debe **permitir** a los nuevos usuarios registrarse en la plataforma proporcionando un nombre de usuario único, una dirección de correo electrónico válida y una contraseña segura.
+- **RF-AUTH-001:** El sistema debe **permitir** a los nuevos usuarios registrarse en la plataforma proporcionando un nombre de usuario único, una dirección de correo electrónico válida y una contraseña.
 - **RF-AUTH-002:** El sistema debe **enviar** un correo electrónico de verificación a la dirección proporcionada por el usuario durante el registro para confirmar la validez de la misma.
 - **RF-AUTH-003:** El sistema debe **restringir** el acceso a funcionalidades específicas de usuario registrado hasta que la dirección de correo electrónico haya sido verificada.
 - **RF-AUTH-004:** El sistema debe **permitir** a los usuarios registrados iniciar sesión utilizando su identificador (correo electrónico o nombre de usuario) y su contraseña.
@@ -158,7 +158,7 @@ Los requisitos funcionales especifican las acciones y servicios que la plataform
 - **RF-AUTH-006:** El sistema debe **permitir** a los usuarios autenticados cerrar su sesión activa en la plataforma.
 - **RF-AUTH-007:** El sistema debe **ofrecer** a los usuarios la posibilidad de solicitar un restablecimiento de contraseña si la han olvidado, mediante un enlace enviado a su correo electrónico registrado.
 - **RF-AUTH-008:** El sistema debe **permitir** a los usuarios autenticados cambiar su contraseña actual, requiriendo la confirmación de la contraseña vigente.
-- **RF-AUTH-009:** El sistema debe **permitir** a los usuarios autenticados visualizar y modificar la información de su perfil, incluyendo el nombre de usuario, el tema de la interfaz (claro/oscuro), las preferencias de notificación y el nivel de visibilidad de su perfil (público, privado, solo amigos).
+- **RF-AUTH-009:** El sistema debe **permitir** a los usuarios autenticados visualizar y modificar la información de su perfil, incluyendo el nombre de usuario, imagen de perfil y el nivel de visibilidad de su perfil (público, privado, solo amigos).
 - **RF-AUTH-010:** El sistema debe **permitir** a los usuarios autenticados subir, actualizar o eliminar su foto de perfil.
 - **RF-AUTH-011:** El sistema debe **permitir** a los usuarios autenticados solicitar la eliminación programada de su cuenta, requiriendo confirmación mediante contraseña.
 - **RF-AUTH-012:** El sistema debe **cancelar** automáticamente una eliminación de cuenta programada si el usuario inicia sesión antes de que finalice el periodo de gracia establecido.
@@ -168,7 +168,7 @@ Los requisitos funcionales especifican las acciones y servicios que la plataform
 
 - **RF-GAME-001:** El sistema debe **integrarse** con la API de Internet Games Database (IGDB) para obtener información detallada y actualizada sobre videojuegos.
 - **RF-GAME-002:** El sistema debe **permitir** la búsqueda de videojuegos en IGDB por diversos criterios, como título.
-- **RF-GAME-003:** El sistema debe **almacenar** localmente la información relevante de los juegos obtenidos de IGDB para optimizar consultas y reducir la dependencia de la API externa para datos frecuentemente accedidos.
+- **RF-GAME-003:** El sistema debe **almacenar** localmente la información relevante de los juegos obtenidos de IGDB que sean añadidos a una biblioteca para optimizar consultas y reducir la dependencia de la API externa para datos frecuentemente accedidos.
 - **RF-GAME-004:** El sistema debe **actualizar** la información local de los juegos si se detectan cambios o si la información almacenada es parcial y se requiere una versión más completa desde IGDB.
 - **RF-GAME-005:** El sistema debe **presentar** al usuario la información detallada de un videojuego, incluyendo metadatos (nombre, resumen, fecha de lanzamiento, etc.), carátula, géneros, plataformas, modos de juego, temas, capturas de pantalla, vídeos y compañías involucradas.
 
@@ -182,7 +182,7 @@ Los requisitos funcionales especifican las acciones y servicios que la plataform
 - **RF-LIB-006:** El sistema debe **permitir** a los usuarios escribir un comentario público y un comentario privado para cada juego en su biblioteca.
 - **RF-LIB-007:** El sistema debe **permitir** a los usuarios registrar las fechas de inicio y finalización de sus partidas.
 - **RF-LIB-008:** El sistema debe **permitir** a los usuarios registrar las horas dedicadas a un juego (ej. historia principal, contenido secundario, completista).
-- **RF-LIB-009:** El sistema debe **mostrar** al usuario su biblioteca de juegos completa, con toda la información personalizada registrada.
+- **RF-LIB-009:** El sistema debe **mostrar** al usuario su biblioteca de juegos completa.
 - **RF-LIB-010:** El sistema debe **permitir** a los usuarios eliminar juegos de su biblioteca personal.
 
 **RF-LIST: Gestión de Listas de Juegos Personalizadas (GameList)**
@@ -200,28 +200,28 @@ Los requisitos funcionales especifican las acciones y servicios que la plataform
 - **RF-TIER-001:** El sistema debe **permitir** a los usuarios autenticados crear 'Tier Lists' de perfil general, inicializadas con un conjunto de secciones por defecto (ej. S, A, B, C, D, Sin Clasificar).
 - **RF-TIER-002:** El sistema debe **generar** y **sincronizar** automáticamente una 'Tier List' cuando se acceda a la funcionalidad desde una GameList específica, poblando la sección "Sin Clasificar" con los juegos de dicha GameList.
 - **RF-TIER-003:** El sistema debe **permitir** a los usuarios añadir juegos de su biblioteca personal a las diferentes secciones de sus 'Tier Lists' de perfil.
-- **RF-TIER-004:** El sistema debe **permitir** a los usuarios mover juegos entre las diferentes secciones de una 'Tier List' y reordenar los juegos dentro de cada sección mediante una interfaz de arrastrar y soltar (drag and drop) o similar.
+- **RF-TIER-004:** El sistema debe **permitir** a los usuarios mover juegos entre las diferentes secciones de una 'Tier List' y reordenar los juegos dentro de cada sección mediante una interfaz de arrastrar y soltar (drag and drop).
 - **RF-TIER-005:** El sistema debe **permitir** a los usuarios eliminar juegos de sus 'Tier Lists' de perfil.
 - **RF-TIER-006:** El sistema debe **permitir** a los usuarios añadir nuevas secciones personalizadas a sus 'Tier Lists', hasta un límite máximo definido de 8.
 - **RF-TIER-007:** El sistema debe **permitir** a los usuarios modificar el nombre de las secciones personalizadas de sus 'Tier Lists'.
 - **RF-TIER-008:** El sistema debe **permitir** a los usuarios eliminar secciones personalizadas de sus 'Tier Lists', moviendo automáticamente los juegos contenidos en ellas a la sección "Sin Clasificar". No se podrá eliminar la última sección personalizable si es la única además de la de "Sin Clasificar".
-- **RF-TIER-009:** El sistema debe **impedir** la eliminación de la sección "Sin Clasificar".
-- **RF-TIER-010:** El sistema debe **permitir** a los usuarios modificar los metadatos (nombre, descripción, visibilidad) de sus 'Tier Lists'.
-- **RF-TIER-011:** El sistema debe **permitir** a los usuarios eliminar sus 'Tier Lists'.
-- **RF-TIER-012:** El sistema debe **permitir** a cualquier usuario (autenticado o no) visualizar las 'Tier Lists' que otros usuarios hayan marcado como públicas.
+- **RF-TIER-009:** El sistema debe **permitir** a los usuarios caambiar el color de cualquiero seccion de sus 'Tier Lists' excepto la sección "Sin Clasificar".
+- **RF-TIER-010:** El sistema debe **impedir** la eliminación de la sección "Sin Clasificar".
+- **RF-TIER-011:** El sistema debe **permitir** a los usuarios modificar los metadatos (nombre, descripción, visibilidad) de sus 'Tier Lists'.
+- **RF-TIER-012:** El sistema debe **permitir** a los usuarios eliminar sus 'Tier Lists'.
+- **RF-TIER-013:** El sistema debe **permitir** a cualquier usuario (autenticado o no) visualizar las 'Tier Lists' que otros usuarios hayan marcado como públicas.
 
 **RF-SOCIAL: Funcionalidades Sociales**
 
 - **RF-SOCIAL-001:** El sistema debe **permitir** a los usuarios autenticados buscar a otros usuarios registrados en la plataforma por su nombre de usuario.
 - **RF-SOCIAL-002:** El sistema debe **permitir** a los usuarios visualizar los perfiles de otros usuarios, respetando la configuración de visibilidad establecida por cada uno (público, privado, solo amigos).
 - **RF-SOCIAL-003:** El sistema debe **permitir** a los usuarios autenticados enviar solicitudes de amistad a otros usuarios.
-- **RF-SOCIAL-004:** El sistema debe **notificar** a un usuario cuando reciba una nueva solicitud de amistad.
-- **RF-SOCIAL-005:** El sistema debe **permitir** a los usuarios aceptar o rechazar las solicitudes de amistad recibidas.
-- **RF-SOCIAL-006:** El sistema debe **permitir** a los usuarios cancelar las solicitudes de amistad que han enviado y que aún están pendientes.
-- **RF-SOCIAL-007:** El sistema debe **mostrar** a cada usuario su lista de amigos.
-- **RF-SOCIAL-008:** El sistema debe **permitir** a los usuarios eliminar una amistad existente.
-- **RF-SOCIAL-009:** El sistema debe **mostrar** a los usuarios las solicitudes de amistad pendientes (tanto enviadas como recibidas).
-- **RF-SOCIAL-010:** El sistema debe **permitir** a los usuarios visualizar los comentarios públicos que otros usuarios han dejado en las fichas de los juegos.
+- **RF-SOCIAL-004:** El sistema debe **permitir** a los usuarios aceptar o rechazar las solicitudes de amistad recibidas.
+- **RF-SOCIAL-005:** El sistema debe **permitir** a los usuarios cancelar las solicitudes de amistad que han enviado y que aún están pendientes.
+- **RF-SOCIAL-006:** El sistema debe **mostrar** a cada usuario su lista de amigos.
+- **RF-SOCIAL-007:** El sistema debe **permitir** a los usuarios eliminar una amistad existente.
+- **RF-SOCIAL-008:** El sistema debe **mostrar** a los usuarios las solicitudes de amistad pendientes (tanto enviadas como recibidas).
+- **RF-SOCIAL-009:** El sistema debe **permitir** a los usuarios visualizar los comentarios públicos que otros usuarios han dejado en las fichas de los juegos.
 
 ## Estructura del proyecto
 
@@ -239,34 +239,6 @@ El backend de MyCheckPoint es el encargado de gestionar toda la lógica de negoc
 - **Seguridad:** Manejo de la autenticación de usuarios (JWT), autorización de acceso a recursos y protección contra vulnerabilidades comunes.
 - **Integración con Servicios Externos:** Comunicación con la API de IGDB para la obtención de información sobre videojuegos.
 - **Tareas Programadas:** Ejecución de procesos en segundo plano, como la limpieza de cuentas programadas para eliminación.
-
-**Diagrama UML de Clases (Reducido):**
-
-_(Ejemplo: Un diagrama simple mostrando User, Game, UserGame, GameList, TierList y sus relaciones más directas)_
-
-**Diagramas de Casos de Uso:**
-
-_(Ejemplo: Casos de uso como "Registrar Usuario", "Gestionar Biblioteca", "Crear Tier List")_
-
-**Diagrama de Secuencia (Llamada a API IGDB para Búsqueda):**
-
-El siguiente diagrama ilustra el flujo para buscar un juego, donde el backend de MyCheckPoint actúa como cliente de la API de IGDB.
-
-```mermaid  
-sequenceDiagram  
-participant Usuario as Usuario (Frontend)  
-participant Frontend as MyCheckPoint Frontend  
-participant Backend as MyCheckPoint Backend  
-participant IGDB as API de IGDB  
-Usuario->>Frontend: Introduce término de búsqueda (ej. "Cyberpunk 2077") y envía  
-Frontend->>Backend: Petición API (GET /api/juegos/igdb/buscar?nombre="Cyberpunk 2077")  
-Backend->>IGDB: Prepara consulta con Client-ID y Access Token (configurados en backend)  
-Backend->>IGDB: Solicita datos del juego (POST /games con query: search "Cyberpunk 2077", fields ..., limit ... )  
-IGDB-->>Backend: Devuelve lista de juegos coincidentes en formato JSON  
-Backend->>Backend: Procesa y mapea datos de IGDB a GameDto  
-Backend-->>Frontend: Devuelve lista de GameDto  
-Frontend-->>Usuario: Muestra resultados de la búsqueda  
-```  
 
 **Estructura del Proyecto (Capas):**
 
@@ -2828,3 +2800,33 @@ Schemas
   * **Ejemplo:** `ContraseñaActual123!`
 
 ## Anexo 2
+
+**Diagrama UML de Clases (Reducido):**
+![imagen](https://github.com/user-attachments/assets/147ca004-faab-401f-aa18-beabb8acaabf)
+
+**Diagramas de Casos de Uso:**
+- Diagrama de Caso de Uso: Gestión de la Biblioteca Personal
+Este diagrama detalla las acciones que un usuario registrado puede realizar sobre su propia biblioteca de juegos.
+
+![imagen](https://github.com/user-attachments/assets/b4cbc029-7dc7-4066-9e25-4541d5eb3b49)
+
+Para Añadir un Juego, el sistema siempre incluye la funcionalidad de Buscar Juegos.
+El usuario puede modificar los juegos de su biblioteca (cambiando su estado de "Jugando" a "Completado", por ejemplo) o eliminarlos directamente.
+
+- Diagrama de Caso de Uso: Interacción Social (Amistades)
+Este diagrama se centra en las funcionalidades sociales de la aplicación, como la búsqueda de usuarios y la gestión de la lista de amigos.
+
+![imagen](https://github.com/user-attachments/assets/5fe53cea-a96d-47cd-a925-ac1fa4d98509)
+
+El caso de uso Enviar Solicitud de Amistad requiere (include) haber realizado una Búsqueda de Usuarios previamente.
+La acción de Ver Perfil de Usuario es una extensión (extend) opcional de la búsqueda, permitiendo al usuario ver más detalles antes de enviar una solicitud.
+
+- Este diagrama ilustra el proceso específico de creación y personalización de una "Tier List", una de las funcionalidades destacadas del proyecto.
+
+![imagen](https://github.com/user-attachments/assets/1c99421b-5234-40e0-a28c-67ac5daac9b9)
+
+**Diagrama de Secuencia (Llamada a API IGDB para Búsqueda):**
+
+El siguiente diagrama ilustra el flujo para buscar un juego, donde el backend de MyCheckPoint actúa como cliente de la API de IGDB.
+
+![imagen](https://github.com/user-attachments/assets/64321685-c808-4a65-bad8-6f7f79a16d9c)
