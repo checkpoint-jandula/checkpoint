@@ -1200,7 +1200,7 @@ const getCompanyRoles = (involvedCompany) => {
 
 // Recibe el objeto game_info completo
 const formatReleaseStatus = (gameInfo) => {
-  // 1. Comprobar si la fecha de lanzamiento es futura
+  // Comprobar si la fecha de lanzamiento es futura
   if (gameInfo.first_release_date) {
     // La fecha de la API viene en segundos, Date.now() está en milisegundos
     const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
@@ -1209,7 +1209,7 @@ const formatReleaseStatus = (gameInfo) => {
     }
   }
 
-  // 2. Si la fecha no es futura, usamos esta lógica de estado.
+  // Si la fecha no es futura, usamos esta lógica de estado.
   const statusCode = gameInfo.first_release_status;
   if (statusCode === null || statusCode === undefined) return 'No especificado';
 
@@ -1296,7 +1296,7 @@ const formatDateSimple = (dateString) => {
   return dateString;
 };
 
-// --- NUEVO ESTADO para el formulario de la biblioteca ---
+// --- ESTADO para el formulario de la biblioteca ---
 const showLibraryForm = ref(false);
 const isAddingNewLibraryEntry = ref(false);
 const isLoadingLibraryAction = ref(false);
@@ -1305,21 +1305,21 @@ const libraryActionError = ref(false);
 
 
 const libraryForm = reactive({
-  status: null, //
-  personal_platform: null, //
-  has_possession: false, //
-  score: null, //
-  comment: '', //
-  private_comment: '', //
-  start_date: '', // (YYYY-MM-DD)
-  end_date: '', // (YYYY-MM-DD)
-  story_duration_hours: null, //
-  story_secondary_duration_hours: null, //
-  completionist_duration_hours: null, //
+  status: null, 
+  personal_platform: null, 
+  has_possession: false, 
+  score: null, 
+  comment: '', 
+  private_comment: '', 
+  start_date: '', 
+  end_date: '', 
+  story_duration_hours: null, 
+  story_secondary_duration_hours: null, 
+  completionist_duration_hours: null, 
 });
 
 
-// Opciones para los selectores del formulario (basadas en tus enums/DTOs)
+// Opciones para los selectores del formulario 
 const gameStatusOptions = {
   playing: [
     { value: 'PLAYING', text: 'Jugando' },
@@ -1356,7 +1356,7 @@ const openLibraryModal = (isNew = false) => {
   isAddingNewLibraryEntry.value = isNew;
   libraryActionMessage.value = '';
   libraryActionError.value = false;
-  modalStep.value = 0; // Siempre empezamos en el paso 0
+  modalStep.value = 0; 
   mainStatusCategory.value = null;
 
   // Limpiar formulario antes de rellenar
@@ -1388,26 +1388,22 @@ const closeLibraryModal = () => {
   showLibraryForm.value = false;
 };
 
-// Navegación del asistente
 const setStatusCategoryAndContinue = (category) => {
   console.log(`[PASO 0] Botón pulsado. Categoría seleccionada: '${category}'`);
   mainStatusCategory.value = category;
   if (category === 'wishlist') {
     libraryForm.status = 'WISHLIST';
-    handleSaveToLibrary(); // Guardar directamente
+    handleSaveToLibrary(); 
   } else {
-    // Asignamos un estado por defecto de la categoría
     libraryForm.status = gameStatusOptions[category][0].value;
     modalStep.value = 1;
   }
 };
 
 const computedStatusOptions = computed(() => {
-  // Si no se ha seleccionado una categoría principal (ej: 'jugando'), devuelve un array vacío.
+  // Si no se ha seleccionado una categoría principal, devuelve un array vacío.
   if (!mainStatusCategory.value) return [];
-
   // Si se ha seleccionado, devuelve el array de opciones correspondiente a esa categoría.
-  // Por ejemplo, si mainStatusCategory es 'completed', devolverá la lista de estados de completado.
   return gameStatusOptions[mainStatusCategory.value] || [];
 });
 
@@ -1431,7 +1427,7 @@ const toggleLibraryForm = (show, isNew = false) => {
       Object.keys(libraryForm).forEach(key => {
         libraryForm[key] = data[key] !== undefined && data[key] !== null ? data[key] : (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
       });
-      libraryForm.has_possession = !!data.has_possession; // Asegurar booleano
+      libraryForm.has_possession = !!data.has_possession; 
     } else {
       Object.keys(libraryForm).forEach(key => {
         libraryForm[key] = (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
@@ -1442,19 +1438,19 @@ const toggleLibraryForm = (show, isNew = false) => {
 };
 
 const handleSaveToLibrary = async () => {
-  // 1. Se asegura de que existe un ID de juego para guardar.
+  // Se asegura de que existe un ID de juego para guardar.
   if (!igdbId.value) return;
 
-  // 2. Activa los indicadores de "cargando" para la interfaz.
+  // Activa los indicadores de "cargando" para la interfaz.
   isLoadingLibraryAction.value = true;
   libraryActionMessage.value = '';
   libraryActionError.value = false;
 
-  // 3. Crea una copia de los datos del formulario para enviarla.
+  // Crea una copia de los datos del formulario para enviarla.
   const dto = { ...libraryForm };
 
-  // 4. Lógica clave: Limpia los campos de horas que NO fueron seleccionados en el desplegable.
-  //    Esto asegura que solo se guarde el tipo de horas que el usuario introdujo.
+  // Limpia los campos de horas que NO fueron seleccionados en el desplegable.
+  // Esto asegura que solo se guarde el tipo de horas que el usuario introdujo.
   const hourTypes = ['story_duration_hours', 'story_secondary_duration_hours', 'completionist_duration_hours'];
   hourTypes.forEach(type => {
     if (type !== hourInputType.value) {
@@ -1462,18 +1458,18 @@ const handleSaveToLibrary = async () => {
     }
   });
 
-  // 5. Intenta guardar los datos en la base de datos a través de la API.
+  // Intenta guardar los datos en la base de datos a través de la API.
   try {
     const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
     // Si tiene éxito, actualiza los datos del juego en la página y cierra el modal.
     gameDetail.value.user_game_data = response.data;
     closeLibraryModal();
   } catch (error) {
-    // 6. Si hay un error, lo captura y muestra un mensaje al usuario.
+    // Si hay un error, lo captura y muestra un mensaje al usuario.
     libraryActionError.value = true;
     libraryActionMessage.value = `Error: ${error.response?.data?.message || 'No se pudo guardar.'}`;
   } finally {
-    // 7. Se asegura de desactivar el indicador de "cargando", tanto si ha habido éxito como si ha habido un error.
+    // Se asegura de desactivar el indicador de "cargando", tanto si ha habido éxito como si ha habido un error.
     isLoadingLibraryAction.value = false;
   }
 };
@@ -1501,13 +1497,6 @@ const handleRemoveFromLibrary = async () => {
     isLoadingLibraryAction.value = false;
   }
 };
-
-
-
-
-
-
-
 </script>
 
 <style src="./GameDetailsView.css" scoped></style>
