@@ -30,47 +30,65 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
-// MODIFICADO: Importamos las funciones específicas de apiInstances
+// Se importan las funciones específicas para buscar o filtrar juegos desde la API.
 import { buscarJuegosEnIgdb, filtrarJuegosEnIgdb } from '@/services/apiInstances';
 import defaultGameCover from '@/assets/img/default-game-cover.svg';
 
+// Se inicializa 'useRoute' para poder acceder a los parámetros de la URL.
 const route = useRoute();
-const searchResults = ref([]);
-const isLoading = ref(false);
-const errorMessage = ref('');
+// --- ESTADO DEL COMPONENTE ---
+const searchResults = ref([]); // Almacenará los resultados de la búsqueda.
+const isLoading = ref(false); // Controla el estado de carga.
+const errorMessage = ref(''); // Muestra mensajes de error.
+// 'hasSearched' ayuda a distinguir entre el estado inicial y una búsqueda sin resultados.
 const hasSearched = ref(false);
 
+/**
+ * @description Propiedad computada que genera un título dinámico para la página
+ * basándose en los parámetros de la URL.
+ * @returns {string} El título a mostrar en la vista.
+ */
 const pageTitle = computed(() => {
   const query = route.query;
+  // Si la URL tiene un parámetro 'q', es una búsqueda por texto.
   if (query.q) {
     return `Resultados para: "${query.q}"`;
   }
+  // Si la URL tiene el parámetro 'filter=true', es una búsqueda avanzada.
   if (query.filter === 'true') {
     return "Resultados del Filtro Avanzado";
   }
+  // Título por defecto si no hay búsqueda.
   return "Búsqueda de Juegos";
 });
 
-// MODIFICADO: La lógica interna de esta función cambia para usar los nuevos servicios
+/**
+ * @description Función central que procesa la query de la URL y decide qué
+ * tipo de búsqueda realizar (texto o filtro avanzado).
+ * @param {object} query - El objeto route.query con todos los parámetros.
+ */
 const processRouteQuery = async (query) => {
+  // Si no hay parámetros en la URL, no se hace nada.
   if (Object.keys(query).length === 0) {
     searchResults.value = [];
     hasSearched.value = false;
     return;
   }
 
+  // Se inicia el estado de carga y se limpian los resultados anteriores.
   isLoading.value = true;
   errorMessage.value = '';
   searchResults.value = [];
-  hasSearched.value = true;
+  hasSearched.value = true; // Se marca que se ha intentado una búsqueda.
 
   try {
     let response;
+    // --- Lógica para decidir qué endpoint de la API llamar ---
+    // Si existe el parámetro 'q', se usa la búsqueda por texto.
     if (query.q) {
-      // Se llama a la función de búsqueda por texto
       response = await buscarJuegosEnIgdb(query.q);
+    // Si existe 'filter=true', se usa la búsqueda por filtros avanzados.
     } else if (query.filter === 'true') {
-      // Se llama a la función de filtrado, pasando los parámetros individualmente
       response = await filtrarJuegosEnIgdb(
         query.fecha_inicio,
         query.fecha_fin,
@@ -79,16 +97,21 @@ const processRouteQuery = async (query) => {
         query.id_modo_juego,
         query.limite
       );
+    // Si no hay parámetros reconocibles, no se hace nada.
     } else {
       isLoading.value = false;
       hasSearched.value = false;
       return;
     }
 
+    // Se asignan los resultados al estado del componente.
     searchResults.value = response.data;
-
+    
+    // Si la búsqueda no devuelve resultados, se podría establecer un mensaje.
+    // (Este mensaje se muestra en el 'v-else-if' del template).
     if (response.data.length === 0) {
-      errorMessage.value = "No se encontraron juegos que coincidan con los criterios."
+      // Nota: este mensaje de error podría ser redundante si el template ya maneja el caso de array vacío.
+      // errorMessage.value = "No se encontraron juegos que coincidan con los criterios."
     }
 
   } catch (error) {
@@ -99,12 +122,23 @@ const processRouteQuery = async (query) => {
   }
 };
 
-// El watch no necesita cambios, seguirá funcionando perfectamente
+/**
+ * @description Observador (watcher) que es el principal disparador de la lógica del componente.
+ * Reacciona a cualquier cambio en la query de la URL.
+ */
 watch(() => route.query,
   (newQuery) => {
+    // Cada vez que la URL cambia (ej: /search?q=zelda), se llama a la función de procesado.
     processRouteQuery(newQuery);
   },
-  { immediate: true, deep: true }
+  {
+    // 'immediate: true' asegura que el watcher se ejecute una vez al cargar el componente,
+    // procesando la URL inicial con la que el usuario llega a la página.
+    immediate: true,
+    // 'deep: true' es importante para que el watcher detecte cambios en cualquiera
+    // de las propiedades del objeto 'query', no solo si el objeto en sí es reemplazado.
+    deep: true
+  }
 );
 
 // --- Funciones de Utilidad (sin cambios) ---

@@ -479,7 +479,9 @@
                 <li v-for="comment in gameDetail.public_comments" :key="comment.username + comment.comment_date"
                   class="comment-item">
                   <strong class="comment-author">{{ comment.username }}</strong>
+                  <!--
                   <small class="comment-date"> ({{ formatTimestampToDate(comment.comment_date) }})</small>
+                  -->
                   <p class="comment-text">{{ comment.comment_text }}</p>
                 </li>
               </ul>
@@ -691,259 +693,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted,onUnmounted, reactive, computed, watch } from 'vue';
-import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
+// --- 1. IMPORTACIONES ---
+// Importaciones de Vue y Vue Router
+import { ref, onMounted, onUnmounted, reactive, computed, watch } from 'vue';
+import { useRoute, RouterLink } from 'vue-router';
+
+// Importaciones de servicios de API
 import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary } from '@/services/apiInstances.js';
+
+// Importación del store de autenticación (Pinia)
 import { useAuthStore } from '@/stores/authStore.js';
-import defaultGameCoverLarge from '@/assets/img/default-game-cover.svg'; // Placeholder para portada principal
-import defaultRelatedCover from '@/assets/img/default-game-cover.svg'; // Placeholder para portadas pequeñas
+
+// Importación de imágenes estáticas para usar como placeholders
+import defaultGameCoverLarge from '@/assets/img/default-game-cover.svg';
+import defaultRelatedCover from '@/assets/img/default-game-cover.svg';
 
 
+// --- 2. CONFIGURACIÓN PRINCIPAL Y ESTADO REACTIVO ---
+const route = useRoute(); // Hook para acceder a la información de la ruta actual (p.ej. parámetros como el ID del juego)
+const authStore = useAuthStore(); // Hook para acceder al estado de autenticación del usuario
 
-const showPrivateNoteModal = ref(false);
-const privateNoteFormText = ref('');
-const isSavingPrivateNote = ref(false);
-
-
-// Abre el modal y carga la nota privada existente en el formulario
-const openPrivateNoteModal = () => {
-  privateNoteFormText.value = gameDetail.value?.user_game_data?.private_comment || '';
-  isSavingPrivateNote.value = false;
-  showPrivateNoteModal.value = true;
-};
-
-// Guarda únicamente el campo de la nota privada
-const handleSavePrivateNote = async () => {
-  if (!igdbId.value) return;
-  isSavingPrivateNote.value = true;
-
-  const dto = {
-    private_comment: privateNoteFormText.value
-  };
-
-  try {
-    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
-    if (gameDetail.value && gameDetail.value.user_game_data) {
-      gameDetail.value.user_game_data = response.data;
-    }
-    showPrivateNoteModal.value = false; // Cerramos el modal
-  } catch (error) {
-    console.error("Error al guardar la nota privada:", error);
-  } finally {
-    isSavingPrivateNote.value = false;
-  }
-};
+// Estado principal del componente
+const gameDetail = ref(null); // Contendrá todos los detalles del juego recibidos de la API
+const igdbId = ref(null);     // Almacena el ID de IGDB del juego actual, extraído de la ruta
+const isLoading = ref(true);  // Booleano para mostrar el estado de carga inicial
+const errorMessage = ref(''); // String para almacenar mensajes de error y mostrarlos al usuario
+const activeTab = ref('details'); // Controla qué pestaña de contenido está visible ('details', 'multimedia', etc.)
 
 
-// --- ESTADO DEL MODAL ASISTENTE (NUEVO) ---
-const modalStep = ref(0); // 0: Selección inicial, 1: Detalles primarios, 2: Detalles secundarios
-const mainStatusCategory = ref(null); // 'playing', 'completed', 'archived'
-const hourInputType = ref('story_duration_hours'); // Para el desplegable de horas
-
-
-
-
-const showCommentModal = ref(false);
-const commentFormText = ref('');
-const isSavingComment = ref(false);
-const commentActionMessage = ref('');
-const commentActionError = ref(false);
-
-const openCommentModal = () => {
-  // Rellena el textarea con el comentario existente, o con vacío si no hay.
-  commentFormText.value = gameDetail.value?.user_game_data?.comment || '';
-  // Resetea cualquier mensaje de acción anterior
-  commentActionMessage.value = '';
-  commentActionError.value = false;
-  // Muestra el modal
-  showCommentModal.value = true;
-};
-
-const handleSaveComment = async () => {
-  if (!igdbId.value) return;
-  isSavingComment.value = true;
-  commentActionMessage.value = '';
-  commentActionError.value = false;
-
-  // Creamos un DTO (Data Transfer Object) solo con el comentario.
-  // Esto asegura que solo actualizamos este campo.
-  const commentDto = {
-    comment: commentFormText.value
-  };
-
-  try {
-    console.log("Guardando comentario:", commentDto, "para igdbId:", igdbId.value);
-    // Llamamos al mismo servicio de la API, pero solo con la información del comentario.
-    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), commentDto);
-
-    // Actualizamos los datos locales para que la vista refleje el cambio al instante.
-    if (gameDetail.value) {
-      gameDetail.value.user_game_data = response.data;
-    }
-
-    // Cerramos el modal al guardar con éxito.
-    showCommentModal.value = false;
-
-  } catch (error) {
-    commentActionError.value = true;
-    if (error.response) {
-      commentActionMessage.value = `Error: ${error.response.data.message || 'No se pudo guardar el comentario.'}`;
-    } else {
-      commentActionMessage.value = 'Error de red al guardar el comentario.';
-    }
-    console.error("Error al guardar comentario:", error);
-  } finally {
-    isSavingComment.value = false;
-  }
-};
-
-
-
-
-// --- LÓGICA PARA "LEER MÁS" DEL COMENTARIO PRIVADO ---
-const isExpanded = ref(false);
-const MAX_COMMENT_LENGTH = 350; // Umbral de caracteres para truncar el texto
-
-// Propiedad que determina si el texto es lo suficientemente largo para necesitar el botón
-const commentNeedsTruncation = computed(() => {
-  const comment = gameDetail.value?.user_game_data?.private_comment;
-  return comment && comment.length > MAX_COMMENT_LENGTH;
-});
-
-// Propiedad que devuelve el texto a mostrar (completo o truncado)
-const displayComment = computed(() => {
-  const comment = gameDetail.value?.user_game_data?.private_comment;
-  if (!comment) return '';
-
-  if (commentNeedsTruncation.value && !isExpanded.value) {
-    return comment.substring(0, MAX_COMMENT_LENGTH) + '...';
-  }
-  return comment;
-});
-
-
-
-const screenshotCarouselIndex = ref(0);
-
-
-const nextScreenshot = () => {
-  const screenshots = gameDetail.value?.game_info?.screenshots;
-  if (!screenshots || screenshots.length <= 1) return;
-  
-  if (screenshotCarouselIndex.value >= screenshots.length - 1) {
-    screenshotCarouselIndex.value = 0;
-  } else {
-    screenshotCarouselIndex.value++;
-  }
-};
-
-
-const prevScreenshot = () => {
-  const screenshots = gameDetail.value?.game_info?.screenshots;
-  if (!screenshots || screenshots.length <= 1) return;
-  
-  if (screenshotCarouselIndex.value <= 0) {
-    screenshotCarouselIndex.value = screenshots.length - 1;
-  } else {
-    screenshotCarouselIndex.value--;
-  }
-};
-
-
-const carouselViewportRef = ref(null); 
-
-
-const carouselItemWidth = ref(0);
-
-// Esta función se encarga de actualizar el ancho
-const updateCarouselItemWidth = () => {
-  if (carouselViewportRef.value) {
-    // El ancho del item es el ancho total del contenedor visible
-    carouselItemWidth.value = carouselViewportRef.value.offsetWidth;
-  }
-};
-
-// Cuando el componente se monta en la página, calculamos el ancho inicial
-onMounted(() => {
-  updateCarouselItemWidth();
-  // Y creamos un observador que recalcule el ancho si el tamaño de la ventana cambia
-  window.addEventListener('resize', updateCarouselItemWidth);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateCarouselItemWidth);
-});
-
-const carouselSliderStyle = computed(() => {
-  if (!gameDetail.value?.game_info?.screenshots?.length) return {};
-  
-  const itemWidth = 400; // Ancho fijo de cada item 
-  const position = screenshotCarouselIndex.value * itemWidth;
-  
-  return {
-    transform: `translateX(-${position}px)`,
-    width: `${itemWidth * gameDetail.value.game_info.screenshots.length}px`
-  };
-});
-
-let isTransitioning = false;
-
-const handleTransitionEnd = () => {
-  isTransitioning = false;
-};
-
-const showLightbox = ref(false);
-const currentGallery = ref([]); // Guardará el array de la galería activa (artworks o screenshots)
-const currentIndex = ref(0);
-
-const currentImage = computed(() => {
-  if (currentGallery.value.length > 0) {
-    return currentGallery.value[currentIndex.value];
-  }
-  return null;
-});
-
-const openLightbox = (gallery, index) => {
-  currentGallery.value = gallery;
-  currentIndex.value = index;
-  showLightbox.value = true;
-  document.body.style.overflow = 'hidden';
-};
-
-const closeLightbox = () => {
-  showLightbox.value = false;
-  document.body.style.overflow = '';
-  currentGallery.value = [];
-  currentIndex.value = 0;
-};
-
-
-const nextImage = () => {
-  if (currentGallery.value.length > 0) {
-    // Si es la última imagen, vuelve a la primera (efecto carrusel)
-    currentIndex.value = (currentIndex.value + 1) % currentGallery.value.length;
-  }
-};
-
-const prevImage = () => {
-  if (currentGallery.value.length > 0) {
-    // Si es la primera, va a la última
-    currentIndex.value = (currentIndex.value - 1 + currentGallery.value.length) % currentGallery.value.length;
-  }
-};
-
-
-
-const route = useRoute();
-const authStore = useAuthStore();
-
-const gameDetail = ref(null);
-const isLoading = ref(true);
-const errorMessage = ref('');
-const igdbId = ref(null);
-
+// --- 3. OBTENCIÓN DE DATOS Y CICLO DE VIDA ---
+/**
+ * @description Función principal que carga los detalles del juego desde la API usando su ID de IGDB.
+ * Gestiona los estados de carga y error.
+ * @param {string|number} id - El ID de IGDB del juego a cargar.
+ */
 const loadGameDetails = async (id) => {
-
   if (!id) {
     errorMessage.value = "ID del juego no proporcionado.";
     isLoading.value = false;
@@ -951,15 +735,11 @@ const loadGameDetails = async (id) => {
   }
   isLoading.value = true;
   errorMessage.value = '';
-  gameDetail.value = null;
+  gameDetail.value = null; // Resetea los detalles previos antes de una nueva carga
 
   try {
     const response = await fetchGameDetailsByIgdbId(Number(id));
-    console.log("Datos del juego recibido:", response.data);
     gameDetail.value = response.data;
-    console.log("Detalles del juego recibidos:", gameDetail.value);
-    console.log("DATOS DE ARTWORKS:", gameDetail.value.game_info.artworks);
-    console.log("DATOS DE SCREENSHOTS:", gameDetail.value.game_info.screenshots);
   } catch (error) {
     console.error(`Error cargando detalles del juego (ID: ${id}):`, error);
     if (error.response) {
@@ -972,338 +752,150 @@ const loadGameDetails = async (id) => {
   }
 };
 
-const activeTab = ref('details'); 
-
-const setActiveTab = (tabName) => {
-  activeTab.value = tabName;
-};
-
-
+// Hook del ciclo de vida: se ejecuta cuando el componente se monta por primera vez
 onMounted(() => {
   igdbId.value = route.params.igdbId;
   loadGameDetails(igdbId.value);
 });
 
+// Watcher: observa cambios en el parámetro 'igdbId' de la ruta.
+// Esto es crucial para que la página se recargue con un nuevo juego sin tener que abandonarla
+// (p.ej., al hacer clic en un juego relacionado).
 watch(() => route.params.igdbId, (newId) => {
   if (newId && newId !== igdbId.value) {
     igdbId.value = newId;
     loadGameDetails(newId);
-    activeTab.value = 'details';
+    activeTab.value = 'details'; // Resetea la pestaña activa a 'detalles'
   }
 });
 
-const getCoverUrl = (imageInfo, size = 'cover_small') => {
-  const isSmall = size.includes('small') || size.includes('thumb');
-  const placeholder = isSmall ? defaultRelatedCover : defaultGameCoverLarge;
 
-  if (imageInfo && typeof imageInfo.url === 'string' && imageInfo.url.trim() !== '') {
-    let imageUrl = imageInfo.url;
-
-    // 1. Aseguramos el protocolo HTTPS
-    if (imageUrl.startsWith('//')) {
-      imageUrl = `https:${imageUrl}`;
-    }
-
-    // 2. Lógica central para cambiar el tamaño
-    const sizePattern = /\/t_[a-zA-Z0-9_]+\//;
-
-    // Si pedimos el tamaño original, simplemente quitamos el especificador de tamaño
-    if (size === 'original') {
-      return imageUrl.replace(sizePattern, '/');
-    }
-
-    // Si la URL ya tiene un tamaño, lo reemplazamos por el que queremos
-    if (imageUrl.match(sizePattern)) {
-      return imageUrl.replace(sizePattern, `/t_${size}/`);
-    }
-
-    // Si no tenía tamaño, intentamos insertarlo (típico de IGDB)
-    if (imageUrl.includes('/upload/')) {
-      return imageUrl.replace('/upload/', `/upload/t_${size}/`);
-    }
-
-    // Si no se pudo modificar, devolvemos la URL tal cual
-    return imageUrl;
-  }
-
-  // Si no hay imageInfo o URL, devolvemos el placeholder correspondiente
-  return placeholder;
+// --- 4. GESTIÓN DE PESTAÑAS Y NAVEGACIÓN INTERNA ---
+/**
+ * @description Cambia la pestaña de contenido activa en la vista.
+ * @param {string} tabName - El nombre de la pestaña a activar.
+ */
+const setActiveTab = (tabName) => {
+  activeTab.value = tabName;
 };
 
 
-const onImageError = (event) => {
-  console.warn("Error al cargar imagen de portada grande:", event.target.src);
-  event.target.src = defaultGameCoverLarge;
-};
+// --- 5. LÓGICA DEL CARRUSEL DE CAPTURAS DE PANTALLA ---
+const screenshotCarouselIndex = ref(0); // Índice de la captura de pantalla actual en el carrusel
 
-const onImageErrorSmall = (event) => { // Nueva función para placeholders de imágenes más pequeñas
-  console.warn("Error al cargar imagen de portada relacionada:", event.target.src);
-  event.target.src = defaultRelatedCover;
-};
-
-const formatTimestampToDate = (timestamp) => {
-  if (!timestamp) return 'Fecha desconocida';
-  return new Date(Number(timestamp) * 1000).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const getWebsiteDisplayName = (urlString) => {
-  if (!urlString) return 'Enlace';
-  try {
-    const url = new URL(urlString);
-    let hostname = url.hostname;
-    // Quitar 'www.' si existe
-    if (hostname.startsWith('www.')) {
-      hostname = hostname.substring(4);
-    }
-    // Capitalizar y mejorar algunos nombres comunes
-    if (hostname.includes('steampowered.com')) return 'Steam';
-    if (hostname.includes('gog.com')) return 'GOG';
-    if (hostname.includes('youtube.com')) return 'YouTube';
-    if (hostname.includes('wikipedia.org')) return 'Wikipedia';
-    if (hostname.includes('epicgames.com')) return 'Epic Games Store';
-    if (hostname.includes('twitch.tv')) return 'Twitch';
-    // Capitalizar el primer caracter del hostname como fallback
-    return hostname.charAt(0).toUpperCase() + hostname.slice(1);
-  } catch (e) {
-    // Si la URL no es válida, mostrar una parte o un genérico
-    return urlString.length > 30 ? urlString.substring(0, 27) + '...' : urlString;
+const nextScreenshot = () => {
+  const screenshots = gameDetail.value?.game_info?.screenshots;
+  if (!screenshots || screenshots.length <= 1) return;
+  
+  if (screenshotCarouselIndex.value >= screenshots.length - 1) {
+    screenshotCarouselIndex.value = 0; // Vuelve al inicio si está en la última
+  } else {
+    screenshotCarouselIndex.value++;
   }
 };
 
-const recognizedWebsites = computed(() => {
-  const websites = gameDetail.value?.game_info?.websites;
-  if (!websites) return [];
+const prevScreenshot = () => {
+  const screenshots = gameDetail.value?.game_info?.screenshots;
+  if (!screenshots || screenshots.length <= 1) return;
+  
+  if (screenshotCarouselIndex.value <= 0) {
+    screenshotCarouselIndex.value = screenshots.length - 1; // Va a la última si está en la primera
+  } else {
+    screenshotCarouselIndex.value--;
+  }
+};
 
-  return websites.filter(website => getWebsiteIconName(website.url) !== 'sin-logo.svg');
+// Estilo computado para el desplazamiento del carrusel.
+// Mueve el contenedor del carrusel horizontalmente basado en el índice actual.
+const carouselSliderStyle = computed(() => {
+  if (!gameDetail.value?.game_info?.screenshots?.length) return {};
+  const itemWidth = 400; // Ancho fijo de cada item del carrusel
+  const position = screenshotCarouselIndex.value * itemWidth;
+  return {
+    transform: `translateX(-${position}px)`,
+    width: `${itemWidth * gameDetail.value.game_info.screenshots.length}px` // Ancho total del slider
+  };
+});
+
+// --- Lógica para el ancho dinámico del carrusel (no implementada en el template final pero el código está aquí) ---
+const carouselViewportRef = ref(null); 
+const carouselItemWidth = ref(0);
+let isTransitioning = false;
+
+const updateCarouselItemWidth = () => {
+  if (carouselViewportRef.value) {
+    carouselItemWidth.value = carouselViewportRef.value.offsetWidth;
+  }
+};
+const handleTransitionEnd = () => {
+  isTransitioning = false;
+};
+onMounted(() => {
+  updateCarouselItemWidth();
+  window.addEventListener('resize', updateCarouselItemWidth);
+});
+onUnmounted(() => {
+  window.removeEventListener('resize', updateCarouselItemWidth);
 });
 
 
-const getWebsiteIconName = (urlString) => {
-  if (!urlString) return 'sin-logo.svg'; // Icono por defecto
+// --- 6. LÓGICA DEL LIGHTBOX (VISOR DE IMÁGENES AMPLIADAS) ---
+const showLightbox = ref(false); // Controla la visibilidad del visor
+const currentGallery = ref([]);  // Almacena la galería activa (capturas o artworks)
+const currentIndex = ref(0);     // Índice de la imagen activa dentro de la galería
 
-  // Mapa de dominios a nombres de icono
-  const domainIconMap = {
-    'steam': 'steam.svg',
-    'gog.com': 'gog.svg',
-    'epicgames.com': 'epicgames.svg',
-    'ubisoft.com': 'ubisoft.svg',
-    'ea.com': 'ea.svg',
-    'battle.net': 'battle.svg',
-    'rockstargames.com': 'rockstargames.svg',
-    'playstation.com': 'playstation.svg',
-    'xbox.com': 'xbox.svg',
-    'youtube.com': 'youtube.svg',
-    'twitch.tv': 'twitch.svg',
-    'wikipedia.org': 'wikipedia.svg',
-    'discord': 'discord.svg', 
-    'facebook.com': 'facebook.svg',
-    'instagram.com': 'instagram.svg',
-    'x.com': 'x.svg',
-    'twitter.com': 'x.svg', 
-    'reddit.com': 'reddit.svg',
-    'apple.com': 'appstore.svg',
-    'play.google': 'googleplay.svg'
-  };
-
-  try {
-    const url = new URL(urlString);
-    const domain = url.hostname + url.pathname;
-
-    // Busca una coincidencia en el mapa
-    for (const key in domainIconMap) {
-      if (domain.includes(key)) {
-        return domainIconMap[key];
-      }
-    }
-
-    return 'sin-logo.svg'; // Si no encuentra ninguna, devuelve el por defecto
-  } catch (e) {
-    return 'sin-logo.svg'; // En caso de URL inválida
+// Propiedad computada que devuelve la imagen actual a mostrar en el lightbox.
+const currentImage = computed(() => {
+  if (currentGallery.value.length > 0) {
+    return currentGallery.value[currentIndex.value];
   }
-};
-
-const getIconUrl = (iconName) => {
-  return new URL(`/src/assets/icons-website/${iconName}`, import.meta.url).href;
-};
-
-const otherWebsites = computed(() => {
-  const websites = gameDetail.value?.game_info?.websites;
-  if (!websites) return [];
-
-  return websites.filter(website => getWebsiteIconName(website.url) === 'sin-logo.svg');
+  return null;
 });
 
-const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
-  if (!videoId) return '';
-  let url = `https://www.youtube.com/embed/${videoId}`;
-  if (autoplay) {
-    url += '?autoplay=1&rel=0';
+/**
+ * @description Abre el visor de imágenes a pantalla completa.
+ * @param {Array} gallery - El array de imágenes (screenshots o artworks) a mostrar.
+ * @param {number} index - El índice de la imagen en la que se hizo clic.
+ */
+const openLightbox = (gallery, index) => {
+  currentGallery.value = gallery;
+  currentIndex.value = index;
+  showLightbox.value = true;
+  document.body.style.overflow = 'hidden'; // Evita el scroll del fondo
+};
+
+const closeLightbox = () => {
+  showLightbox.value = false;
+  document.body.style.overflow = ''; // Restaura el scroll del fondo
+  currentGallery.value = [];
+  currentIndex.value = 0;
+};
+
+const nextImage = () => {
+  if (currentGallery.value.length > 0) {
+    currentIndex.value = (currentIndex.value + 1) % currentGallery.value.length; // Loop circular
   }
-  return url;
 };
 
-const formatGameType = (gameType) => {
-  if (!gameType) return 'No especificado';
-
-  // Mapeo de los valores numéricos/string de la API a texto legible
-  // Basado en IGDB GameCategoryEnum y los ejemplos
-  const typeMap = {
-    "0": "Juego Principal", // MAIN_GAME
-    "MAIN_GAME": "Juego Principal",
-    "1": "DLC / Add-on", // DLC_ADDON
-    "DLC_ADDON": "DLC / Add-on",
-    "2": "Expansión",    // EXPANSION
-    "EXPANSION": "Expansión",
-    "3": "Bundle",      // BUNDLE
-    "BUNDLE": "Bundle",
-    "4": "Expansión Independiente", // STANDALONE_EXPANSION
-    "STANDALONE_EXPANSION": "Expansión Independiente",
-    "5": "Mod",         // MOD
-    "MOD": "Mod",
-    "6": "Episodio",    // EPISODE
-    "EPISODE": "Episodio",
-    "7": "Temporada",   // SEASON
-    "SEASON": "Temporada",
-    "8": "Remake",      // REMAKE
-    "REMAKE": "Remake",
-    "9": "Remaster",    // REMASTER
-    "REMASTER": "Remaster",
-    "10": "Juego Expandido", // EXPANDED_GAME
-    "EXPANDED_GAME": "Juego Expandido",
-    "11": "Port",        // PORT
-    "PORT": "Port",
-    "12": "Fork",        // FORK (Bifurcación)
-    "FORK": "Fork",
-    "13": "Pack",        // PACK
-    "PACK": "Pack",
-    "14": "Actualización", // UPDATE
-    "UPDATE": "Actualización",
-  };
-
-  return typeMap[String(gameType).toUpperCase()] || String(gameType); // Devuelve el mapeado o el valor original si no se encuentra
-};
-
-const getCompanyRoles = (involvedCompany) => {
-  if (!involvedCompany) return '';
-  const roles = [];
-  if (involvedCompany.developer) roles.push('Desarrollador'); //
-  if (involvedCompany.publisher) roles.push('Editor'); //
-  if (involvedCompany.porting) roles.push('Porting'); //
-  if (involvedCompany.supporting) roles.push('Soporte'); //
-
-  return roles.join(', ');
-};
-
-// Recibe el objeto game_info completo
-const formatReleaseStatus = (gameInfo) => {
-  // Comprobar si la fecha de lanzamiento es futura
-  if (gameInfo.first_release_date) {
-    // La fecha de la API viene en segundos, Date.now() está en milisegundos
-    const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
-    if (releaseTimestampMs > Date.now()) {
-      return 'Próximamente'; // Forzamos el estado si la fecha es futura
-    }
+const prevImage = () => {
+  if (currentGallery.value.length > 0) {
+    currentIndex.value = (currentIndex.value - 1 + currentGallery.value.length) % currentGallery.value.length; // Loop circular
   }
-
-  // Si la fecha no es futura, usamos esta lógica de estado.
-  const statusCode = gameInfo.first_release_status;
-  if (statusCode === null || statusCode === undefined) return 'No especificado';
-
-  const statusMap = {
-    "-1": "Lanzado", 
-    "0": "Lanzado",
-    "2": "Alpha",
-    "3": "Beta",
-    "4": "Acceso Anticipado",
-    "5": "Offline",
-    "6": "Cancelado",
-    "7": "Rumoreado"
-  };
-
-  return statusMap[String(statusCode)] || `Estado Desconocido (${statusCode})`;
 };
 
-// Para obtener la clase CSS del estado de lanzamiento
-const getReleaseStatusClass = (gameInfo) => {
-  if (gameInfo.first_release_date) {
-    const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
-    if (releaseTimestampMs > Date.now()) {
-      return 'status-upcoming'; 
-    }
-  }
 
-  const statusCode = gameInfo.first_release_status;
-  if (statusCode === null || statusCode === undefined) return '';
+// --- 7. GESTIÓN DE LA BIBLIOTECA DEL USUARIO (MODAL PRINCIPAL) ---
 
-  const statusMap = {
-    '-1': 'status-released',        
-    '0': 'status-released',
-    '2': 'status-alpha',
-    '3': 'status-beta',
-    '4': 'status-early-access',
-    '5': 'status-offline',
-    '6': 'status-cancelled',
-    '7': 'status-rumored'      
-  };
+// Estado para controlar el modal y sus pasos (asistente)
+const showLibraryForm = ref(false);           // Visibilidad del modal
+const modalStep = ref(0);                     // Paso actual del asistente (0: categoría, 1: detalles, 2: más detalles)
+const mainStatusCategory = ref(null);         // Categoría principal seleccionada ('playing', 'completed', etc.)
+const isAddingNewLibraryEntry = ref(false);   // Distingue entre añadir un juego nuevo y editar uno existente
+const isLoadingLibraryAction = ref(false);    // Muestra un estado de carga en los botones de guardado
+const libraryActionMessage = ref('');         // Mensajes de feedback (éxito/error)
+const libraryActionError = ref(false);        // Booleano para estilizar el mensaje de feedback como error
 
-  return statusMap[String(statusCode)] || 'status-other';
-};
-
-const formatPersonalPlatform = (platform) => {
-  if (!platform) return 'No especificada';
-  // Mapeo basado en UserPersonalPlatform enum (del backend) 
-  const platformMap = {
-    'STEAM': 'Steam',
-    'EPIC_GAMES': 'Epic Games Store',
-    'GOG_GALAXY': 'GOG Galaxy',
-    'XBOX': 'Xbox',
-    'PLAYSTATION': 'PlayStation',
-    'NINTENDO': 'Nintendo',
-    'BATTLE_NET': 'Battle.net',
-    'EA_APP': 'EA App',
-    'UBISOFT_CONNECT': 'Ubisoft Connect',
-    'OTHER': 'Otra'
-  };
-  return platformMap[platform] || platform;
-};
-
-// Función para formatear el estado del juego del usuario
-const formatUserGameStatus = (status) => {
-  if (!status) return 'No especificado';
-  // Mapeo basado en UserGameStatus enum (del backend) 
-  const statusMap = {
-    'COMPLETED': 'Completado',
-    'COMPLETED_MAIN_STORY': 'Historia Principal Completada',
-    'COMPLETED_MAIN_AND_SIDES': 'Principal + Secundarias Importantes Completado',
-    'COMPLETED_100_PERCENT': 'Completado al 100%',
-    'ARCHIVED': 'Archivado',
-    'ARCHIVED_ABANDONED': 'Archivado (Abandonado)',
-    'ARCHIVED_NOT_PLAYING': 'Archivado (Sin Jugar)',
-    'WISHLIST': 'En Lista de Deseos',
-    'PLAYING': 'Jugando',
-    'PLAYING_PAUSED': 'Jugando (En Pausa)',
-    'PLAYING_ENDLESS': 'Jugando (Sin Fin / Rejugable)'
-  };
-  return statusMap[status] || status; // Devuelve el mapeado o el valor original
-};
-
-const formatDateSimple = (dateString) => {
-  if (!dateString) return '';
-  return dateString;
-};
-
-// --- ESTADO para el formulario de la biblioteca ---
-const showLibraryForm = ref(false);
-const isAddingNewLibraryEntry = ref(false);
-const isLoadingLibraryAction = ref(false);
-const libraryActionMessage = ref('');
-const libraryActionError = ref(false);
-
-
+// Objeto reactivo que contiene todos los campos del formulario de la biblioteca
 const libraryForm = reactive({
   status: null, 
   personal_platform: null, 
@@ -1317,9 +909,9 @@ const libraryForm = reactive({
   story_secondary_duration_hours: null, 
   completionist_duration_hours: null, 
 });
+const hourInputType = ref('story_duration_hours'); // Controla qué campo de horas está vinculado al input numérico
 
-
-// Opciones para los selectores del formulario 
+// Opciones para los 'select' del formulario, organizadas por categoría
 const gameStatusOptions = {
   playing: [
     { value: 'PLAYING', text: 'Jugando' },
@@ -1338,7 +930,7 @@ const gameStatusOptions = {
     { value: 'ARCHIVED_NOT_PLAYING', text: 'Archivado (Sin Jugar)' },
   ]
 };
-const personalPlatformOptions = [ //
+const personalPlatformOptions = [
   { value: 'STEAM', text: 'Steam' },
   { value: 'EPIC_GAMES', text: 'Epic Games Store' },
   { value: 'GOG_GALAXY', text: 'GOG Galaxy' },
@@ -1351,35 +943,42 @@ const personalPlatformOptions = [ //
   { value: 'OTHER', text: 'Otra' },
 ];
 
+// Propiedad computada que filtra las opciones de estado específico según la categoría principal seleccionada.
+const computedStatusOptions = computed(() => {
+  if (!mainStatusCategory.value) return [];
+  return gameStatusOptions[mainStatusCategory.value] || [];
+});
 
+/**
+ * @description Abre el modal de la biblioteca, resetea su estado y rellena los datos si es una edición.
+ * @param {boolean} isNew - True si se está añadiendo un juego, false si se está editando.
+ */
 const openLibraryModal = (isNew = false) => {
   isAddingNewLibraryEntry.value = isNew;
   libraryActionMessage.value = '';
   libraryActionError.value = false;
-  modalStep.value = 0; 
+  modalStep.value = 0; // Siempre empieza en el paso 0
   mainStatusCategory.value = null;
 
-  // Limpiar formulario antes de rellenar
+  // Limpia el formulario a sus valores por defecto
   Object.keys(libraryForm).forEach(key => {
     libraryForm[key] = (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
   });
 
+  // Si es modo edición, rellena el formulario con los datos existentes
   if (!isNew && gameDetail.value?.user_game_data) {
-    // Modo Edición: Rellenamos el formulario con los datos existentes
     const data = gameDetail.value.user_game_data;
     Object.keys(libraryForm).forEach(key => {
       if (data[key] !== undefined && data[key] !== null) {
         libraryForm[key] = data[key];
       }
     });
-
-    // Determinamos la categoría principal para preseleccionar la opción
+    // Determina la categoría principal para pre-seleccionar la opción en el asistente
     const currentStatus = data.status || '';
     if (currentStatus.includes('PLAYING')) mainStatusCategory.value = 'playing';
     else if (currentStatus.includes('COMPLETED')) mainStatusCategory.value = 'completed';
     else if (currentStatus.includes('ARCHIVED')) mainStatusCategory.value = 'archived';
     else if (currentStatus === 'WISHLIST') mainStatusCategory.value = 'wishlist';
-
   }
   showLibraryForm.value = true;
 };
@@ -1388,69 +987,40 @@ const closeLibraryModal = () => {
   showLibraryForm.value = false;
 };
 
+// Navegación del asistente
+const goToStep = (step) => {
+  modalStep.value = step;
+};
+
+/**
+ * @description Maneja el primer paso del asistente. Guarda la categoría y avanza.
+ * Si es 'wishlist', guarda directamente.
+ * @param {string} category - La categoría seleccionada.
+ */
 const setStatusCategoryAndContinue = (category) => {
-  console.log(`[PASO 0] Botón pulsado. Categoría seleccionada: '${category}'`);
   mainStatusCategory.value = category;
   if (category === 'wishlist') {
     libraryForm.status = 'WISHLIST';
-    handleSaveToLibrary(); 
+    handleSaveToLibrary(); // Acción directa para 'Lista de Deseos'
   } else {
+    // Para otras categorías, pre-selecciona el primer estado y avanza al siguiente paso
     libraryForm.status = gameStatusOptions[category][0].value;
     modalStep.value = 1;
   }
 };
 
-const computedStatusOptions = computed(() => {
-  // Si no se ha seleccionado una categoría principal, devuelve un array vacío.
-  if (!mainStatusCategory.value) return [];
-  // Si se ha seleccionado, devuelve el array de opciones correspondiente a esa categoría.
-  return gameStatusOptions[mainStatusCategory.value] || [];
-});
-
-const goToStep = (step) => {
-  modalStep.value = step;
-};
-
-
-
-
-// --- Lógica para Formulario de Biblioteca ---
-const toggleLibraryForm = (show, isNew = false) => {
-  showLibraryForm.value = show;
-  isAddingNewLibraryEntry.value = isNew;
-  libraryActionMessage.value = '';
-  libraryActionError.value = false;
-
-  if (show) {
-    if (!isNew && gameDetail.value?.user_game_data) {
-      const data = gameDetail.value.user_game_data;
-      Object.keys(libraryForm).forEach(key => {
-        libraryForm[key] = data[key] !== undefined && data[key] !== null ? data[key] : (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
-      });
-      libraryForm.has_possession = !!data.has_possession; 
-    } else {
-      Object.keys(libraryForm).forEach(key => {
-        libraryForm[key] = (typeof libraryForm[key] === 'boolean' ? false : (typeof libraryForm[key] === 'string' ? '' : null));
-      });
-      libraryForm.has_possession = false;
-    }
-  }
-};
-
+/**
+ * @description Envía los datos del formulario a la API para guardar o actualizar la entrada en la biblioteca.
+ */
 const handleSaveToLibrary = async () => {
-  // Se asegura de que existe un ID de juego para guardar.
   if (!igdbId.value) return;
-
-  // Activa los indicadores de "cargando" para la interfaz.
   isLoadingLibraryAction.value = true;
   libraryActionMessage.value = '';
   libraryActionError.value = false;
 
-  // Crea una copia de los datos del formulario para enviarla.
-  const dto = { ...libraryForm };
+  const dto = { ...libraryForm }; // Crea un DTO (Data Transfer Object) con los datos del formulario
 
-  // Limpia los campos de horas que NO fueron seleccionados en el desplegable.
-  // Esto asegura que solo se guarde el tipo de horas que el usuario introdujo.
+  // Limpia los campos de horas que NO fueron seleccionados para evitar enviar datos incorrectos
   const hourTypes = ['story_duration_hours', 'story_secondary_duration_hours', 'completionist_duration_hours'];
   hourTypes.forEach(type => {
     if (type !== hourInputType.value) {
@@ -1458,36 +1028,33 @@ const handleSaveToLibrary = async () => {
     }
   });
 
-  // Intenta guardar los datos en la base de datos a través de la API.
   try {
     const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
-    // Si tiene éxito, actualiza los datos del juego en la página y cierra el modal.
-    gameDetail.value.user_game_data = response.data;
-    closeLibraryModal();
+    gameDetail.value.user_game_data = response.data; // Actualiza los datos locales con la respuesta
+    closeLibraryModal(); // Cierra el modal si todo fue bien
   } catch (error) {
-    // Si hay un error, lo captura y muestra un mensaje al usuario.
     libraryActionError.value = true;
     libraryActionMessage.value = `Error: ${error.response?.data?.message || 'No se pudo guardar.'}`;
   } finally {
-    // Se asegura de desactivar el indicador de "cargando", tanto si ha habido éxito como si ha habido un error.
     isLoadingLibraryAction.value = false;
   }
 };
 
+/**
+ * @description Elimina el juego de la biblioteca del usuario tras confirmación.
+ */
 const handleRemoveFromLibrary = async () => {
-  if (!igdbId.value || !gameDetail.value?.user_game_data) {
-    libraryActionMessage.value = "No hay juego que eliminar."; libraryActionError.value = true; return;
-  }
+  if (!igdbId.value || !gameDetail.value?.user_game_data) return;
   if (!window.confirm("¿Seguro que quieres eliminar este juego de tu biblioteca?")) return;
 
   isLoadingLibraryAction.value = true;
-  libraryActionMessage.value = ''; libraryActionError.value = false;
+  libraryActionMessage.value = ''; 
+  libraryActionError.value = false;
   try {
     await removeGameFromUserLibrary(Number(igdbId.value));
-    if (gameDetail.value) gameDetail.value.user_game_data = null;
-    libraryActionMessage.value = 'Juego eliminado de tu biblioteca.';
+    gameDetail.value.user_game_data = null; // Elimina los datos del usuario localmente
     showLibraryForm.value = false;
-    isAddingNewLibraryEntry.value = true; // Si se elimina, el siguiente clic al botón será para "añadir"
+    isAddingNewLibraryEntry.value = true; // Prepara el botón para "Añadir" la próxima vez
   } catch (error) {
     libraryActionError.value = true;
     if (error.response) {
@@ -1496,6 +1063,195 @@ const handleRemoveFromLibrary = async () => {
   } finally {
     isLoadingLibraryAction.value = false;
   }
+};
+
+
+
+// --- 8. GESTIÓN DEL MODAL DE COMENTARIO PÚBLICO ---
+const showCommentModal = ref(false);
+const commentFormText = ref('');
+const isSavingComment = ref(false);
+const commentActionMessage = ref('');
+const commentActionError = ref(false);
+
+const openCommentModal = () => {
+  commentFormText.value = gameDetail.value?.user_game_data?.comment || '';
+  commentActionMessage.value = '';
+  commentActionError.value = false;
+  showCommentModal.value = true;
+};
+
+const handleSaveComment = async () => {
+  if (!igdbId.value) return;
+  isSavingComment.value = true;
+  commentActionMessage.value = '';
+  commentActionError.value = false;
+
+  // Se crea un DTO solo con el comentario para asegurar que solo se actualiza este campo
+  const commentDto = { comment: commentFormText.value };
+
+  try {
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), commentDto);
+    if (gameDetail.value) {
+      gameDetail.value.user_game_data = response.data;
+    }
+    showCommentModal.value = false;
+  } catch (error) {
+    commentActionError.value = true;
+    commentActionMessage.value = `Error: ${error.response?.data?.message || 'No se pudo guardar el comentario.'}`;
+    console.error("Error al guardar comentario:", error);
+  } finally {
+    isSavingComment.value = false;
+  }
+};
+
+
+// --- 9. GESTIÓN DEL MODAL DE NOTA PRIVADA ---
+const showPrivateNoteModal = ref(false);
+const privateNoteFormText = ref('');
+const isSavingPrivateNote = ref(false);
+
+const openPrivateNoteModal = () => {
+  privateNoteFormText.value = gameDetail.value?.user_game_data?.private_comment || '';
+  isSavingPrivateNote.value = false;
+  showPrivateNoteModal.value = true;
+};
+
+const handleSavePrivateNote = async () => {
+  if (!igdbId.value) return;
+  isSavingPrivateNote.value = true;
+  // DTO solo con la nota privada
+  const dto = { private_comment: privateNoteFormText.value };
+
+  try {
+    const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
+    if (gameDetail.value && gameDetail.value.user_game_data) {
+      gameDetail.value.user_game_data = response.data;
+    }
+    showPrivateNoteModal.value = false;
+  } catch (error) {
+    console.error("Error al guardar la nota privada:", error);
+  } finally {
+    isSavingPrivateNote.value = false;
+  }
+};
+
+
+// --- 10. LÓGICA "LEER MÁS" PARA COMENTARIOS ---
+const isExpanded = ref(false); // Controla si el comentario largo está expandido
+const MAX_COMMENT_LENGTH = 350; // Límite de caracteres para truncar el texto
+
+// Determina si el comentario es suficientemente largo como para necesitar el botón "Leer más"
+const commentNeedsTruncation = computed(() => {
+  const comment = gameDetail.value?.user_game_data?.private_comment;
+  return comment && comment.length > MAX_COMMENT_LENGTH;
+});
+
+// Devuelve el texto a mostrar: truncado o completo, según el estado de 'isExpanded'
+const displayComment = computed(() => {
+  const comment = gameDetail.value?.user_game_data?.private_comment;
+  if (!comment) return '';
+  if (commentNeedsTruncation.value && !isExpanded.value) {
+    return comment.substring(0, MAX_COMMENT_LENGTH) + '...';
+  }
+  return comment;
+});
+
+
+// --- 11. UTILIDADES Y FORMATEADORES DE DATOS ---
+
+// -- Imágenes y URLs --
+/**
+ * @description Construye una URL de imagen de IGDB con un tamaño específico.
+ * @param {object} imageInfo - El objeto de imagen de la API de IGDB.
+ * @param {string} size - El código de tamaño de IGDB (ej: '720p', 'cover_small').
+ * @returns {string} La URL final de la imagen o un placeholder.
+ */
+const getCoverUrl = (imageInfo, size = 'cover_small') => {
+  const isSmall = size.includes('small') || size.includes('thumb');
+  const placeholder = isSmall ? defaultRelatedCover : defaultGameCoverLarge;
+  if (imageInfo && typeof imageInfo.url === 'string' && imageInfo.url.trim() !== '') {
+    let imageUrl = imageInfo.url.replace('/t_thumb/', `/t_${size}/`); // Reemplazo simple
+    if (imageUrl.startsWith('//')) {
+      imageUrl = `https:${imageUrl}`;
+    }
+    return imageUrl;
+  }
+  return placeholder;
+};
+const onImageError = (event) => { event.target.src = defaultGameCoverLarge; };
+const onImageErrorSmall = (event) => { event.target.src = defaultRelatedCover; };
+const getYouTubeEmbedUrl = (videoId) => {
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+};
+
+// -- Fechas --
+const formatTimestampToDate = (timestamp) => {
+  if (!timestamp) return 'Fecha desconocida';
+  return new Date(Number(timestamp) * 1000).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+const formatDateSimple = (dateString) => dateString || '';
+
+// -- Enlaces a sitios web --
+const getWebsiteDisplayName = (urlString) => {
+  if (!urlString) return 'Enlace';
+  try {
+    const url = new URL(urlString);
+    let hostname = url.hostname.replace('www.', '');
+    const nameMap = { 'steampowered.com': 'Steam', 'gog.com': 'GOG', 'youtube.com': 'YouTube', 'wikipedia.org': 'Wikipedia', 'epicgames.com': 'Epic Games Store', 'twitch.tv': 'Twitch' };
+    return nameMap[hostname] || (hostname.charAt(0).toUpperCase() + hostname.slice(1));
+  } catch (e) {
+    return urlString;
+  }
+};
+const getWebsiteIconName = (urlString) => {
+  if (!urlString) return 'sin-logo.svg';
+  const domainIconMap = { 'steam': 'steam.svg', 'gog.com': 'gog.svg', 'epicgames.com': 'epicgames.svg', 'ubisoft.com': 'ubisoft.svg', 'ea.com': 'ea.svg', 'battle.net': 'battle.svg', 'rockstargames.com': 'rockstargames.svg', 'playstation.com': 'playstation.svg', 'xbox.com': 'xbox.svg', 'youtube.com': 'youtube.svg', 'twitch.tv': 'twitch.svg', 'wikipedia.org': 'wikipedia.svg', 'discord': 'discord.svg', 'facebook.com': 'facebook.svg', 'instagram.com': 'instagram.svg', 'x.com': 'x.svg', 'twitter.com': 'x.svg', 'reddit.com': 'reddit.svg', 'apple.com': 'appstore.svg', 'play.google': 'googleplay.svg' };
+  try {
+    const domain = new URL(urlString).hostname;
+    for (const key in domainIconMap) {
+      if (domain.includes(key)) return domainIconMap[key];
+    }
+    return 'sin-logo.svg';
+  } catch (e) { return 'sin-logo.svg'; }
+};
+const getIconUrl = (iconName) => new URL(`/src/assets/icons-website/${iconName}`, import.meta.url).href;
+const recognizedWebsites = computed(() => gameDetail.value?.game_info?.websites?.filter(w => getWebsiteIconName(w.url) !== 'sin-logo.svg') || []);
+const otherWebsites = computed(() => gameDetail.value?.game_info?.websites?.filter(w => getWebsiteIconName(w.url) === 'sin-logo.svg') || []);
+
+// -- Datos del juego (IGDB) --
+const formatGameType = (gameType) => {
+  const typeMap = { "0": "Juego Principal", "1": "DLC / Add-on", "2": "Expansión", "3": "Bundle", "4": "Expansión Independiente", "8": "Remake", "9": "Remaster" };
+  return typeMap[String(gameType)] || String(gameType);
+};
+const getCompanyRoles = (involvedCompany) => {
+  if (!involvedCompany) return '';
+  const roles = [];
+  if (involvedCompany.developer) roles.push('Desarrollador');
+  if (involvedCompany.publisher) roles.push('Editor');
+  if (involvedCompany.porting) roles.push('Porting');
+  if (involvedCompany.supporting) roles.push('Soporte');
+  return roles.join(', ');
+};
+const formatReleaseStatus = (gameInfo) => {
+  if (gameInfo.first_release_date * 1000 > Date.now()) return 'Próximamente';
+  const statusMap = { "-1": "Lanzado", "0": "Lanzado", "2": "Alpha", "3": "Beta", "4": "Acceso Anticipado", "5": "Offline", "6": "Cancelado", "7": "Rumoreado" };
+  return statusMap[String(gameInfo.first_release_status)] || 'No especificado';
+};
+const getReleaseStatusClass = (gameInfo) => {
+  if (gameInfo.first_release_date * 1000 > Date.now()) return 'status-upcoming';
+  const statusMap = { '-1': 'status-released', '0': 'status-released', '2': 'status-alpha', '3': 'status-beta', '4': 'status-early-access', '5': 'status-offline', '6': 'status-cancelled', '7': 'status-rumored' };
+  return statusMap[String(gameInfo.first_release_status)] || 'status-other';
+};
+
+// -- Datos del juego (Usuario) --
+const formatPersonalPlatform = (platform) => {
+  const platformMap = { 'STEAM': 'Steam', 'EPIC_GAMES': 'Epic Games Store', 'GOG_GALAXY': 'GOG Galaxy', 'XBOX': 'Xbox', 'PLAYSTATION': 'PlayStation', 'NINTENDO': 'Nintendo', 'BATTLE_NET': 'Battle.net', 'EA_APP': 'EA App', 'UBISOFT_CONNECT': 'Ubisoft Connect', 'OTHER': 'Otra' };
+  return platformMap[platform] || platform;
+};
+const formatUserGameStatus = (status) => {
+  const statusMap = { 'COMPLETED': 'Completado', 'COMPLETED_MAIN_STORY': 'Historia Principal Completada', 'COMPLETED_MAIN_AND_SIDES': 'Principal + Secundarias', 'COMPLETED_100_PERCENT': 'Completado al 100%', 'ARCHIVED': 'Archivado', 'ARCHIVED_ABANDONED': 'Archivado (Abandonado)', 'ARCHIVED_NOT_PLAYING': 'Archivado (Sin Jugar)', 'WISHLIST': 'En Lista de Deseos', 'PLAYING': 'Jugando', 'PLAYING_PAUSED': 'Jugando (En Pausa)', 'PLAYING_ENDLESS': 'Jugando (Sin Fin)' };
+  return statusMap[status] || status;
 };
 </script>
 

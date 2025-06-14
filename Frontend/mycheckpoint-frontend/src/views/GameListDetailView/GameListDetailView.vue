@@ -203,6 +203,7 @@
   </div>
 </template>
 <script setup>
+// --- 1. IMPORTACIONES Y CONFIGURACIÓN INICIAL ---
 import { ref, onMounted, watch, reactive, computed } from 'vue';
 import { useRoute, RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
@@ -218,21 +219,27 @@ import {
 } from '@/services/apiInstances';
 import defaultLibraryCover from '@/assets/img/default-game-cover.svg';
 
+// Definición de las props que el componente espera recibir del componente padre.
 const props = defineProps({
   listPublicId: {
     type: String,
     required: true,
   },
 });
+
+// Inicialización de hooks de Vue Router y el store de autenticación.
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-const gameListDetails = ref(null); // GameListResponseDTO
-const isLoading = ref(true); // Loader principal para la lista
+
+// --- 2. ESTADO DEL COMPONENTE ---
+// -- Estado principal de la vista --
+const gameListDetails = ref(null);
+const isLoading = ref(true); // Controla el loader principal de la página.
 const errorMessageApi = ref('');
 
-// Estado para modal de edición de metadatos
+// -- Estado para el modal de edición de metadatos --
 const showEditMetadataModal = ref(false);
 const isLoadingMetadataUpdate = ref(false);
 const editMetadataMessage = ref('');
@@ -243,24 +250,28 @@ const editListForm = reactive({
   is_public: false,
 });
 
-// --- NUEVO: Estado para creación/obtención de TierList ---
+// -- Estado para la creación/obtención de TierList --
 const isLoadingTierListCreation = ref(false);
 const tierListCreationError = ref('');
 
-// Estado para Modal de "Añadir Juegos"
+// -- Estado para el modal de "Añadir Juegos" --
 const showAddGamesModal = ref(false);
 const isLoadingLibraryForSelection = ref(false);
 const libraryForSelection = ref([]);
-const gamesToAdd = ref(new Set()); // Set de internal_id de UserGame
+const gamesToAdd = ref(new Set()); // Un Set es ideal para manejar selecciones únicas.
 const addGamesErrorMessage = ref('');
-const isLoadingActionOnGame = ref(false); // Loader para añadir/quitar juego individual
+const isLoadingActionOnGame = ref(false); // Loader para acciones individuales (añadir/quitar).
 
+// -- Estado para los filtros del modal "Añadir Juegos" --
 const modalFilters = reactive({
   searchQuery: '',
   status: null,
   platform: null
 });
 
+
+// --- 3. DATOS ESTÁTICOS (Opciones para Selects) ---
+// Opciones para el filtro de estado de juego en el modal.
 const gameStatusOptions = [
   { value: null, text: 'Todos los Estados' },
   { value: 'PLAYING', text: 'Jugando' },
@@ -272,6 +283,7 @@ const gameStatusOptions = [
   { value: 'ARCHIVED_ABANDONED', text: 'Abandonado' }
 ];
 
+// Opciones para el filtro de plataforma en el modal.
 const personalPlatformOptions = [
   { value: null, text: 'Todas las Plataformas' },
   { value: 'STEAM', text: 'Steam' },
@@ -283,7 +295,12 @@ const personalPlatformOptions = [
   { value: 'OTHER', text: 'Otra' }
 ];
 
-// Añadir esta computed property para el filtrado
+
+// --- 4. PROPIEDADES COMPUTADAS ---
+/**
+ * @description Filtra la biblioteca del usuario para mostrarla en el modal "Añadir Juegos".
+ * Se recalcula automáticamente cuando cambian los filtros o la biblioteca cargada.
+ */
 const filteredLibraryForModal = computed(() => {
   if (!libraryForSelection.value) return [];
 
@@ -300,6 +317,10 @@ const filteredLibraryForModal = computed(() => {
   });
 });
 
+/**
+ * @description Determina si el usuario logueado es el propietario de la lista.
+ * Es fundamental para la lógica de permisos (mostrar botones de edición, etc.).
+ */
 const isOwner = computed(() => {
   if (!authStore.isAuthenticated || !authStore.currentUser || !gameListDetails.value) {
     return false;
@@ -307,6 +328,14 @@ const isOwner = computed(() => {
   return authStore.currentUser.nombre_usuario === gameListDetails.value.owner_username;
 });
 
+
+// --- 5. OBTENCIÓN DE DATOS Y CICLO DE VIDA ---
+/**
+ * @description Carga los detalles de la lista desde la API.
+ * Primero intenta cargarla como una lista del propietario. Si falla por permisos,
+ * intenta cargarla como una lista pública.
+ * @param {string} id - El ID público de la lista.
+ */
 const fetchListDetails = async (id) => {
   if (!id) {
     errorMessageApi.value = "ID de lista no proporcionado.";
@@ -315,30 +344,24 @@ const fetchListDetails = async (id) => {
   }
   isLoading.value = true;
   errorMessageApi.value = '';
-  // gameListDetails.value = null; // No resetear aquí para que no parpadee si solo se actualizan los juegos
   try {
-    // Intenta obtenerla como si fuera del usuario actual
+    // Primer intento: obtener la lista como si fuera del usuario actual.
     const response = await getMySpecificGameListDetails(id);
     gameListDetails.value = response.data;
-    console.log("Detalles de la lista (propia) cargados:", gameListDetails.value);
   } catch (error) {
-    console.warn(`No se pudo cargar la lista ${id} como propia del usuario. Intentando como pública...`, error.response?.status);
-    // Si falla (ej. 403 No eres el dueño, 404 No es tuya), intenta obtenerla como pública
+    // Si falla (ej. 403 No eres el dueño), intenta obtenerla como pública.
     if (error.response && (error.response.status === 403 || error.response.status === 404 || error.response.status === 401)) {
       try {
         const publicResponse = await viewPublicGameListDetails(id);
         gameListDetails.value = publicResponse.data;
-        // Asegurarse de que realmente sea pública si el endpoint la devuelve
+        // Medida de seguridad: si la API devolviera una lista privada, no la mostramos.
         if (!gameListDetails.value.is_public) {
-          // Si el endpoint viewPublicGameList devuelve una lista privada (no debería según la semántica)
           errorMessageApi.value = "Esta lista no es pública.";
-          gameListDetails.value = null; // No mostrarla
-          router.push({ name: 'home' }); // O a una página de error
+          gameListDetails.value = null;
+          router.push({ name: 'home' });
           return;
         }
-        console.log("Detalles de la lista (pública de otro) cargados:", gameListDetails.value);
       } catch (publicError) {
-        console.error(`Error cargando lista pública de juegos (ID: ${id}):`, publicError);
         if (publicError.response) {
           errorMessageApi.value = `Error ${publicError.response.status}: ${publicError.response.data.message || publicError.response.data.error || 'No se pudo cargar la lista pública.'}`;
         } else {
@@ -346,8 +369,7 @@ const fetchListDetails = async (id) => {
         }
         gameListDetails.value = null;
       }
-    } else { // Otro tipo de error en la primera llamada
-      console.error(`Error cargando detalles de la lista de juegos (ID: ${id}):`, error);
+    } else { // Otro tipo de error en la primera llamada (ej. 500).
       if (error.response) {
         errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar los detalles de la lista.'}`;
       } else {
@@ -360,17 +382,21 @@ const fetchListDetails = async (id) => {
   }
 };
 
+// Hook que se ejecuta cuando el componente se monta en el DOM.
 onMounted(() => {
   fetchListDetails(props.listPublicId);
 });
 
+// Observador que se activa si cambia el ID de la lista en la URL.
+// Esto permite recargar los datos sin tener que recargar toda la página.
 watch(() => props.listPublicId, (newId, oldId) => {
   if (newId && newId !== oldId) {
     fetchListDetails(newId);
   }
 });
 
-// --- Lógica para Editar Metadatos de la Lista ---
+
+// --- 6. MÉTODOS PARA MODAL "EDITAR METADATOS" ---
 const openEditMetadataModal = () => {
   if (!gameListDetails.value) return;
   editListForm.name = gameListDetails.value.name || '';
@@ -400,15 +426,12 @@ const handleUpdateListMetadata = async () => {
     description: editListForm.description,
     is_public: editListForm.is_public,
   };
-
-  // Construir DTO solo con campos que cambiaron, si el backend soporta PATCH o PUT parcial.
-  // Si el backend espera todos los campos para PUT, enviar 'dto' directamente.
-  // La documentación de GameListControllerApi.updateMyGameList dice "Solo los campos proporcionados [...] serán actualizados".
-  const changes = {};
+  
+  // Optimización: se comprueba si ha habido cambios antes de llamar a la API.
   let hasChanges = false;
-  if (dto.name !== gameListDetails.value.name) { changes.name = dto.name; hasChanges = true; }
-  if (dto.description !== (gameListDetails.value.description || null)) { changes.description = dto.description; hasChanges = true; }
-  if (dto.is_public !== gameListDetails.value.is_public) { changes.is_public = dto.is_public; hasChanges = true; }
+  if (dto.name !== gameListDetails.value.name) { hasChanges = true; }
+  if (dto.description !== (gameListDetails.value.description || null)) { hasChanges = true; }
+  if (dto.is_public !== gameListDetails.value.is_public) { hasChanges = true; }
 
   if (!hasChanges) {
     editMetadataMessage.value = "No se han realizado cambios.";
@@ -419,12 +442,11 @@ const handleUpdateListMetadata = async () => {
 
   try {
     const response = await updateMyUserGameList(props.listPublicId, dto);
-    gameListDetails.value = response.data;
+    gameListDetails.value = response.data; // Actualiza los datos locales con la respuesta de la API.
     editMetadataMessage.value = "¡Detalles de la lista actualizados!";
     editMetadataError.value = false;
-    setTimeout(() => closeEditMetadataModal(), 1500);
+    setTimeout(() => closeEditMetadataModal(), 1500); // Cierra el modal tras 1.5s.
   } catch (error) {
-    console.error("Error actualizando metadatos de la lista:", error);
     editMetadataError.value = true;
     if (error.response?.data) {
       editMetadataMessage.value = error.response.data.errors?.join(', ') || error.response.data.message || error.response.data.error || "No se pudo actualizar la lista.";
@@ -436,40 +458,9 @@ const handleUpdateListMetadata = async () => {
   }
 };
 
-// --- NUEVO: Lógica para Crear/Obtener TierList desde GameList ---
-const handleGetOrCreateTierListFromGameList = async () => {
-  if (!gameListDetails.value?.public_id) {
-    tierListCreationError.value = "No se puede procesar la Tier List: ID de GameList no disponible.";
-    return;
-  }
-  isLoadingTierListCreation.value = true;
-  tierListCreationError.value = '';
-  try {
-    // Llama a la función del servicio API que has creado o vas a crear
-    // y que internamente llama a GET /api/v1/gamelists/{gameListPublicId}/tierlist
-    const response = await getOrCreateTierListFromGameList(props.listPublicId);
-    const tierListData = response.data; // Se asume que la respuesta es TierListResponseDTO
 
-    if (tierListData && tierListData.public_id) {
-      // Redirige a la vista de detalle de la TierList
-      // Asegúrate que 'view-public-tierlist' es el nombre correcto de tu ruta para ver TierLists
-      router.push({ name: 'view-public-tierlist', params: { tierListPublicId: tierListData.public_id } });
-    } else {
-      throw new Error("La respuesta de la API no contiene el ID público de la Tier List.");
-    }
-  } catch (error) {
-    console.error("Error creando/obteniendo Tier List desde GameList:", error);
-    if (error.response) {
-      tierListCreationError.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo procesar la Tier List.'}`;
-    } else {
-      tierListCreationError.value = "Error de red o inesperado al procesar la Tier List.";
-    }
-  } finally {
-    isLoadingTierListCreation.value = false;
-  }
-};
-
-// --- Lógica para "Añadir Juegos" ---
+// --- 7. MÉTODOS PARA MODAL "AÑADIR JUEGOS" ---
+// Carga la biblioteca del usuario, excluyendo los juegos que ya están en la lista actual.
 const fetchLibraryForSelection = async () => {
   isLoadingLibraryForSelection.value = true;
   addGamesErrorMessage.value = '';
@@ -478,7 +469,6 @@ const fetchLibraryForSelection = async () => {
     const currentGameIdsInList = new Set(gameListDetails.value?.games_in_list?.map(g => g.internal_id) || []);
     libraryForSelection.value = response.data.filter(game => !currentGameIdsInList.has(game.internal_id));
   } catch (error) {
-    console.error("Error fetching user library for selection:", error);
     addGamesErrorMessage.value = "No se pudo cargar tu biblioteca para seleccionar juegos.";
   } finally {
     isLoadingLibraryForSelection.value = false;
@@ -486,17 +476,16 @@ const fetchLibraryForSelection = async () => {
 };
 
 const openAddGamesModal = () => {
-  console.log("Botón 'Añadir Juegos' clickeado. Abriendo modal..."); // <--- AÑADE ESTE LOG
   gamesToAdd.value.clear();
-  fetchLibraryForSelection(); // Esta función carga los juegos para el modal
+  fetchLibraryForSelection();
   showAddGamesModal.value = true;
-  console.log("showAddGamesModal debería ser true ahora:", showAddGamesModal.value); // <--- AÑADE ESTE LOG TAMBIÉN
 };
 
 const closeAddGamesModal = () => {
   showAddGamesModal.value = false;
 };
 
+// Añade o quita un juego del Set de selección.
 const toggleGameForAddition = (userGameInternalId) => {
   if (gamesToAdd.value.has(userGameInternalId)) {
     gamesToAdd.value.delete(userGameInternalId);
@@ -505,6 +494,7 @@ const toggleGameForAddition = (userGameInternalId) => {
   }
 };
 
+// Envía a la API la petición de añadir todos los juegos seleccionados.
 const handleAddSelectedGamesToList = async () => {
   if (gamesToAdd.value.size === 0) {
     addGamesErrorMessage.value = "Selecciona al menos un juego para añadir.";
@@ -513,18 +503,17 @@ const handleAddSelectedGamesToList = async () => {
   isLoadingActionOnGame.value = true;
   addGamesErrorMessage.value = '';
 
+  // Se crea un array de promesas para ejecutarlas en paralelo.
   const promises = [];
   gamesToAdd.value.forEach(userGameId => {
     promises.push(addGameToMyGameList(props.listPublicId, { user_game_id: userGameId }));
   });
 
   try {
-    await Promise.all(promises);
-    // Tras añadir, recargar los detalles de la lista para ver los cambios.
-    await fetchListDetails(props.listPublicId);
+    await Promise.all(promises); // Las peticiones se envían a la vez.
+    await fetchListDetails(props.listPublicId); // Recarga los detalles para ver los cambios.
     closeAddGamesModal();
   } catch (error) {
-    console.error("Error añadiendo juegos a la lista:", error);
     if (error.response?.data) {
       addGamesErrorMessage.value = error.response.data.message || error.response.data.error || "Error al añadir algunos juegos.";
     } else {
@@ -535,18 +524,46 @@ const handleAddSelectedGamesToList = async () => {
   }
 };
 
-// --- Lógica para "Quitar Juego de la Lista" ---
+
+// --- 8. MÉTODOS DE ACCIONES (TIER LIST, QUITAR JUEGO, ELIMINAR LISTA) ---
+const handleGetOrCreateTierListFromGameList = async () => {
+  if (!gameListDetails.value?.public_id) {
+    tierListCreationError.value = "No se puede procesar la Tier List: ID de GameList no disponible.";
+    return;
+  }
+  isLoadingTierListCreation.value = true;
+  tierListCreationError.value = '';
+  try {
+    const response = await getOrCreateTierListFromGameList(props.listPublicId);
+    const tierListData = response.data;
+
+    if (tierListData && tierListData.public_id) {
+      // Redirige a la vista de detalle de la Tier List.
+      router.push({ name: 'view-public-tierlist', params: { tierListPublicId: tierListData.public_id } });
+    } else {
+      throw new Error("La respuesta de la API no contiene el ID público de la Tier List.");
+    }
+  } catch (error) {
+    if (error.response) {
+      tierListCreationError.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudo procesar la Tier List.'}`;
+    } else {
+      tierListCreationError.value = "Error de red o inesperado al procesar la Tier List.";
+    }
+  } finally {
+    isLoadingTierListCreation.value = false;
+  }
+};
+
 const handleRemoveGameFromList = async (userGameInternalId) => {
   if (!userGameInternalId) {
     errorMessageApi.value = "Error: No se pudo identificar el juego a eliminar.";
     return;
   }
-
   isLoadingActionOnGame.value = true;
   errorMessageApi.value = '';
   try {
     await removeGameFromMyGameList(props.listPublicId, userGameInternalId);
-    // Actualizar localmente o recargar
+    // Actualización optimista: se modifica el estado local para una respuesta visual instantánea.
     if (gameListDetails.value?.games_in_list) {
       gameListDetails.value.games_in_list = gameListDetails.value.games_in_list.filter(
         game => game.internal_id !== userGameInternalId
@@ -554,7 +571,6 @@ const handleRemoveGameFromList = async (userGameInternalId) => {
       gameListDetails.value.game_count = gameListDetails.value.games_in_list.length;
     }
   } catch (error) {
-    console.error("Error quitando juego de la lista:", error);
     if (error.response?.data) {
       errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo quitar el juego.";
     } else {
@@ -565,42 +581,27 @@ const handleRemoveGameFromList = async (userGameInternalId) => {
   }
 };
 
-// --- Lógica para "Eliminar Lista" ---
 const handleDeleteList = async () => {
   if (!gameListDetails.value) return;
   if (window.confirm(`¿Estás seguro de que quieres eliminar la lista "${gameListDetails.value.name}" permanentemente? Esta acción no se puede deshacer.`)) {
-    isLoading.value = true; // Usar el loader principal
+    isLoading.value = true;
     errorMessageApi.value = '';
     try {
-      console.log("Intentando eliminar lista con listPublicId:", props.listPublicId);
       if (!props.listPublicId) {
         errorMessageApi.value = "Error: ID de lista no disponible para eliminación.";
-        isLoading.value = false; // Asegúrate de resetear isLoading si retornas aquí
+        isLoading.value = false;
         return;
       }
       await deleteMyGameList(props.listPublicId);
-
-      // Redirección CORREGIDA:
-      // Opción 1: Ir al perfil del usuario (y él puede seleccionar la pestaña de listas si quiere)
+      // Redirección al perfil del usuario.
       if (authStore.currentUser?.public_id) {
         router.push({ name: 'profile', params: { publicId: authStore.currentUser.public_id } });
-        // Para que se seleccione la pestaña de "Mis Listas" al llegar, UserProfileView.vue
-        // podría necesitar una lógica para aceptar una query param o un prop que indique la pestaña activa.
-        // O, podrías tener una ruta específica para "Mis Listas" como tab del perfil.
-        // Por simplicidad ahora, redirigimos al perfil general.
       } else {
-        router.push({ name: 'home' }); // Fallback a la home si no podemos ir al perfil
+        router.push({ name: 'home' }); // Fallback.
       }
-
-      // Opcional: Si tienes una ruta específica que es la vista de "Mis Listas" (no la de edición)
-      // router.push({ name: 'nombre-de-ruta-para-ver-todas-mis-listas' });
-
     } catch (error) {
-      console.error("Error eliminando la lista:", error);
       if (error.response?.data) {
         errorMessageApi.value = error.response.data.message || error.response.data.error || "No se pudo eliminar la lista.";
-      } else if (error.message && error.message.includes("status code 404")) {
-        errorMessageApi.value = "No se pudo eliminar la lista: Recurso no encontrado (404). Verifica el endpoint o el ID.";
       }
       else {
         errorMessageApi.value = "Error de red o inesperado al eliminar la lista.";
@@ -612,7 +613,7 @@ const handleDeleteList = async () => {
 };
 
 
-// --- Funciones Helper de Formato ---
+// --- 9. FUNCIONES HELPER DE FORMATO ---
 const getCoverUrl = (coverData, targetSize = 't_cover_small') => {
   const currentPlaceholder = defaultLibraryCover;
   if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') {
@@ -628,35 +629,22 @@ const getCoverUrl = (coverData, targetSize = 't_cover_small') => {
   return currentPlaceholder;
 };
 
-// Devuelve la URL del logo de la plataforma
+// Construye la URL del logo de la plataforma dinámicamente.
 const getPlatformLogoUrl = (platform) => {
   if (!platform) return '';
-  // Asumimos que los nombres de archivo coinciden con los valores del backend en minúsculas
   const platformName = platform.toLowerCase();
   try {
-    // Esta sintaxis es necesaria para que Vite encuentre las imágenes dinámicamente
     return new URL(`/src/assets/logo-personal-platform/${platformName}.svg`, import.meta.url).href;
   } catch (error) {
-    console.warn(`No se encontró el logo para la plataforma: ${platformName}.svg`);
-    // Devuelve un logo genérico si no se encuentra el específico
     return new URL(`/src/assets/logo-personal-platform/other.svg`, import.meta.url).href;
   }
 };
 
-
 const onListGameCoverError = (event) => { event.target.src = defaultLibraryCover; };
-const formatUserGameStatus = (status) => {
-  if (!status) return 'N/A';
-  const map = { 'PLAYING': 'Jugando', 'COMPLETED_MAIN_STORY': 'Completado', 'COMPLETED': 'Completado 100%', 'WISHLIST': 'En Deseos', /* ...otros */ };
-  return map[status] || status;
-};
+
 const formatReadableDate = (isoDateString) => {
   if (!isoDateString) return '';
   return new Date(isoDateString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-};
-const truncateText = (text, maxLength) => {
-  if (!text) return '';
-  return text.length <= maxLength ? text : text.substring(0, maxLength) + '...';
 };
 </script>
 <style src="./GameListDetailView.css" scoped></style>

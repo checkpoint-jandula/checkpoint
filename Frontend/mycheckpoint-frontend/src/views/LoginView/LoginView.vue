@@ -29,71 +29,99 @@
 </template>
 
 <script setup>
+// --- 1. IMPORTACIONES ---
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore.js';
-import { loginUser } from '@/services/apiInstances.js'; // Importamos la función para login
+import { loginUser } from '@/services/apiInstances.js';
 
+
+// --- 2. CONFIGURACIÓN PRINCIPAL ---
+// Se inicializa el router para poder redirigir al usuario tras el login.
+const router = useRouter();
+// Se obtiene una instancia del store de autenticación para manejar el estado del usuario.
+const authStore = useAuthStore();
+
+
+// --- 3. ESTADO DEL COMPONENTE ---
+// Refs para vincular los campos del formulario de login.
 const identifier = ref('');
 const password = ref('');
+
+// Refs para gestionar el estado de la UI durante el proceso de login.
 const errorMessage = ref('');
 const isLoading = ref(false);
 
-const authStore = useAuthStore();
-const router = useRouter();
 
+// --- 4. LÓGICA PRINCIPAL ---
+/**
+ * @description Maneja el envío del formulario de inicio de sesión.
+ * Llama a la API, gestiona las respuestas de éxito y error, y actualiza el estado de la aplicación.
+ */
 const handleLogin = async () => {
+  // Resetea el estado antes de cada intento.
   errorMessage.value = '';
   isLoading.value = true;
 
+  // Se crea el objeto DTO (Data Transfer Object) con los datos del formulario
+  // para enviarlo a la API, tal como lo espera el backend.
   /** @type {import('@/api-client/index.js').LoginRequestDTO} */
-  const loginData = { //
-    identificador: identifier.value, //
-    contraseña: password.value, //
+  const loginData = { 
+    identificador: identifier.value, 
+    contraseña: password.value, 
   };
 
+  // El bloque try/catch/finally asegura un manejo robusto de la llamada asíncrona.
   try {
-    const response = await loginUser(loginData); //
-    // El backend devuelve JwtResponseDTO en caso de éxito (200)
-    // La acción loginSuccess en authStore se encargará de guardar el token
-    // y luego llamar a fetchCurrentUser para obtener los datos del usuario.
-    await authStore.loginSuccess(response.data); //
+    // --- Bloque de Éxito ---
+    const response = await loginUser(loginData);
+    
+    // Se delega al store la lógica de guardar el token y obtener los datos del usuario.
+    // Esto mantiene el componente limpio y la lógica de autenticación centralizada.
+    await authStore.loginSuccess(response.data);
 
-    // Redirigir a la página de inicio o dashboard
+    // Si todo va bien, se redirige al usuario a la página principal.
     router.push('/');
 
   } catch (error) {
-    if (error.response) {
-      console.error("Datos del error:", error.response.data);
-      console.error("Estado del error:", error.response.status);
+    // --- Bloque de Manejo de Errores ---
+    // Este bloque se ejecuta si la promesa de 'loginUser' es rechazada.
 
+    // Caso 1: El servidor respondió con un código de error (4xx, 5xx).
+    if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
-
-      if (status === 400) { //
-        // Errores de validación de campos del DTO
-        if (data && data.errors && data.errors.length > 0) { //
+      
+      // Error de validación de campos.
+      if (status === 400) {
+        if (data && data.errors && data.errors.length > 0) {
             errorMessage.value = data.errors.join(', ');
         } else {
             errorMessage.value = 'Los datos proporcionados son incorrectos.';
         }
-      } else if (status === 401) { //
-        // Credenciales incorrectas o fallo general de autenticación
-         errorMessage.value = data.message || 'Credenciales incorrectas. Por favor, inténtalo de nuevo.'; //
-      } else if (status === 403) { //
-        // Cuenta deshabilitada (ej. email no verificado) o eliminada
-        errorMessage.value = data.error || 'Acceso prohibido. Tu cuenta podría estar deshabilitada o necesitar verificación.'; //
+      // Error de credenciales incorrectas.
+      } else if (status === 401) {
+         errorMessage.value = data.message || 'Credenciales incorrectas. Por favor, inténtalo de nuevo.';
+      // Error de acceso prohibido (cuenta no verificada, baneada, etc.).
+      } else if (status === 403) {
+        errorMessage.value = data.error || 'Acceso prohibido. Tu cuenta podría estar deshabilitada o necesitar verificación.';
+      // Cualquier otro error del servidor.
       } else {
         errorMessage.value = `Error del servidor (${status}): ${data.error || 'Ocurrió un problema al intentar iniciar sesión.'}`;
       }
+    
+    // Caso 2: La petición se hizo pero no se recibió respuesta (error de red).
     } else if (error.request) {
-      console.error("Error de red:", error.request);
       errorMessage.value = 'No se pudo conectar con el servidor. Por favor, inténtalo más tarde.';
+    
+    // Caso 3: Error en la configuración de la petición antes de enviarla.
     } else {
-      console.error('Error de configuración:', error.message);
       errorMessage.value = `Error: ${error.message}`;
     }
   } finally {
+    // --- Bloque Final ---
+    // Este bloque se ejecuta siempre, tanto si hubo éxito como si hubo error.
+    // Es el lugar perfecto para desactivar el estado de carga y rehabilitar el botón.
     isLoading.value = false;
   }
 };

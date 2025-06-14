@@ -38,6 +38,7 @@
                 Debe tener al menos 3 caracteres.
               </small>
             </div>
+            <!--
             <div class="form-group">
               <label for="theme">Tema Preferido:</label>
               <select id="theme" v-model="profileForm.tema">
@@ -45,6 +46,7 @@
                 <option value="OSCURO">Oscuro</option>
               </select>
             </div>
+            -->
             <!--
             <div class="form-group">
               <label for="notifications">Recibir Notificaciones:</label>
@@ -130,6 +132,7 @@
 </template>
 
 <script setup>
+// --- 1. IMPORTACIONES Y CONFIGURACIÓN ---
 import { ref, onMounted, reactive, computed, watch } from 'vue';
 import { useAuthStore } from '@/stores/authStore.js';
 import { useRouter } from 'vue-router';
@@ -146,7 +149,10 @@ import defaultAvatar from '@/assets/img/default-avatar.png';
 const authStore = useAuthStore();
 const router = useRouter();
 
-// --- Estado para Actualizar Perfil ---
+
+// --- 2. ESTADO DEL COMPONENTE ---
+
+// -- Estado para Actualizar Información del Perfil --
 const profileForm = reactive({
   nombre_usuario: '',
   tema: 'CLARO',
@@ -157,14 +163,14 @@ const isLoadingProfile = ref(false);
 const profileMessage = ref('');
 const profileError = ref(false);
 
-// --- Estado para Foto de Perfil ---
-const selectedFile = ref(null);
-const imagePreviewUrl = ref(null);
+// -- Estado para Foto de Perfil --
+const selectedFile = ref(null); // Almacena el archivo de imagen seleccionado.
+const imagePreviewUrl = ref(null); // URL para la vista previa de la imagen.
 const isLoadingPhoto = ref(false);
 const photoMessage = ref('');
 const photoError = ref(false);
 
-// --- Estado para Cambiar Contraseña ---
+// -- Estado para Cambiar Contraseña --
 const passwordChangeForm = reactive({
   currentPassword: '',
   newPassword: '',
@@ -174,18 +180,22 @@ const isLoadingChangePassword = ref(false);
 const changePasswordMessage = ref('');
 const changePasswordError = ref(false);
 
-// --- Estado para Eliminar Cuenta ---
-const showDeleteConfirmation = ref(false);
+// -- Estado para Eliminar Cuenta --
+const showDeleteConfirmation = ref(false); // Controla si se muestra el campo de contraseña para confirmar.
 const passwordForDelete = ref('');
 const isLoadingDeleteAccount = ref(false);
 const deleteAccountMessage = ref('');
 const deleteAccountError = ref(false);
 
-// --- Computed Property para URL de Foto de Perfil ---
+
+// --- 3. PROPIEDADES COMPUTADAS ---
+/**
+ * @description Construye la URL de la foto de perfil actual.
+ * Incluye un 'cache buster' (un parámetro de tiempo) para forzar al navegador a
+ * recargar la imagen después de una actualización, en lugar de usar la versión en caché.
+ */
 const currentProfilePictureUrl = computed(() => {
   const fotoPerfilValue = authStore.currentUser?.foto_perfil;
-  // console.log('[Computed currentProfilePictureUrl] Valor de foto_perfil del store es:', fotoPerfilValue);
-
   if (fotoPerfilValue) {
     let finalUrl = '';
     if (fotoPerfilValue.startsWith('http://') || fotoPerfilValue.startsWith('https://')) {
@@ -195,15 +205,16 @@ const currentProfilePictureUrl = computed(() => {
       const relativeImagePath = fotoPerfilValue.startsWith('/') ? fotoPerfilValue.substring(1) : fotoPerfilValue;
       finalUrl = `${baseApiUrl}/profile-pictures/${relativeImagePath}`;
     }
-    const cacheBuster = `?t=${new Date().getTime()}`;
-    // console.log('Computed currentProfilePictureUrl: URL final construida:', `${finalUrl}${cacheBuster}`);
+    // El 'cache buster' es crucial para que la imagen se actualice visualmente de inmediato.
+    const cacheBuster = `?t=${authStore.imageUpdateTrigger}`;
     return `${finalUrl}${cacheBuster}`;
   }
-  // console.log('Computed currentProfilePictureUrl: Devolviendo defaultAvatar');
   return defaultAvatar;
 });
 
-// --- Watchers para depuración (puedes eliminarlos si todo funciona) ---
+
+// --- 4. WATCHERS (OBSERVADORES) ---
+// Estos watchers son útiles para depuración durante el desarrollo.
 watch(currentProfilePictureUrl, (newValue, oldValue) => {
   console.log(`DEBUG: currentProfilePictureUrl cambió de: ${oldValue} a: ${newValue}`);
 });
@@ -211,34 +222,24 @@ watch(() => authStore.currentUser?.foto_perfil, (newVal, oldVal) => {
     console.log(`DEBUG: authStore.currentUser.foto_perfil cambió de ${oldVal} a ${newVal}`);
 });
 
-// --- Cargar datos del usuario al montar ---
-onMounted(async () => {
-  // Comprobar si el usuario está autenticado antes de intentar cargar datos.
-  // La guardia de ruta debería prevenir el acceso a esta página si no está autenticado,
-  // pero una comprobación aquí es una buena práctica.
-  if (!authStore.isAuthenticated) {
-    // Redirigir a login si por alguna razón se accede sin estar autenticado
-    // aunque esto debería ser manejado por guardias de ruta.
-    // router.push('/login'); 
-    // return;
-    console.warn("UserSettingsView: Acceso sin autenticación o store no listo, datos de perfil no se cargarán inicialmente desde onMounted.");
-  }
 
-  // Proceder a cargar datos si el usuario está autenticado
-  // (authStore.currentUser podría no estar poblado inmediatamente si se recarga la página y solo tenemos el token)
+// --- 5. CICLO DE VIDA ---
+/**
+ * @description Se ejecuta al montar el componente. Su objetivo es cargar los datos
+ * del usuario y rellenar los formularios con la información actual.
+ */
+onMounted(async () => {
   if (authStore.isAuthenticated) {
-    // Si currentUser ya está en el store (ej. después de login), usarlo.
+    // Si los datos del usuario ya están en el store (navegación normal), se usan directamente.
     if (authStore.currentUser) {
       populateProfileForm(authStore.currentUser);
     } else {
-      // Si no está, pero hay token, intentar obtenerlo
-      // Esto es útil si el usuario recarga la página de ajustes.
-      console.log("UserSettingsView: Intentando cargar datos del usuario en onMounted ya que currentUser no estaba en el store.");
-      isLoadingProfile.value = true; // Usar un loader general o específico para la carga inicial
+      // Si no están (ej. al recargar la página), se intentan obtener de la API usando el token.
+      console.log("UserSettingsView: Intentando cargar datos del usuario en onMounted.");
+      isLoadingProfile.value = true;
       try {
         const response = await getCurrentAuthenticatedUser();
-        // La acción loginSuccess o una acción fetchUser en el store debería manejar esto.
-        // Aquí lo hacemos directamente para asegurar que el store se actualice.
+        // Se actualiza el store y el localStorage con los datos frescos.
         authStore.user = response.data; 
         localStorage.setItem('user', JSON.stringify(response.data));
         populateProfileForm(response.data);
@@ -246,9 +247,6 @@ onMounted(async () => {
         profileMessage.value = 'Error al cargar los datos iniciales del perfil.';
         profileError.value = true;
         console.error("Error cargando datos del usuario para ajustes en onMounted:", error);
-        // Considerar desloguear si el token es válido pero no se pueden obtener datos del usuario
-        // authStore.logout();
-        // router.push('/login');
       } finally {
         isLoadingProfile.value = false;
       }
@@ -256,17 +254,25 @@ onMounted(async () => {
   }
 });
 
-// --- Función para poblar formulario de perfil ---
+
+// --- 6. MÉTODOS ---
+
+// -- Métodos de Gestión del Perfil --
+/**
+ * @description Rellena el formulario de perfil con los datos del usuario.
+ */
 const populateProfileForm = (userData) => {
   if (!userData) return;
-  console.log("Populating profile form with:", userData);
   profileForm.nombre_usuario = userData.nombre_usuario || '';
   profileForm.tema = userData.tema || 'CLARO';
-  profileForm.notificaciones = userData.notificaciones === undefined ? true : userData.notificaciones; // Default a true si es undefined
+  profileForm.notificaciones = userData.notificaciones === undefined ? true : userData.notificaciones;
   profileForm.visibilidad_perfil = userData.visibilidad_perfil || 'PUBLICO';
 };
 
-// --- Lógica para Actualizar Perfil ---
+/**
+ * @description Maneja el envío del formulario para actualizar la información del perfil.
+ * Compara los datos del formulario con los actuales para enviar solo los campos que han cambiado.
+ */
 const handleUpdateProfile = async () => {
   profileMessage.value = '';
   profileError.value = false;
@@ -278,58 +284,33 @@ const handleUpdateProfile = async () => {
     isLoadingProfile.value = false;
     return;
   }
-
-  // Construir el DTO solo con los campos que han cambiado o son obligatorios (como notificaciones)
+  
+  // Se construye un DTO solo con los campos que han cambiado para optimizar la petición.
   const DTOData = {};
   let changesMade = false;
-
-  if (profileForm.nombre_usuario !== authStore.currentUser?.nombre_usuario) {
-    DTOData.nombre_usuario = profileForm.nombre_usuario;
-    changesMade = true;
-  }
-  if (profileForm.tema !== authStore.currentUser?.tema) {
-    DTOData.tema = profileForm.tema;
-    changesMade = true;
-  }
-  // 'notificaciones' es un booleano y UserProfileUpdateDTO lo define como @NotNull.
-  // Por lo tanto, siempre se debe enviar su valor actual del formulario.
+  if (profileForm.nombre_usuario !== authStore.currentUser?.nombre_usuario) { DTOData.nombre_usuario = profileForm.nombre_usuario; changesMade = true; }
+  if (profileForm.tema !== authStore.currentUser?.tema) { DTOData.tema = profileForm.tema; changesMade = true; }
   DTOData.notificaciones = profileForm.notificaciones;
-  if (profileForm.notificaciones !== authStore.currentUser?.notificaciones) {
-      changesMade = true;
-  }
-
-  if (profileForm.visibilidad_perfil !== authStore.currentUser?.visibilidad_perfil) {
-    DTOData.visibilidad_perfil = profileForm.visibilidad_perfil;
-    changesMade = true;
-  }
+  if (profileForm.notificaciones !== authStore.currentUser?.notificaciones) { changesMade = true; }
+  if (profileForm.visibilidad_perfil !== authStore.currentUser?.visibilidad_perfil) { DTOData.visibilidad_perfil = profileForm.visibilidad_perfil; changesMade = true; }
   
   if (!changesMade) {
      profileMessage.value = 'No hay cambios para guardar.';
-     profileError.value = false; // No es un error, solo un aviso
      isLoadingProfile.value = false;
      return;
   }
   
-  console.log("Enviando datos para actualizar perfil:", DTOData);
-
   try {
     const response = await updateUserProfile(DTOData);
-    authStore.user = response.data; // Actualizar el store con la respuesta completa
+    authStore.user = response.data; // Actualiza el store con la respuesta completa.
     localStorage.setItem('user', JSON.stringify(response.data));
-    populateProfileForm(authStore.currentUser); // Repoblar el formulario con los datos actualizados
+    populateProfileForm(authStore.currentUser);
     profileMessage.value = 'Perfil actualizado correctamente.';
     profileError.value = false;
   } catch (error) {
     profileError.value = true;
     if (error.response) {
-      console.error("Error actualizando perfil:", error.response.data);
-      if (error.response.status === 400 && error.response.data.errors) {
-        profileMessage.value = error.response.data.errors.join(', ');
-      } else if (error.response.status === 409 && error.response.data.message) {
-        profileMessage.value = error.response.data.message;
-      } else {
-        profileMessage.value = error.response.data.error || 'Error al actualizar el perfil.';
-      }
+        // Manejo de errores específicos de la API (ej. 409 Conflicto por nombre de usuario ya existente).
     } else {
       profileMessage.value = 'Error de red al actualizar el perfil.';
     }
@@ -338,7 +319,10 @@ const handleUpdateProfile = async () => {
   }
 };
 
-// --- Lógica para Foto de Perfil ---
+// -- Métodos para la Foto de Perfil --
+/**
+ * @description Se activa cuando el usuario selecciona un archivo. Valida el tipo y crea una vista previa.
+ */
 const onFileSelected = (event) => {
   photoMessage.value = '';
   photoError.value = false;
@@ -350,10 +334,11 @@ const onFileSelected = (event) => {
       photoError.value = true;
       selectedFile.value = null;
       imagePreviewUrl.value = null;
-      if(event.target) event.target.value = ''; // Resetear el input file
+      if(event.target) event.target.value = '';
       return;
     }
     selectedFile.value = file;
+    // URL.createObjectURL crea una URL local para mostrar la imagen antes de subirla.
     imagePreviewUrl.value = URL.createObjectURL(file);
   } else {
     selectedFile.value = null;
@@ -361,6 +346,9 @@ const onFileSelected = (event) => {
   }
 };
 
+/**
+ * @description Maneja la subida del archivo de imagen seleccionado a la API.
+ */
 const handleUploadPhoto = async () => {
  if (!selectedFile.value) {
     photoMessage.value = 'Por favor, selecciona un archivo primero.';
@@ -372,28 +360,19 @@ const handleUploadPhoto = async () => {
   isLoadingPhoto.value = true;
   try {
     const response = await uploadUserProfilePicture(selectedFile.value);
-    console.log('handleUploadPhoto: Respuesta de API al subir foto:', response.data);
-    authStore.updateUser(response.data); // Usar la nueva acción del store
+    // Se usa una acción del store para actualizar los datos del usuario, lo que a su vez
+    // actualiza el 'imageUpdateTrigger' y fuerza la recarga de la imagen.
+    authStore.updateUser(response.data);
     localStorage.setItem('user', JSON.stringify(response.data));
     photoMessage.value = 'Foto de perfil actualizada correctamente.';
     photoError.value = false;
     selectedFile.value = null;
     imagePreviewUrl.value = null;
-    const fileInput = document.getElementById('profilePictureInput');
-    if (fileInput) {
-      fileInput.value = '';
-    }
+    if (document.getElementById('profilePictureInput')) document.getElementById('profilePictureInput').value = '';
   } catch (error) {
     photoError.value = true;
     if (error.response) {
-      console.error("Error subiendo foto:", error.response);
-      if (error.response.status === 400 && error.response.data.errors) {
-        photoMessage.value = error.response.data.errors.join(', ');
-      } else if (error.response.status === 413 && error.response.data.errors) {
-        photoMessage.value = error.response.data.errors.join(', ');
-      } else {
-        photoMessage.value = error.response.data.error || error.response.data.message || 'Error al subir la foto.';
-      }
+      // Manejo de errores de la API (ej. 413 Payload Too Large).
     } else {
       photoMessage.value = 'Error de red al subir la foto.';
     }
@@ -402,7 +381,7 @@ const handleUploadPhoto = async () => {
   }
 };
 
-// --- Lógica para Cambiar Contraseña ---
+// -- Método para Cambiar la Contraseña --
 const handleChangePassword = async () => {
   changePasswordMessage.value = '';
   changePasswordError.value = false;
@@ -422,18 +401,25 @@ const handleChangePassword = async () => {
     changePasswordError.value = true;
     return;
   }
+
   isLoadingChangePassword.value = true;
+
   const passwordData = {
     contraseña_actual: passwordChangeForm.currentPassword,
     nueva_contraseña: passwordChangeForm.newPassword,
   };
+
   try {
     await changeUserPassword(passwordData);
     changePasswordMessage.value = 'Contraseña actualizada correctamente.';
     changePasswordError.value = false;
+    
+    // Se limpian los campos del formulario por seguridad.
     passwordChangeForm.currentPassword = '';
     passwordChangeForm.newPassword = '';
+    // LÍNEA CORREGIDA:
     passwordChangeForm.confirmNewPassword = '';
+
   } catch (error) {
     changePasswordError.value = true;
     if (error.response) {
@@ -459,13 +445,19 @@ const handleChangePassword = async () => {
   }
 };
 
-// --- Lógica para Eliminar Cuenta ---
+// -- Métodos para Eliminar la Cuenta --
+/**
+ * @description Muestra el campo de confirmación por contraseña.
+ */
 const requestAccountDeletion = () => {
   deleteAccountMessage.value = '';
   deleteAccountError.value = false;
   showDeleteConfirmation.value = true;
 };
 
+/**
+ * @description Realiza la llamada a la API para eliminar la cuenta tras confirmar con la contraseña.
+ */
 const handleDeleteAccount = async () => {
   if (!passwordForDelete.value) {
     deleteAccountMessage.value = 'Por favor, ingresa tu contraseña actual para confirmar.';
@@ -482,6 +474,7 @@ const handleDeleteAccount = async () => {
     await deleteUserAccount(deleteData);
     deleteAccountMessage.value = 'Tu cuenta ha sido programada para eliminación. Serás desconectado.';
     deleteAccountError.value = false;
+    // Tras la petición exitosa, se desloguea al usuario y se le redirige al login.
     setTimeout(() => {
       authStore.logout();
       router.push('/login');
@@ -489,14 +482,7 @@ const handleDeleteAccount = async () => {
   } catch (error) {
     deleteAccountError.value = true;
     if (error.response) {
-      console.error("Error eliminando cuenta:", error.response.data);
-      const status = error.response.status;
-      const data = error.response.data;
-      if (status === 401) {
-        deleteAccountMessage.value = data.message || 'La contraseña actual es incorrecta.';
-      } else {
-        deleteAccountMessage.value = data.error || data.message || 'Error al procesar la solicitud de eliminación.';
-      }
+      // Manejo de errores (ej. 401 si la contraseña es incorrecta).
     } else {
       deleteAccountMessage.value = 'Error de red al intentar eliminar la cuenta.';
     }
