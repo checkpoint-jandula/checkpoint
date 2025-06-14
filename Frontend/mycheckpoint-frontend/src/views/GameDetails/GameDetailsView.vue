@@ -30,12 +30,6 @@
               <strong>Lanzamiento:</strong>
               <span>{{ formatTimestampToDate(gameDetail.game_info.first_release_date) }}</span>
             </div>
-            <div
-              v-if="gameDetail.game_info.first_release_status !== null && gameDetail.game_info.first_release_status !== undefined"
-              class="meta-item">
-              <strong>Estado:</strong>
-              <span>{{ formatReleaseStatus(gameDetail.game_info.first_release_status) }}</span>
-            </div>
             <div v-if="gameDetail.game_info.total_rating" class="meta-item">
               <strong>Puntuación IGDB:</strong>
               <span>{{ Math.round(gameDetail.game_info.total_rating) }}/100</span>
