@@ -1,3 +1,4 @@
+/* --- Layout Principal --- */
 .search-users-view {
     max-width: 900px;
     margin: 1rem auto;
@@ -10,6 +11,7 @@ h1 {
     color: var(--color-heading);
 }
 
+/* --- Formulario de Búsqueda --- */
 .search-form {
     display: flex;
     gap: 0.5rem;
@@ -41,18 +43,12 @@ h1 {
     background-color: var(--color-azul-hover);
 }
 
-/*
-.search-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-*/
-
 .input-hint {
     font-size: 0.8rem;
     color: var(--color-text-light-2);
 }
 
+/* --- Mensajes de Estado --- */
 .loading-message, .error-message, .no-results-message {
     text-align: center;
     padding: 2rem;
@@ -67,6 +63,7 @@ h1 {
     background-color: #ffbaba;
 }
 
+/* --- Rejilla de Resultados y Tarjetas --- */
 .results-grid {
     margin-top: 2rem;
     display: grid;

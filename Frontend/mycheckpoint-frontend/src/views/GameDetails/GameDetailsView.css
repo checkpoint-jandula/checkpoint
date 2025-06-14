@@ -4,15 +4,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    /* Mantenemos la separación que tenía el h2 */
 }
 
-/* Hacemos que el h2 dentro de este contenedor no tenga margen inferior */
 .section-header-with-action h2 {
     margin-bottom: 0;
 }
 
-/* Un estilo opcional para hacer el botón de editar un poco más pequeño */
 .action-button.small-button {
     padding: 0.4em 0.8em;
     font-size: 0.85rem;
@@ -20,8 +17,6 @@
 
 
 /* Modal de Juego Detalles */
-/* --- Estilos para el nuevo modal por pasos (Wizard) --- */
-
 .wizard-step-0 h4 {
     text-align: center;
     color: var(--color-text-light-2);
@@ -61,7 +56,6 @@
 }
 
 .library-form-modal .modal-footer {
-    /* Aseguramos que los botones de atrás/continuar estén en los extremos */
     justify-content: space-between;
 }
 
@@ -248,7 +242,6 @@
 
 .carousel-item {
     flex: 0 0 400px;
-    /* Mantenemos el ancho fijo */
     width: 400px;
     padding: 0 10px;
     box-sizing: border-box;
@@ -479,7 +472,6 @@
     margin-bottom: 0.75rem;
 }
 
-/* MEJORA GLOBAL: Evitamos que cualquier párrafo con texto largo rompa el layout */
 .section-block p {
     line-height: 1.7;
     color: var(--color-text);
@@ -645,7 +637,6 @@
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    /* Espacio entre los botones */
     margin-top: 1rem;
     margin-bottom: 1rem;
 }
@@ -784,11 +775,9 @@
     border-bottom: 1px solid var(--color-border);
 }
 
-/* MEJORA GLOBAL: Evitamos que las tarjetas de juegos relacionados crezcan sin control */
 .related-games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 200px));
-    /* Límite de 200px */
     gap: 1rem;
 }
 
@@ -844,8 +833,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* La clase .website-link ya está definida arriba en la sección de iconos */
-
 /* Comentarios públicos */
 .public-comments-section .comments-list {
     list-style: none;
@@ -869,8 +856,6 @@
     color: var(--color-text-light-2);
     margin-left: 0.5em;
 }
-
-/* La regla para .comment-text hereda de .section-block p */
 
 /* Modal del Formulario */
 .modal-overlay {
@@ -1062,18 +1047,14 @@
 
 /* Estilos para Dispositivos Móviles */
 @media (max-width: 767px) {
-
-    /* 1. LAYOUT: Las columnas principales se apilan verticalmente. */
     .game-content-wrapper {
         flex-direction: column;
     }
 
-    /* 2. ESPACIADO: El contenedor global pierde su padding. El espacio se gestionará de forma individual. */
     .game-details-view {
         padding: 1rem 0;
     }
 
-    /* 3. CABECERA: La cabecera del juego se centra y adapta. */
     .game-main-header {
         width: 100%;
         flex-direction: column;
@@ -1085,27 +1066,22 @@
         justify-content: center;
     }
 
-    /* 4. COLUMNA DERECHA: Ocupa todo el ancho. */
     .column-right {
         width: 100%;
     }
 
-    /* 5. BLOQUES DE CONTENIDO: La regla clave. Cada bloque gestiona su propio espacio y desbordamiento. */
     .column-right .section-block {
         margin-left: 1rem;
         margin-right: 1rem;
         overflow-x: hidden;
-        /* Corta cualquier contenido hijo que se desborde */
     }
 
-    /* 6. PESTAÑAS: La navegación se transforma en una lista vertical. */
     .tabs-navigation {
         flex-direction: column;
         align-items: stretch;
         gap: 0.2rem;
         border-bottom: none;
         margin: 0 1rem 1rem 1rem;
-        /* Damos margen para separarlo del resto */
     }
 
     .tabs-navigation button {
@@ -1121,7 +1097,6 @@
         background-color: var(--color-background);
     }
 
-    /* 7. CARRUSEL: Los items del carrusel ocupan el 100% del ancho. */
     .carousel-container {
         padding: 0;
     }
@@ -1143,13 +1118,10 @@
         right: 10px;
     }
 
-    /* 8. VÍDEOS: Limitamos el ancho para que no se peguen a los bordes. (Opcional) */
     .videos-grid .video-item {
         max-width: 100%;
-        /* Permitimos que ocupe el ancho del section-block */
     }
 
-    /* 9. VÍDEOS: Corregimos el solapamiento en móvil */
     .videos-grid {
         display: flex;
         flex-direction: column;

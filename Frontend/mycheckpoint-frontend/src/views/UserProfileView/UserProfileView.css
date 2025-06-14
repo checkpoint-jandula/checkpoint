@@ -1,5 +1,4 @@
-/* --- ESTILOS GENERALES DE LA VISTA DE PERFIL --- */
-
+/* --- Estilos Generales de la Vista --- */
 .user-profile-view {
   max-width: 1100px;
   margin: 1rem auto;
@@ -28,7 +27,6 @@
   font-style: italic;
 }
 
-/* Estilo base para todos los bloques de sección principales */
 .section-block {
   padding: 1.5rem;
   margin-bottom: 1.5rem; 
@@ -36,16 +34,15 @@
   border-radius: 8px;
   border: 1px solid var(--color-border);
 }
+
 .tab-pane > .section-block:last-child {
   margin-bottom: 0;
 }
 
-
-/* --- CABECERA DEL PERFIL --- */
-
+/* --- Cabecera del Perfil --- */
 .profile-header {
   display: flex;
-  flex-direction: column; /* Apilado en móvil por defecto */
+  flex-direction: column;
   align-items: center;
   gap: 1.5rem;
   text-align: center;
@@ -73,35 +70,35 @@
   margin-bottom: 1rem;
 }
 
-/* --- ACCIONES DE AMISTAD --- */
-
+/* --- Acciones de Amistad y Perfil --- */
 .friend-actions {
   margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centrado en móvil por defecto */
+  align-items: center;
   gap: 0.5rem;
 }
+
 .friend-actions-received, .friend-actions-friends {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
-  justify-content: center; /* Asegura centrado si hay wrap */
+  justify-content: center;
 }
+
 .friend-actions-friends span {
   font-weight: bold;
   color: var(--color-heading);
 }
+
 .action-feedback {
   font-size: 0.9em;
   margin: 0.5rem 0 0 0;
 }
+
 .action-feedback.success { color: #2e7d32; }
 .action-feedback.error { color: #d8000c; }
-
-
-/* --- ACCIONES DEL PERFIL PROPIO (Botón de Ajustes) --- */
 
 .profile-actions {
   margin-top: 1rem;
@@ -110,17 +107,16 @@
   justify-content: center;
 }
 
-
-/* --- PESTAÑAS DE NAVEGACIÓN --- */
-
+/* --- Pestañas de Navegación --- */
 .tabs-navigation.profile-tabs {
   display: flex;
   gap: 0.2rem;
   margin-top: 2rem; 
-  margin-bottom: 0; /* Lo gestiona el tab-content */
+  margin-bottom: 0;
   border-bottom: 1px solid var(--color-border-hover);
   justify-content: flex-start;
 }
+
 .tabs-navigation.profile-tabs button {
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
@@ -133,46 +129,51 @@
   transition: color 0.2s, border-color 0.2s, background-color 0.2s;
   border-top-left-radius: 5px; 
   border-top-right-radius: 5px;
-  white-space: nowrap; /* Evita que el texto del botón se parta */
+  white-space: nowrap;
 }
+
 .tabs-navigation.profile-tabs button:hover {
   color: var(--color-text);
   background-color: var(--color-background-mute);
 }
+
 .tabs-navigation.profile-tabs button.active-tab {
   color: var(--color-heading);
   border-bottom-color: var(--color-azul);
   background-color: var(--color-background-soft);
 }
-.tabs-navigation.profile-tabs button.active-tab.tab-library { /* Clase específica para la pestaña Biblioteca */
+
+.tabs-navigation.profile-tabs button.active-tab.tab-library {
   color: var(--color-azul);
   font-weight: bold;
 }
+
 .tab-content {
   padding-top: 1.5rem;
 }
 
-
-/* --- BIBLIOTECA PÚBLICA (GRID Y TARJETAS) --- */
-
+/* --- Biblioteca Pública: Grid y Tarjetas --- */
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1.5rem;
 }
+
 .library-game-card {
   background-color: var(--color-background-soft);
-  border-radius: 8px; /* Coherencia con .section-block */
+  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   overflow: hidden;
   display: flex; 
   flex-direction: column;
 }
+
 .library-game-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
+
 .library-game-card a {
   text-decoration: none;
   color: inherit;
@@ -180,6 +181,7 @@
   flex-direction: column;
   height: 100%; 
 }
+
 .library-game-cover {
   width: 100%;
   aspect-ratio: 3 / 4; 
@@ -187,12 +189,14 @@
   background-color: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
 }
+
 .card-content {
   padding: 0.8rem 1rem; 
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
+
 .game-title {
   font-size: 1rem; 
   font-weight: 600; 
@@ -206,25 +210,27 @@
   -webkit-box-orient: vertical;
   min-height: calc(1.3em * 2); 
 }
+
 .user-game-info {
   font-size: 0.8rem; 
-  margin-top: auto; /* Empuja la información hacia abajo */
+  margin-top: auto;
   padding-top: 0.5rem;
   color: var(--color-text-light-2);
 }
+
 .info-item {
   margin-bottom: 0.25rem; 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .info-item strong {
   color: var(--color-text); 
   margin-right: 0.3em;
 }
 
-/* --- BOTONES DE ACCIÓN (Reutilizados) --- */
-
+/* --- Botones de Acción --- */
 .action-button {
   padding: 0.7em 1.4em;
   font-size: 0.9rem;
@@ -237,38 +243,47 @@
   font-weight: 500;
   white-space: nowrap;
 }
+
 .action-button.small {
   padding: 0.4em 0.8em;
   font-size: 0.85rem;
 }
+
 .action-button.primary {
   background-color: hsla(160, 100%, 37%, 1);
   color: white;
   border-color: hsla(160, 100%, 37%, 1);
 }
+
 .action-button.primary:hover:not(:disabled) { background-color: hsla(160, 100%, 30%, 1); }
+
 .action-button.secondary {
   background-color: var(--color-background-mute);
   color: var(--color-text);
   border-color: var(--color-border-hover);
 }
+
 .action-button.secondary:hover:not(:disabled) { 
   background-color: var(--color-border);
   border-color: var(--color-border-hover);
 }
+
 .action-button.danger {
     background-color: #c94040;
     color: white;
     border-color: #c94040;
 }
+
 .action-button.danger:hover:not(:disabled) {
     background-color: #a53232;
 }
-.action-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
+.action-button:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+}
 
-/* --- LAYOUT PARA ESCRITORIO (min-width) --- */
-
+/* --- Estilos para Escritorio (Responsive) --- */
 @media (min-width: 768px) {
   .profile-header {
     flex-direction: row;
@@ -294,17 +309,12 @@
   }
 }
 
-/* ------------------------------------------- */
-/* --- ESTILOS PARA DISPOSITIVOS MÓVILES --- */
-/* ------------------------------------------- */
+/* --- Estilos para Móviles (Responsive) --- */
 @media (max-width: 767px) {
-  
-  /* 1. Reducimos el padding general de la vista */
   .user-profile-view {
     padding: 0.5rem;
   }
   
-  /* 2. Hacemos la cabecera un poco más compacta */
   .profile-header {
       gap: 1rem;
   }
@@ -316,26 +326,21 @@
     height: 100px;
   }
 
-  /* 3. La barra de pestañas se hace deslizable horizontalmente */
   .tabs-navigation.profile-tabs {
     overflow-x: auto;
-    /* Ocultamos la barra de scroll nativa para un look más limpio */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   .tabs-navigation.profile-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and Opera */
+    display: none;
   }
 
-  /* 4. La rejilla de la biblioteca se ajusta para ser más compacta */
   .library-grid {
-    /* Permitimos columnas más estrechas para que quepan 2 en muchos móviles */
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    
     gap: 1rem;
   }
 
   .library-game-card .card-content {
   display: none;
-}
+  }
 }

@@ -1,7 +1,8 @@
-/* ... (estilos existentes) ... */
+/* --- Layout General y Secciones --- */
 h2 {
     margin-bottom: 1rem;
 }
+
 .user-settings-container {
     max-width: 1000px;
     margin: 2rem auto;
@@ -24,6 +25,24 @@ h2 {
     padding-bottom: 0.5rem;
 }
 
+/* --- Layout en Columnas --- */
+.settings-layout-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.settings-column-left {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.settings-column-right {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* --- Elementos de Formulario --- */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -47,10 +66,10 @@ h2 {
     background-color: var(--color-background);
     color: var(--color-text);
 }
+
 .form-group input[type="file"] {
     padding: 0.3rem;
 }
-
 
 .form-group input[type="checkbox"] {
     margin-right: 0.5rem;
@@ -63,13 +82,14 @@ h2 {
     display: block;
     margin-top: 0.25rem;
 }
-.error-message-inline { /* Para el mensaje de contraseñas no coinciden */
+
+.error-message-inline {
     color: red;
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
 
-
+/* --- Botones --- */
 button {
     padding: 0.75rem 1.5rem;
     background-color: hsla(160, 100%, 37%, 1);
@@ -91,6 +111,7 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* --- Mensajes de Estado --- */
 .error-message,
 .success-message {
     margin-top: 1rem;
@@ -111,12 +132,14 @@ button:disabled {
     color: green;
 }
 
+/* --- Sección de Foto de Perfil --- */
 .profile-picture-area {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
 }
+
 .profile-picture-current,
 .profile-picture-preview {
     max-width: 150px;
@@ -125,14 +148,18 @@ button:disabled {
     object-fit: cover;
     border: 2px solid var(--color-border);
 }
+
 .image-preview-container {
     text-align: center;
 }
+
 .upload-button {
     width: auto;
 }
+
+/* --- Sección de Eliminar Cuenta --- */
 .delete-account-section {
-    border-color: red; /* Destacar la zona peligrosa */
+    border-color: red;
     background-color: rgba(255,0,0,0.05);
 }
 
@@ -162,7 +189,7 @@ button:disabled {
 }
 
 .delete-button-confirm:disabled {
-    background-color: #ff8080; /* Un rojo más claro para deshabilitado */
+    background-color: #ff8080;
     cursor: not-allowed;
 }
 
@@ -173,35 +200,14 @@ button:disabled {
     border-radius: 4px;
 }
 
-/* --- NUEVO LAYOUT DE DOS COLUMNAS PARA AJUSTES --- */
-
-.settings-layout-wrapper {
-  display: flex;
-  gap: 1.5rem; /* Espacio entre columnas */
-  align-items: flex-start; /* Alinea las columnas en la parte superior */
-}
-
-.settings-column-left {
-  width: 300px; /* Ancho fijo para la columna de la foto */
-  flex-shrink: 0; /* Evita que la columna se encoja */
-}
-
-.settings-column-right {
-  flex-grow: 1; /* Permite que la columna de formularios ocupe el resto del espacio */
-  min-width: 0; /* Evita problemas de desbordamiento en flexbox */
-}
-
-
-/* --- ADAPTACIÓN A MÓVILES --- */
+/* --- Estilos para Móviles (Responsive) --- */
 @media (max-width: 768px) {
   .settings-layout-wrapper {
-    /* Las columnas se apilan una encima de la otra */
     flex-direction: column;
   }
 
   .settings-column-left,
   .settings-column-right {
-    /* Ambas columnas ocupan todo el ancho disponible */
     width: 100%;
   }
 }

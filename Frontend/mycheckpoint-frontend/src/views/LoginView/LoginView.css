@@ -1,3 +1,4 @@
+/* --- Contenedor Principal --- */
 .login-container {
     max-width: 400px;
     margin: 2rem auto;
@@ -7,6 +8,7 @@
     background-color: var(--color-background-soft);
 }
 
+/* --- Elementos de Formulario --- */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -32,6 +34,7 @@
     outline: none;
 }
 
+/* --- Botones --- */
 button {
     width: 100%;
     padding: 0.75rem;
@@ -53,6 +56,7 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* --- Mensajes y Alertas --- */
 .error-message {
     margin-top: 1rem;
     padding: 1rem;
@@ -63,16 +67,19 @@ button:disabled {
     text-align: center;
 }
 
+/* --- Enlaces Adicionales --- */
 .extra-links {
     margin-top: 1.5rem;
     text-align: center;
 }
+
 .extra-links a {
     color: hsla(160, 100%, 37%, 1);
     text-decoration: none;
     display: block;
     margin-top: 0.5rem;
 }
+
 .extra-links a:hover {
     text-decoration: underline;
 }

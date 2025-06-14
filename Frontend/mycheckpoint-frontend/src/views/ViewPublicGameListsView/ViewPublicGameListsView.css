@@ -1,3 +1,4 @@
+/* --- Layout Principal y Mensajes --- */
 .view-public-gamelists {
   max-width: 1200px;
   margin: 1rem auto;
@@ -16,16 +17,19 @@
   font-size: 1.2rem;
   color: var(--color-text);
 }
+
 .error-message {
   color: #d8000c;
   background-color: #ffbaba;
   border: 1px solid #d8000c;
   border-radius: 4px;
 }
+
 .empty-message {
   color: var(--color-text-light-2);
 }
 
+/* --- Rejilla y Tarjetas --- */
 .gamelists-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -34,10 +38,9 @@
 
 .gamelist-card {
   background-color: var(--color-background-soft);
-
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  display: flex; /* Para que el enlace ocupe toda la tarjeta */
+  display: flex;
   flex-direction: column;
 }
 
@@ -46,13 +49,14 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
+/* --- Contenido de la Tarjeta --- */
 .gamelist-card .card-link {
   text-decoration: none;
   color: inherit;
   padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Asegura que el enlace ocupe todo el espacio */
+  height: 100%;
 }
 
 .card-header {
@@ -67,8 +71,7 @@
   font-weight: 600;
   color: var(--color-heading);
   margin: 0;
-
-   overflow-wrap: break-word;
+  overflow-wrap: break-word;
   word-break: break-word;
 }
 
@@ -85,17 +88,17 @@
   color: var(--color-text);
   line-height: 1.5;
   margin-bottom: 1rem;
-  flex-grow: 1; /* Para que ocupe el espacio y empuje el footer hacia abajo */
+  flex-grow: 1;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* Limitar a 3 líneas */
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: calc(1.5em * 3); /* Reserva espacio para 3 líneas */
-
-   overflow-wrap: break-word;
+  min-height: calc(1.5em * 3);
+  overflow-wrap: break-word;
   word-break: break-word;
 }
+
 .list-description-empty {
   font-size: 0.9rem;
   color: var(--color-text-light-2);
@@ -104,9 +107,8 @@
   flex-grow: 1;
 }
 
-
 .list-footer {
-  margin-top: auto; /* Empuja el footer hacia abajo */
+  margin-top: auto;
   display: flex;
   justify-content: space-between;
   align-items: center;

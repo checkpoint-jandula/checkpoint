@@ -1,13 +1,10 @@
-.my-library-view {
-  /* No es necesario el padding si los bloques internos ya lo gestionan */
-}
 .my-library-view > h1 {
   text-align: center;
   margin-bottom: 2rem;
   color: var(--color-heading);
 }
 
-/* --- INICIO: Panel de Filtros Rediseñado --- */
+/* --- Panel de Filtros --- */
 .filters-panel {
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -44,7 +41,6 @@
   font-weight: 500;
 }
 
-/* Nuevo estilo para los desplegables */
 .filter-group select {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -81,25 +77,27 @@
   gap: 0.5rem;
   transition: color 0.2s, background-color 0.2s;
 }
+
 .button-reset:hover {
   background-color: rgba(220, 30, 30, 0.583);
   color: black;
 }
-/* --- FIN: Panel de Filtros Rediseñado --- */
 
-/* --- Mensajes de estado --- */
+/* --- Mensajes de Estado --- */
 .loading-message, .error-message, .empty-library-message {
   text-align: center;
   padding: 2rem;
   font-size: 1.2rem;
   color: var(--color-text);
 }
+
 .error-message {
   color: #d8000c;
   background-color: #ffbaba;
   border: 1px solid #d8000c;
   border-radius: 4px;
 }
+
 .empty-library-message {
   color: var(--color-text-light-2);
   padding: 2rem;
@@ -108,23 +106,21 @@
   text-align: center;
 }
 
-/* --- Rejilla y Tarjetas --- */
+/* --- Rejilla y Tarjetas de Juegos --- */
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1.5rem;
 }
 
-/* CORRECCIÓN: Restauramos el border-radius original y nos aseguramos de que el overflow:hidden recorte a los hijos */
 .library-game-card {
   background-color: var(--color-background-soft);
-  border-radius: 10px; /* <--- Radio de borde original restaurado */
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  overflow: hidden; /* <--- Clave para recortar las esquinas de la imagen */
+  overflow: hidden;
   display: flex; 
   flex-direction: column;
-
 }
 
 .library-game-card:hover {
@@ -132,34 +128,28 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* CORRECCIÓN: Anulamos el hover azul global para los enlaces dentro de la tarjeta */
 .library-game-card a:hover {
   background-color: transparent;
 }
 
-/* 1. Hacemos que el nuevo enlace ocupe todo el espacio de la tarjeta */
 .library-game-card .card-full-link {
   text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
   height: 100%;
-  
-  /* ¡CLAVE! Anulamos el padding de 8px de tu regla global 'a' */
   padding: 0 !important; 
 }
 
-/* 2. Anulamos el efecto de fondo azul de tu regla global 'a:hover' */
 .library-game-card .card-full-link:hover {
   background-color: transparent !important;
 }
 
-/* 3. Hacemos que el efecto hover del título funcione a través del enlace padre */
 .library-game-card .card-full-link:hover .game-title {
-  color: var(--color-azul); /* Cambia al color azul definido */
+  color: var(--color-azul);
 }
 
-/* Contenedor de la carátula para posicionar elementos superpuestos */
+/* --- Contenido de la Tarjeta --- */
 .card-cover-container {
   position: relative;
   line-height: 0;
@@ -171,11 +161,8 @@
   object-fit: cover;
   background-color: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
-
-  
 }
 
-/* Estilos para la puntuación superpuesta */
 .score-badge-on-cover {
   position: absolute;
   top: 10px;
@@ -194,16 +181,16 @@
   border: 2px solid white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
+
 .score-badge-on-cover.score-high { background-color: #2e7d32; }
 .score-badge-on-cover.score-medium { background-color: #ff8f00; }
 .score-badge-on-cover.score-low { background-color: #c62828; }
 .score-badge-on-cover.score-none { background-color: #546e7a; }
 
-/* Estilos para el logo de la plataforma superpuesto */
 .platform-logo-on-cover {
   position: absolute;
   bottom: 8px;
-  right: 8px; /* Cambiado a la derecha para no chocar con el scrollbar si lo hubiera */
+  right: 8px;
   z-index: 2;
   width: 48px;
   height: 48px;
@@ -212,6 +199,7 @@
   justify-content: center;
   box-sizing: border-box;
 }
+
 .platform-logo-on-cover img {
   width: 100%;
   height: 100%;
@@ -219,14 +207,15 @@
   filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.9));
 }
 
-/* Contenido de la tarjeta simplificado */
 .card-content {
-  padding: 1rem 1.2rem; /* Un poco más de padding */
+  padding: 1rem 1.2rem;
 }
+
 .card-content a {
   text-decoration: none;
   color: inherit;
 }
+
 .game-title {
   font-size: 1rem; 
   font-weight: 600; 
@@ -236,34 +225,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.2s ease-in-out; /* Transición para el hover del título */
+  transition: color 0.2s ease-in-out;
 }
-/* El hover del título ahora funcionará al anular el del enlace */
+
 .game-title:hover {
   color: var(--color-azul);
 }
 
-/* --- ESTILOS PARA DISPOSITIVOS MÓVILES --- */
+/* --- Estilos para Móviles --- */
 @media (max-width: 767px) {
-  /* En móvil, la rejilla de filtros se convierte en una sola columna */
-.filter-controls {
-  grid-template-columns: 1fr;
-}
-.filter-actions {
-  /* El botón de limpiar ocupa todo el ancho y se centra */
-  justify-self: center;
-}
+  .filter-controls {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-actions {
+    justify-self: center;
+  }
+
   .filter-group {
     flex-basis: 100%;
   }
 
-  /* Rejilla de dos columnas */
   .library-grid {
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
 
-  /* Ocultamos el título en móvil, dejando solo la carátula con sus overlays */
   .library-game-card .card-content {
     display: none;
   }

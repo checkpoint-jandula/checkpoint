@@ -1,10 +1,12 @@
-/* Tus estilos existentes para .search-results-view, .loading-message, etc. */
+/* --- Layout Principal y Mensajes --- */
 .search-results-view {
     padding: 1rem;
 }
+
 .search-results-view h1 {
     margin-bottom: 1.5rem;
 }
+
 .loading-message, .error-message, .no-results-message {
     text-align: center;
     padding: 1rem;
@@ -16,18 +18,19 @@
     background-color: rgba(255,0,0,0.1);
     border: 1px solid red;
 }
+
 .no-results-message {
     color: var(--color-text);
 }
 
+/* --- Rejilla de Resultados --- */
 .results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.5rem;
 }
 
-
-/* Efecto hover para las tarjetas */
+/* --- Tarjeta de Juego --- */
 .game-card {
     background-color: var(--color-background-soft);
     position: relative;
@@ -35,14 +38,14 @@
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.2s ease-in-out;
-    z-index: 1; /* Añadimos z-index para el contenido */
+    z-index: 1;
 }
 
 .game-card:hover {
     transform: translateY(-5px);
 }
 
-/* Animación del borde */
+/* --- Animación de Borde de Tarjeta --- */
 @property --gradient-angle {
     syntax: "<angle>";
     initial-value: 0deg;
@@ -57,7 +60,7 @@
 .game-card::before {
     content: "";
     position: absolute;
-    inset: -2px; /* Simplifica top, right, bottom, left */
+    inset: -2px;
     z-index: -1;
     background: conic-gradient(
         from var(--gradient-angle),
@@ -75,45 +78,46 @@
     opacity: 1;
 }
 
+/* --- Contenido de la Tarjeta --- */
 .game-card a {
     text-decoration: none;
     color: inherit;
-    display: flex; /* Cambiado a flex para mejor control interno */
-    flex-direction: column; /* Apilar imagen e info verticalmente */
-    height: 100%; /* Para que el enlace ocupe toda la tarjeta */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
-
 
 .game-cover {
     width: 100%;
-    aspect-ratio: 3 / 4; /* Proporción común para portadas, ajusta si es necesario */
+    aspect-ratio: 3 / 4;
     object-fit: cover;
     display: block;
-    background-color: var(--color-background-mute); /* */
+    background-color: var(--color-background-mute);
 }
 
 .game-info {
     padding: 1rem;
-    flex-grow: 1; /* Para que ocupe el espacio restante si las tarjetas tienen alturas variables */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
 
 .game-name {
-    font-size: 1rem; /* Ajustado */
+    font-size: 1rem;
     font-weight: bold;
-    margin: 0 0 0.3rem 0; /* Ajustado */
-    color: var(--color-heading); /* */
+    margin: 0 0 0.3rem 0;
+    color: var(--color-heading);
 }
 
 .game-year {
-    font-size: 0.8rem; /* Ajustado */
-    color: var(--color-heading); /* */
-    margin-bottom: 0.4rem; /* Ajustado */
+    font-size: 0.8rem;
+    color: var(--color-heading);
+    margin-bottom: 0.4rem;
 }
+
 .game-summary {
-    font-size: 0.8rem; /* Ajustado */
-    color: var(--color-text); /* */
-    line-height: 1.3; /* Ajustado */
-    flex-grow: 1; /* Para que el resumen ocupe espacio si es corto */
+    font-size: 0.8rem;
+    color: var(--color-text);
+    line-height: 1.3;
+    flex-grow: 1;
 }
