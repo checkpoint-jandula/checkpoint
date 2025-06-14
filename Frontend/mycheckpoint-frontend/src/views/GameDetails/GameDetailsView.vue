@@ -691,7 +691,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed, watch } from 'vue';
+import { ref, onMounted,onUnmounted, reactive, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router'; // RouterLink importado aquí
 import { fetchGameDetailsByIgdbId, addOrUpdateGameInUserLibrary, removeGameFromUserLibrary } from '@/services/apiInstances.js';
 import { useAuthStore } from '@/stores/authStore.js';
@@ -849,14 +849,13 @@ const prevScreenshot = () => {
   }
 };
 
-// AÑADE ESTA PROPIEDAD COMPUTADA para calcular el estilo 'transform' dinámicamente
-// Esto es lo que crea el efecto de "desplazamiento"
-const carouselViewportRef = ref(null); // Asegúrate de que esta línea ya existe
 
-// El ancho de cada item del carrusel, que ahora calcularemos dinámicamente
+const carouselViewportRef = ref(null); 
+
+
 const carouselItemWidth = ref(0);
 
-// Esta función se encargará de actualizar el ancho
+// Esta función se encarga de actualizar el ancho
 const updateCarouselItemWidth = () => {
   if (carouselViewportRef.value) {
     // El ancho del item es el ancho total del contenedor visible
@@ -871,17 +870,14 @@ onMounted(() => {
   window.addEventListener('resize', updateCarouselItemWidth);
 });
 
-// Cuando el componente se destruye, limpiamos el observador para evitar fugas de memoria
-import { onUnmounted } from 'vue'; // Asegúrate de tener este import arriba
 onUnmounted(() => {
   window.removeEventListener('resize', updateCarouselItemWidth);
 });
 
-// La propiedad computada ahora usa el ancho dinámico
 const carouselSliderStyle = computed(() => {
   if (!gameDetail.value?.game_info?.screenshots?.length) return {};
   
-  const itemWidth = 400; // Ancho fijo de cada item (debe coincidir con el CSS)
+  const itemWidth = 400; // Ancho fijo de cada item 
   const position = screenshotCarouselIndex.value * itemWidth;
   
   return {
@@ -914,16 +910,14 @@ const openLightbox = (gallery, index) => {
   document.body.style.overflow = 'hidden';
 };
 
-// MODIFICA tu función 'closeLightbox' para que reinicie el nuevo estado.
 const closeLightbox = () => {
   showLightbox.value = false;
   document.body.style.overflow = '';
-  // Reseteamos la galería para liberar memoria
   currentGallery.value = [];
   currentIndex.value = 0;
 };
 
-// AÑADE estas dos nuevas funciones para la navegación.
+
 const nextImage = () => {
   if (currentGallery.value.length > 0) {
     // Si es la última imagen, vuelve a la primera (efecto carrusel)
@@ -949,7 +943,6 @@ const errorMessage = ref('');
 const igdbId = ref(null);
 
 const loadGameDetails = async (id) => {
-  // ... (lógica existente)
 
   if (!id) {
     errorMessage.value = "ID del juego no proporcionado.";
@@ -979,7 +972,7 @@ const loadGameDetails = async (id) => {
   }
 };
 
-const activeTab = ref('details'); // Pestaña activa por defecto: 'details', 'multimedia', 'community'
+const activeTab = ref('details'); 
 
 const setActiveTab = (tabName) => {
   activeTab.value = tabName;
@@ -1000,7 +993,6 @@ watch(() => route.params.igdbId, (newId) => {
 });
 
 const getCoverUrl = (imageInfo, size = 'cover_small') => {
-  // Decide qué placeholder usar basado en el tamaño solicitado.
   const isSmall = size.includes('small') || size.includes('thumb');
   const placeholder = isSmall ? defaultRelatedCover : defaultGameCoverLarge;
 
@@ -1107,11 +1099,11 @@ const getWebsiteIconName = (urlString) => {
     'youtube.com': 'youtube.svg',
     'twitch.tv': 'twitch.svg',
     'wikipedia.org': 'wikipedia.svg',
-    'discord': 'discord.svg', // Cubre .com y .gg
+    'discord': 'discord.svg', 
     'facebook.com': 'facebook.svg',
     'instagram.com': 'instagram.svg',
     'x.com': 'x.svg',
-    'twitter.com': 'x.svg', // Twitter ahora es X
+    'twitter.com': 'x.svg', 
     'reddit.com': 'reddit.svg',
     'apple.com': 'appstore.svg',
     'play.google': 'googleplay.svg'
@@ -1135,8 +1127,6 @@ const getWebsiteIconName = (urlString) => {
 };
 
 const getIconUrl = (iconName) => {
-  // Esta sintaxis es la forma correcta en Vite para manejar assets dinámicos.
-  // Le dice a Vite que incluya estos archivos en la compilación final.
   return new URL(`/src/assets/icons-website/${iconName}`, import.meta.url).href;
 };
 
@@ -1147,16 +1137,6 @@ const otherWebsites = computed(() => {
   return websites.filter(website => getWebsiteIconName(website.url) === 'sin-logo.svg');
 });
 
-
-
-
-
-
-
-
-
-
-
 const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   if (!videoId) return '';
   let url = `https://www.youtube.com/embed/${videoId}`;
@@ -1165,14 +1145,6 @@ const getYouTubeEmbedUrl = (videoId, autoplay = false) => {
   }
   return url;
 };
-
-
-
-const getYouTubeThumbnailUrl = (videoId, quality = 'hqdefault') => {
-  if (!videoId) return defaultRelatedCover; // Placeholder
-  return `https://i.ytimg.com/vi/${videoId}/${quality}.jpg`;
-};
-
 
 const formatGameType = (gameType) => {
   if (!gameType) return 'No especificado';
@@ -1210,7 +1182,6 @@ const formatGameType = (gameType) => {
     "PACK": "Pack",
     "14": "Actualización", // UPDATE
     "UPDATE": "Actualización",
-    // Añade más mapeos según sea necesario, o si tu API devuelve otros strings
   };
 
   return typeMap[String(gameType).toUpperCase()] || String(gameType); // Devuelve el mapeado o el valor original si no se encuentra
@@ -1229,7 +1200,6 @@ const getCompanyRoles = (involvedCompany) => {
 
 // Recibe el objeto game_info completo
 const formatReleaseStatus = (gameInfo) => {
-  // --- LÓGICA NUEVA ---
   // 1. Comprobar si la fecha de lanzamiento es futura
   if (gameInfo.first_release_date) {
     // La fecha de la API viene en segundos, Date.now() está en milisegundos
@@ -1238,53 +1208,46 @@ const formatReleaseStatus = (gameInfo) => {
       return 'Próximamente'; // Forzamos el estado si la fecha es futura
     }
   }
-  // --- FIN LÓGICA NUEVA ---
 
-  // 2. Si la fecha no es futura, usamos la lógica de estado que ya tenías
+  // 2. Si la fecha no es futura, usamos esta lógica de estado.
   const statusCode = gameInfo.first_release_status;
   if (statusCode === null || statusCode === undefined) return 'No especificado';
 
   const statusMap = {
-    "-1": "Lanzado", // Asignamos "Desconocido" al -1 del backend
+    "-1": "Lanzado", 
     "0": "Lanzado",
     "2": "Alpha",
     "3": "Beta",
     "4": "Acceso Anticipado",
     "5": "Offline",
     "6": "Cancelado",
-    "7": "Rumoreado",
-    "9": "Próximamente" // Mantenemos este por si el backend lo envía
+    "7": "Rumoreado"
   };
 
   return statusMap[String(statusCode)] || `Estado Desconocido (${statusCode})`;
 };
 
-// Recibe el objeto game_info completo
+// Para obtener la clase CSS del estado de lanzamiento
 const getReleaseStatusClass = (gameInfo) => {
-  // --- LÓGICA NUEVA ---
-  // 1. Comprobar si la fecha de lanzamiento es futura
   if (gameInfo.first_release_date) {
     const releaseTimestampMs = Number(gameInfo.first_release_date) * 1000;
     if (releaseTimestampMs > Date.now()) {
-      return 'status-upcoming'; // Forzamos la clase CSS
+      return 'status-upcoming'; 
     }
   }
-  // --- FIN LÓGICA NUEVA ---
 
-  // 2. Si la fecha no es futura, usamos la lógica de estado que ya tenías
   const statusCode = gameInfo.first_release_status;
   if (statusCode === null || statusCode === undefined) return '';
 
   const statusMap = {
-    '-1': 'status-released',        // Clase para "Desconocido"
+    '-1': 'status-released',        
     '0': 'status-released',
     '2': 'status-alpha',
     '3': 'status-beta',
     '4': 'status-early-access',
     '5': 'status-offline',
     '6': 'status-cancelled',
-    '7': 'status-rumored',
-    '9': 'status-upcoming'      // Mantenemos este por si el backend lo envía
+    '7': 'status-rumored'      
   };
 
   return statusMap[String(statusCode)] || 'status-other';
@@ -1292,7 +1255,7 @@ const getReleaseStatusClass = (gameInfo) => {
 
 const formatPersonalPlatform = (platform) => {
   if (!platform) return 'No especificada';
-  // Mapeo basado en UserPersonalPlatform enum (del backend) o UserGameDataDTO.md / UserGameResponseDTO.md
+  // Mapeo basado en UserPersonalPlatform enum (del backend) 
   const platformMap = {
     'STEAM': 'Steam',
     'EPIC_GAMES': 'Epic Games Store',
@@ -1304,14 +1267,14 @@ const formatPersonalPlatform = (platform) => {
     'EA_APP': 'EA App',
     'UBISOFT_CONNECT': 'Ubisoft Connect',
     'OTHER': 'Otra'
-    // Añade más si tu enum tiene más valores
   };
   return platformMap[platform] || platform;
 };
 
+// Función para formatear el estado del juego del usuario
 const formatUserGameStatus = (status) => {
   if (!status) return 'No especificado';
-  // Mapeo basado en UserGameStatus enum (del backend) o UserGameDataDTO.md / UserGameResponseDTO.md
+  // Mapeo basado en UserGameStatus enum (del backend) 
   const statusMap = {
     'COMPLETED': 'Completado',
     'COMPLETED_MAIN_STORY': 'Historia Principal Completada',
@@ -1324,17 +1287,12 @@ const formatUserGameStatus = (status) => {
     'PLAYING': 'Jugando',
     'PLAYING_PAUSED': 'Jugando (En Pausa)',
     'PLAYING_ENDLESS': 'Jugando (Sin Fin / Rejugable)'
-    // Añade más si tu enum tiene más valores
   };
   return statusMap[status] || status; // Devuelve el mapeado o el valor original
 };
 
-// Función para formatear fechas YYYY-MM-DD a un formato más legible si es necesario,
-// o simplemente para mostrarlas si ya están bien.
 const formatDateSimple = (dateString) => {
   if (!dateString) return '';
-  // Asumiendo que dateString es YYYY-MM-DD
-  // Si necesitas un formato diferente, puedes usar new Date(dateString).toLocaleDateString(...)
   return dateString;
 };
 
