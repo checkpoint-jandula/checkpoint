@@ -141,7 +141,6 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error cargando datos para filtros:", error);
   }
-  // Event listener para cerrar el menú de usuario si se hace clic fuera
   document.addEventListener('click', closeUserMenuOnClickOutside);
 });
 

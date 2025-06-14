@@ -723,14 +723,12 @@ const handleSavePrivateNote = async () => {
 
   try {
     const response = await addOrUpdateGameInUserLibrary(Number(igdbId.value), dto);
-    // Actualizamos los datos locales con la respuesta de la API
     if (gameDetail.value && gameDetail.value.user_game_data) {
       gameDetail.value.user_game_data = response.data;
     }
     showPrivateNoteModal.value = false; // Cerramos el modal
   } catch (error) {
     console.error("Error al guardar la nota privada:", error);
-    // Aquí podrías añadir un mensaje de error para el usuario si quieres
   } finally {
     isSavingPrivateNote.value = false;
   }
