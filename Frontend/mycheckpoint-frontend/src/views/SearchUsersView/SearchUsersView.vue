@@ -47,7 +47,7 @@ import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { searchUsers } from '@/services/apiInstances'; // <-- Necesitarás añadir esta función
 import { BASE_PATH } from '@/api-client/base';
-import defaultAvatar from '@/assets/img/default-avatar.png';
+import defaultAvatar from '@/assets/img/default-avatar.svg';
 
 const searchQuery = ref('');
 const searchResults = ref([]);

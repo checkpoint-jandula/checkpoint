@@ -103,7 +103,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { findAllGenres, findAllThemes, findAllGameModes } from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
-import defaultAvatar from '@/assets/img/default-avatar.png';
+import defaultAvatar from '@/assets/img/default-avatar.svg';
 
 const authStore = useAuthStore();
 const router = useRouter();

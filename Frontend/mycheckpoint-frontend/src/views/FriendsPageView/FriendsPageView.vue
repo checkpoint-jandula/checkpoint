@@ -85,7 +85,7 @@ import {
   removeFriend 
 } from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
-import defaultAvatar from '@/assets/img/default-avatar.png';
+import defaultAvatar from '@/assets/img/default-avatar.svg';
 
 const activeTab = ref('friends');
 const friends = ref([]);

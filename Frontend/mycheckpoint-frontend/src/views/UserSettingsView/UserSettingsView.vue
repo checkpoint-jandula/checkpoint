@@ -141,7 +141,7 @@ import {
   deleteUserAccount
 } from '@/services/apiInstances.js';
 import { BASE_PATH } from '@/api-client/base.js';
-import defaultAvatar from '@/assets/img/default-avatar.png';
+import defaultAvatar from '@/assets/img/default-avatar.svg';
 
 const authStore = useAuthStore();
 const router = useRouter();

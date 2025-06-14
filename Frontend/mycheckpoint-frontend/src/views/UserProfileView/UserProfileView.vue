@@ -135,7 +135,7 @@ import {
   removeFriend
 } from '@/services/apiInstances';
 import { BASE_PATH } from '@/api-client/base';
-import defaultAvatar from '@/assets/img/default-avatar.png';
+import defaultAvatar from '@/assets/img/default-avatar.svg';
 import defaultLibraryCover from '@/assets/img/default-game-cover.svg';
 
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue';

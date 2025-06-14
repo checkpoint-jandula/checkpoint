@@ -64,7 +64,7 @@ h2 {
     border-radius: 4px;
     box-sizing: border-box;
     background-color: var(--color-background);
-    color: var(--color-text);
+    color: white;
 }
 
 .form-group input[type="file"] {
@@ -78,13 +78,13 @@ h2 {
 
 .input-hint {
     font-size: 0.8rem;
-    color: var(--vt-c-text-light-2);
+    color: white;
     display: block;
     margin-top: 0.25rem;
 }
 
 .error-message-inline {
-    color: red;
+    color: white;
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
