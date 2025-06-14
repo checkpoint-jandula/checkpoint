@@ -1,4 +1,6 @@
 <template>
+  <LoadingScreen v-if="isLoading" />
+
   <div id="app-container">
     <Header />
     <main class="main-content">
@@ -9,9 +11,21 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 import Header from '@/components/Header/Header.vue';
 import Footer from '@/components/Footer/Footer.vue';
+import LoadingScreen from './components/LoadingScreen/LoadingScreen.vue';
+
+const isLoading = ref(true);
+
+// Simulamos una carga de datos
+onMounted(() => {
+  setTimeout(() => {
+    isLoading.value = false; // Ocultamos el loader después de 4 segundos
+  }, 2000); // Dale un poco más de tiempo que la animación principal (3s)
+});
+
 </script>
 
 <style scoped>

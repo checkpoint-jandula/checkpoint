@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { 
   getMyFriends, 
@@ -94,6 +94,8 @@ const receivedRequests = ref([]);
 
 const isLoading = ref(true);
 const errorMessage = ref('');
+
+let pollingInterval = null;
 
 const fetchData = async () => {
   isLoading.value = true;
@@ -116,7 +118,21 @@ const fetchData = async () => {
   }
 };
 
-onMounted(fetchData);
+onMounted(() => {
+  fetchData(); 
+
+  // Inicia el polling: llama a fetchData cada 15 segundos
+  pollingInterval = setInterval(fetchData, 5000); 
+});
+
+onUnmounted(() => {
+  // Es crucial limpiar el intervalo cuando el usuario sale del componente
+  // para evitar peticiones innecesarias y fugas de memoria.
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
+});
+
 
 // --- Manejadores de acciones ---
 
