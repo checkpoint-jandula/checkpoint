@@ -1,62 +1,61 @@
-/* Estilos principales del Footer */
+/* Footer Container */
 .main-footer {
-  background-color: var(--color-background-soft); /* Usa tus variables de color */
+  background-color: var(--color-background-soft); 
   color: var(--color-text);
   padding: 1.5rem 0 0.5rem;
   border-top: 1px solid var(--color-border);
   font-size: 0.9rem;
 }
 
-/* Contenedor principal para el layout responsive */
+/* Footer Layout */
 .footer-content {
   display: flex;
-  flex-wrap: wrap; /* ¡La clave de la responsividad! */
+  flex-wrap: wrap; 
   justify-content: space-between;
   columns: auto;
-  gap: 2rem; /* Espacio entre las columnas */
+  gap: 2rem; 
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Estilo base para cada columna/sección del footer */
+/* Footer Sections */
 .footer-section {
-  flex: 1; /* Permite que las columnas crezcan */
-  min-width: 220px; /* Ancho mínimo antes de que se apilen */
+  flex: 1;
+  min-width: 220px;
 }
 
+/* Section Titles */
 .footer-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-heading);
   margin-bottom: 1rem;
-  border-bottom: 2px solid var(--color-azul-hover); /* Acento de color */
+  border-bottom: 2px solid var(--color-azul-hover);
   padding-bottom: 0.5rem;
   display: inline-block;
 }
 
+/* Support Section */
 .support-title {
   margin-top: 1.5rem;
 }
 
+/* IGDB Section */
 .igdb-logo-link {
   padding: 0;
 }
 
-/* Estilos específicos para la sección de IGDB */
 .about-section .data-notice {
   font-size: 0.85rem;
   line-height: 1.5;
-  color: var(--color-text-mute); /* Un color de texto más suave */
+  color: var(--color-text-mute);
 }
-
 
 .igdb-logo {
   max-width: 100px;
-  /* El logo de IGDB es oscuro. Si tu fondo es oscuro, invierte el color */
-  /* filter: invert(1) brightness(2); */
 }
 
-/* Estilos para las listas */
+/* List Styles */
 .tech-list,
 .team-list {
   list-style: none;
@@ -69,7 +68,7 @@
   margin-bottom: 0.5rem;
 }
 
-/* Estilos para los enlaces */
+/* Footer Links */
 .footer-section a {
     color: var(--color-text);
     text-decoration: none;
@@ -79,12 +78,12 @@
 }
 
 .footer-section a:hover {
-  color: var(--color-rosa-hover); /* Tu color de acento al pasar el ratón */
+  color: var(--color-rosa-hover);
   background-color: transparent !important;
   text-decoration: underline;
 }
 
-/* Barra inferior del footer */
+/* Copyright Bar */
 .footer-bottom {
   text-align: center;
   margin-top: 1rem;
@@ -94,19 +93,19 @@
   color: var(--color-text-mute);
 }
 
-/* Ajustes para pantallas muy pequeñas (opcional, flex-wrap ya hace la mayor parte del trabajo) */
+/* Mobile Responsive */
 @media (max-width: 576px) {
   .footer-content {
-    flex-direction: column; /* Apila todo en una columna */
+    flex-direction: column;
     align-items: center;
     text-align: center;
   }
 
   .footer-section a {
-  text-align: center;
-}
+    text-align: center;
+  }
 
   .footer-title {
-    display: block; /* Asegura que el borde ocupe todo el ancho */
+    display: block;
   }
 }

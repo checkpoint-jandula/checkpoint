@@ -270,6 +270,20 @@
   opacity: 0.4;
   transform: scale(0.95);
 }
+.tier-item-compact.drag-over-item-target {
+  position: relative;
+}
+
+.tier-item-compact.drag-over-item-target::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: hsla(160, 100%, 37%, 1);
+  border-radius: 3px;
+}
 
 /* --- IMAGEN DEL MODAL DE AÑADIR JUEGOS --- */
 .library-game-cover {

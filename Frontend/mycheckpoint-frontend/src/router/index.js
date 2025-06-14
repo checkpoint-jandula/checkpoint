@@ -51,13 +51,11 @@ const routes = [
     name: "profile",
     component: UserProfileView,
     props: true,
-    // Dentro de UserProfileView se manejará la lógica para mostrar
-    // la biblioteca, listas, tiers y ajustes si es el perfil del usuario logueado.
   },
   {
-    path: "/settings", // Esta ruta ahora se accederá desde el perfil del usuario.
+    path: "/settings", 
     name: "settings",
-    component: UserSettingsView, // UserSettingsView se podría cargar dentro de UserProfileView
+    component: UserSettingsView, 
     meta: { requiresAuth: true },
   },
   {
@@ -80,39 +78,37 @@ const routes = [
   {
     path: "/public-gamelists",
     name: "public-gamelists",
-    component: ViewPublicGameListsView, // Crear este componente placeholder
+    component: ViewPublicGameListsView, 
   },
   {
-    path: "/gamelists/public/:listPublicId", // RUTA para ver una lista pública
+    path: "/gamelists/public/:listPublicId", 
     name: "view-public-gamelist",
     component: GameListDetailView, 
     props: true,
   },
   {
-    path: "/my-gamelists/:listPublicId/detail", // Ruta para una lista específica del usuario
+    path: "/my-gamelists/:listPublicId/detail", 
     name: "gamelist-detail",
     component: GameListDetailView,
-    props: true, // Para pasar listPublicId como prop al componente
-    meta: { requiresAuth: true }, // Esta vista requiere autenticación
+    props: true, 
+    meta: { requiresAuth: true }, 
   },
   {
     path: "/public-tierlists",
     name: "public-tierlists",
-    component: ViewPublicTierListsView, // Crear este componente placeholder
+    component: ViewPublicTierListsView, 
   },
   {
-    path: "/tierlists/public/:tierListPublicId", // NUEVA RUTA para ver una tier list pública
+    path: "/tierlists/public/:tierListPublicId", 
     name: "view-public-tierlist",
-    component: TierListDetail, // Placeholder por ahora
+    component: TierListDetail, 
     props: true,
   },
   {
     path: "/search-users",
     name: "search-users",
-    component: SearchUsersView, // Crear este componente placeholder
+    component: SearchUsersView, 
   },
-  // Las rutas como /my-library, /my-gamelists, /my-tierlists ya no son necesarias aquí
-  // como rutas de primer nivel si se integran en UserProfileView.
 ];
 
 const router = createRouter({

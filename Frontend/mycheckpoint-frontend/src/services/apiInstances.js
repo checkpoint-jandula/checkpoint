@@ -8,10 +8,9 @@ import {
     GameListControllerApi,
     TierListControllerApi,
     FriendshipControllerApi
-    // Importa aquí todos los demás ControllerApi que necesites de @/api-client
-} from '@/api-client'; // Asume que api.ts exporta estas clases
+} from '@/api-client'; 
 
-const config = new Configuration(); // Puedes dejarla vacía si la baseURL y el token se manejan globalmente en apiClient
+const config = new Configuration(); 
 
 // Instancia para Autenticación
 const authApi = new AutenticacinControllerApi(config, undefined, apiClient); //
@@ -34,12 +33,6 @@ const tierListsApi = new TierListControllerApi(config, undefined, apiClient); //
 // Instancia para Amistades
 const friendshipApi = new FriendshipControllerApi(config, undefined, apiClient); //
 
-
-// Exportaciones que usarás en tus componentes/vistas para llamar a la API
-// Estas son las funciones de los *ApiFactory o *ApiFp, o directamente los métodos de las instancias de clase.
-// Para simplificar, exportaremos directamente los métodos que necesites o las instancias completas.
-
-// Ejemplo de cómo podrías exportar funciones específicas para facilitar su uso:
 
 // Autenticación
 export const loginUser = (loginRequestDTO) => {
@@ -204,8 +197,6 @@ export const addSectionToMyTierList = (tierListPublicId, tierSectionRequestDTO) 
 };
 
 export const updateMyTierSection = (tierListPublicId, sectionInternalId, tierSectionRequestDTO) => {
-  // tierListsApi es tu instancia de TierListControllerApi
-  // updateSectionName es el método generado que corresponde a PUT /api/v1/tierlists/{tierListPublicId}/sections/{sectionInternalId}
   return tierListsApi.updateTierSection(tierListPublicId, sectionInternalId, tierSectionRequestDTO); //
 };
 

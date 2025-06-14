@@ -103,10 +103,18 @@
               {{ isOwner ? "Arrastra un juego aquí" : "(Vacío)" }}
             </div>
             <div v-else class="tier-items-grid-horizontal">
-              <div v-for="item in section.items" :key="item.tier_list_item_id" class="tier-item-compact"
-                :class="{ 'dragging-item': draggedItemInfo?.tierListItemId === item.tier_list_item_id }"
-                :draggable="isOwner" @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
-                @dragend="isOwner ? handleDragEnd($event) : null">
+              <div v-for="item in section.items" :key="item.tier_list_item_id" 
+                class="tier-item-compact"
+                :class="{ 
+                  'dragging-item': draggedItemInfo?.tierListItemId === item.tier_list_item_id,
+                  'drag-over-item-target': dragOverItemId === item.tier_list_item_id && isOwner 
+                }"
+                :draggable="isOwner" 
+                @dragstart="isOwner ? handleDragStart($event, item, section.internal_id) : null"
+                @dragend="isOwner ? handleDragEnd($event) : null"
+                @dragover.prevent.stop="isOwner ? handleDragOver($event, section.internal_id, item.tier_list_item_id) : null"
+                @dragleave="isOwner ? handleDragLeaveItemOrSection($event) : null"
+                @drop.stop="isOwner ? handleDrop($event, section.internal_id, item.tier_list_item_id) : null">
                 <RouterLink :to="{ name: 'game-details', params: { igdbId: item.game_igdb_id } }"
                   :title="item.game_name">
                   <img :src="getItemCoverUrl(item.game_cover_url, 'cover_big')" :alt="item.game_name"
@@ -983,34 +991,25 @@ const handleAddSelectedGamesToUnclassified = async () => { // Nombre específico
 
 // --- LÓGICA ACTUALIZADA PARA QUITAR ÍTEM DE TIER LIST (PROFILE_GLOBAL) ---
 const handleRemoveItemFromTierList = async (tierListItemId) => {
-  // Esta acción solo está permitida para Tier Lists de tipo PROFILE_GLOBAL y si el usuario es el propietario.
   if (!isEditableTierList.value) {
     alert("Solo puedes quitar ítems directamente de Tier Lists de tipo 'Perfil Global' que te pertenezcan.");
     return;
   }
   if (!tierListItemId) {
     console.error("ID del ítem de la tier list no proporcionado.");
-    // Podrías mostrar un mensaje de error al usuario aquí si lo deseas
     return;
   }
 
-  if (window.confirm("¿Estás seguro de que quieres quitar este juego de la tier list?")) {
-    isLoadingTierItemAction.value = true;
-    // Podrías tener un mensaje específico para esta acción si quieres
-    // editTierListMetadataMessage.value = ''; 
-    // editTierListMetadataError.value = false;
-    try {
-      console.log(`Quitando ítem con ID ${tierListItemId} de la Tier List ${props.tierListPublicId}`);
-      const response = await removeItemFromMyTierList(props.tierListPublicId, tierListItemId);
-      tierListDetails.value = response.data; // La API devuelve la TierList actualizada
-      // alert("Ítem quitado de la Tier List."); // O un mensaje de toast/notificación
-    } catch (error) {
-      console.error(`Error quitando ítem ${tierListItemId} de la Tier List:`, error);
-      // Mostrar error al usuario
-      alert(`Error: ${error.response?.data?.message || error.response?.data?.error || 'No se pudo quitar el ítem.'}`);
-    } finally {
-      isLoadingTierItemAction.value = false;
-    }
+  isLoadingTierItemAction.value = true;
+  try {
+    console.log(`Quitando ítem con ID ${tierListItemId} de la Tier List ${props.tierListPublicId}`);
+    const response = await removeItemFromMyTierList(props.tierListPublicId, tierListItemId);
+    tierListDetails.value = response.data;
+  } catch (error) {
+    console.error(`Error quitando ítem ${tierListItemId} de la Tier List:`, error);
+    alert(`Error: ${error.response?.data?.message || error.response?.data?.error || 'No se pudo quitar el ítem.'}`);
+  } finally {
+    isLoadingTierItemAction.value = false;
   }
 };
 
@@ -1035,8 +1034,15 @@ const handleDragOver = (event, targetSectionId, targetItemId = null) => {
   if (!isOwner.value || !draggedItemInfo.value) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
+  
+  // No permitir drop sobre sí mismo
+  if (targetItemId === draggedItemInfo.value.tierListItemId) {
+    event.dataTransfer.dropEffect = 'none';
+    return;
+  }
+  
   dragOverSectionId.value = targetSectionId;
-  dragOverItemId.value = targetItemId; // Guardar sobre qué ítem estamos
+  dragOverItemId.value = targetItemId;
 };
 
 const handleDragLeaveItemOrSection = (event) => {
@@ -1060,35 +1066,61 @@ const handleDrop = async (event, targetSectionId, beforeItemId = null) => {
   const tierListItemIdToMove = draggedData.tierListItemId;
   const originalSectionId = draggedData.originalSectionId;
 
+  // Si es la misma sección y el mismo item, ignoramos
+  if (beforeItemId === tierListItemIdToMove) return;
+
   let targetSection = tierListDetails.value?.sections?.find(s => s.internal_id === targetSectionId);
   if (!targetSection) {
     if (tierListDetails.value?.unclassified_section?.internal_id === targetSectionId) {
       targetSection = tierListDetails.value.unclassified_section;
     } else {
       console.error("Sección destino no encontrada en drop");
-      handleDragEnd(); return;
+      handleDragEnd();
+      return;
     }
   }
 
-  let newOrder = 0;
   const itemsInTargetSection = targetSection.items || [];
+  let newOrder;
 
   if (beforeItemId !== null) {
-    // Se soltó sobre un ítem específico, encontrar su orden para insertar antes
-    const beforeItemIndex = itemsInTargetSection.findIndex(item => item.tier_list_item_id === beforeItemId);
+    // Encontrar el índice del item "before"
+    const beforeItemIndex = itemsInTargetSection.findIndex(item => 
+      item.tier_list_item_id === beforeItemId
+    );
+
     if (beforeItemIndex !== -1) {
-      // Si el ítem arrastrado viene de la misma sección y se mueve ANTES de su posición original, el índice no cambia.
-      // Si se mueve DESPUÉS de su posición original, el índice es el del 'beforeItem'.
-      // Esta lógica puede ser compleja y a menudo el backend la maneja mejor.
-      // Por ahora, asumimos que el backend reordena si le damos el índice del elemento "antes de".
-      newOrder = itemsInTargetSection[beforeItemIndex].item_order;
+      // Si estamos en la misma sección
+      if (originalSectionId === targetSectionId) {
+        const draggedItemIndex = itemsInTargetSection.findIndex(item => 
+          item.tier_list_item_id === tierListItemIdToMove
+        );
+        
+        // Ajustar el orden basado en la posición relativa
+        if (draggedItemIndex < beforeItemIndex) {
+          // Si se mueve hacia adelante, usar el orden del item destino
+          newOrder = itemsInTargetSection[beforeItemIndex].item_order;
+        } else {
+          // Si se mueve hacia atrás, usar el orden del item anterior al destino
+          newOrder = beforeItemIndex > 0 ? 
+            itemsInTargetSection[beforeItemIndex-1].item_order + 1 :
+            itemsInTargetSection[beforeItemIndex].item_order;
+        }
+      } else {
+        // Si viene de otra sección, usar el orden del item destino
+        newOrder = itemsInTargetSection[beforeItemIndex].item_order;
+      }
     } else {
-      // No se encontró el item 'before', añadir al final
-      newOrder = itemsInTargetSection.length;
+      // Si no encontramos el item before, añadir al final
+      newOrder = itemsInTargetSection.length > 0 ?
+        itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1 :
+        0;
     }
   } else {
-    // Se soltó en el área de la sección, no sobre un ítem específico -> añadir al final
-    newOrder = itemsInTargetSection.length;
+    // Se soltó en el área vacía de la sección, añadir al final
+    newOrder = itemsInTargetSection.length > 0 ?
+      itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1 :
+      0;
   }
 
   // Ajuste si se mueve dentro de la misma sección hacia una posición posterior
@@ -1261,4 +1293,5 @@ const getTierColor = (sectionName) => {
   return "#CCCCCC"; // Gris por defecto para nombres no reconocidos
 };
 </script>
+
 <style src="./TierListDetail.css" scoped></style>

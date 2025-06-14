@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { useAuthStore } from '@/stores/authStore'; // Lo crearemos en el siguiente paso
-import { BASE_PATH } from '@/api-client/base'; //
+import { useAuthStore } from '@/stores/authStore'; 
+import { BASE_PATH } from '@/api-client/base'; 
+import router from '@/router'; 
 
 const apiClient = axios.create({
   baseURL: BASE_PATH //
@@ -10,7 +11,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore();
-    const token = authStore.token_acceso; // Asumiendo que así se llama en tu store
+    const token = authStore.token_acceso; 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,10 +32,8 @@ apiClient.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Token inválido o expirado
       console.error("Error 401: No autorizado. Deslogueando...");
-      authStore.logout(); // Llama a una acción de logout en tu store
-      // Podrías redirigir al login aquí si tu router está disponible
-      // import router from '@/router'; // Asegúrate que la importación sea correcta y no cause ciclos
-      // router.push('/login');
+      authStore.logout(); 
+       router.push('/login');
     }
     return Promise.reject(error);
   }

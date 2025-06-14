@@ -1,3 +1,4 @@
+/* Contenedor Principal del Header */
 .main-header {
   border-bottom: 1px solid var(--color-border);
   position: sticky;
@@ -14,15 +15,16 @@
   border-bottom: 2px solid rgba(255, 255, 255, 0.18);
 }
 
+/* Diseño del Header */
 .header-content {
   display: flex;
   align-items: center;
   height: 6rem;
   padding: 0 1.5rem;
   justify-content: space-between;
-  /* position: relative; */ /* <-- ESTA LÍNEA HA SIDO ELIMINADA. ES LA CORRECCIÓN CLAVE. */
 }
 
+/* Sección del Logo */
 .logo-container {
   flex: 0 0 auto;
   display: flex;
@@ -36,6 +38,7 @@
   vertical-align: middle;
 }
 
+/* Transiciones y Animaciones del Logo */
 .logo svg path {
   transition: fill 0.3s ease-in-out;
 }
@@ -85,12 +88,14 @@
   fill: #00D2E0;
 }
 
+/* Título de la Aplicación */
 .app-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-heading);
 }
 
+/* Navegación Principal */
 .main-nav {
   display: flex;
   align-items: center;
@@ -101,6 +106,7 @@
   transform: translateX(-50%);
 }
 
+/* Enlaces de Navegación */
 .header-content a{
   background-color: transparent;
   border-radius: 0;
@@ -123,6 +129,7 @@ nav a.router-link-exact-active {
   border-radius: 0;
 }
 
+/* Contenedor de Acciones */
 .actions-container {
   display: flex;
   align-items: center;
@@ -130,7 +137,7 @@ nav a.router-link-exact-active {
   flex: 0 0 auto;
 }
 
-/* --- ESTILOS UNIFICADOS PARA BÚSQUEDA Y FILTROS --- */
+/* Sección de Búsqueda y Filtros */
 .search-container {
   display: flex;
 }
@@ -194,7 +201,7 @@ nav a.router-link-exact-active {
 }
 
 
-/* --- ESTILOS PARA EL MENÚ DE USUARIO --- */
+/* Menú de Usuario */
 .user-menu-container {
   position: relative;
   display: flex;
@@ -254,7 +261,7 @@ nav a.router-link-exact-active {
   border-color: var(--color-azul);
 }
 
-/* --- Panel de Filtros --- */
+/* Panel de Filtros */
 .filter-panel {
   padding: 1.5rem;
   background-color: var(--color-background);
@@ -272,7 +279,7 @@ nav a.router-link-exact-active {
 .action-button.secondary:hover { background-color: var(--color-border); }
 
 
-/* --- ESTILOS PARA EL MENÚ HAMBURGUESA --- */
+/* Menú Hamburguesa */
 .menu-toggle {
   display: none;
   background: none;
@@ -318,8 +325,7 @@ nav a.router-link-exact-active {
 }
 
 
-/* --- MEDIA QUERIES PARA RESPONSIVE --- */
-
+/* Diseño Responsivo */
 @media (max-width: 1900px) {
   .main-nav {
     gap: 0rem;

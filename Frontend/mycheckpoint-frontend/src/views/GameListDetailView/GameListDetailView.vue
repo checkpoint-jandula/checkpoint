@@ -125,37 +125,64 @@
       </section>
     </div>
 
+    <!-- Reemplazar el modal de añadir juegos existente con esta nueva versión -->
     <div v-if="showAddGamesModal && isOwner" class="modal-overlay" @click.self="closeAddGamesModal">
       <div class="modal-panel add-games-modal-panel">
         <div class="modal-header">
           <h3>Añadir Juegos a "{{ gameListDetails?.name }}"</h3>
-          <button type="button" @click="closeAddGamesModal" class="modal-close-button"
-            aria-label="Cerrar">&times;</button>
+          <button type="button" @click="closeAddGamesModal" class="modal-close-button" aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
+          <div class="modal-filters-panel">
+            <div class="modal-filter-group search-group">
+              <input type="search" v-model="modalFilters.searchQuery" placeholder="Buscar en mi biblioteca..."
+                class="modal-search-input">
+            </div>
+            <div class="modal-filter-group">
+              <select v-model="modalFilters.status">
+                <option v-for="opt in gameStatusOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+              </select>
+            </div>
+            <div class="modal-filter-group">
+              <select v-model="modalFilters.platform">
+                <option v-for="opt in personalPlatformOptions" :key="opt.value" :value="opt.value">{{ opt.text }}</option>
+              </select>
+            </div>
+          </div>
+
           <div v-if="isLoadingLibraryForSelection" class="loading-message">Cargando tu biblioteca...</div>
           <div v-if="addGamesErrorMessage" class="error-message modal-error">{{ addGamesErrorMessage }}</div>
 
-          <div v-if="!isLoadingLibraryForSelection && libraryForSelection.length === 0 && !addGamesErrorMessage"
+          <div v-if="!isLoadingLibraryForSelection && filteredLibraryForModal.length === 0 && !addGamesErrorMessage"
             class="empty-message">
-            No hay más juegos en tu biblioteca para añadir o ya están todos en esta lista.
+            No hay juegos que coincidan con tus filtros.
           </div>
 
-          <ul class="add-games-list" v-if="libraryForSelection.length > 0">
-            <li v-for="game in libraryForSelection" :key="game.internal_id"
+          <div class="modal-games-grid" v-if="filteredLibraryForModal.length > 0">
+            <div v-for="game in filteredLibraryForModal" :key="game.internal_id"
+              class="library-game-card selectable"
               :class="{ 'selected-for-add': gamesToAdd.has(game.internal_id) }"
               @click="toggleGameForAddition(game.internal_id)">
-              <img :src="getCoverUrl(game.game_cover, 'cover_big')" @error="onListGameCoverError"
-                class="add-game-cover-thumb" />
-              <span class="add-game-name-text">{{ game.game_name || `ID: ${game.game_igdb_id}` }}</span>
-              <input type="checkbox" :checked="gamesToAdd.has(game.internal_id)" @click.stop readonly
-                class="add-game-checkbox" />
-            </li>
-          </ul>
+              
+              <div class="card-cover-container">
+                <img :src="getCoverUrl(game.game_cover, 'cover_big')"
+                  :alt="`Carátula de ${game.game_name || 'Juego'}`"
+                  class="library-game-cover"
+                  @error="onListGameCoverError" />
+                <div v-if="gamesToAdd.has(game.internal_id)" class="selection-overlay">
+                  <span class="checkmark-icon">✔</span>
+                </div>
+              </div>
+              
+              <div class="card-content">
+                <h3 class="game-title">{{ game.game_name }}</h3>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <div v-if="addGamesErrorMessage && !isLoadingLibraryForSelection"
-            :class="addGamesErrorMessage ? 'error-message' : ''" class="action-message modal-action-message">
+            class="action-message modal-action-message error-message">
             {{ addGamesErrorMessage }}
           </div>
           <button type="button" @click="closeAddGamesModal" class="action-button secondary"
@@ -165,7 +192,7 @@
           <button @click="handleAddSelectedGamesToList"
             :disabled="isLoadingActionOnGame || isLoadingLibraryForSelection || gamesToAdd.size === 0"
             class="action-button primary">
-            {{ isLoadingActionOnGame ? 'Añadiendo...' : `Añadir Seleccionados (${gamesToAdd.size})` }}
+            {{ isLoadingActionOnGame ? 'Añadiendo...' : `Añadir (${gamesToAdd.size})` }}
           </button>
         </div>
       </div>
@@ -227,6 +254,51 @@ const libraryForSelection = ref([]);
 const gamesToAdd = ref(new Set()); // Set de internal_id de UserGame
 const addGamesErrorMessage = ref('');
 const isLoadingActionOnGame = ref(false); // Loader para añadir/quitar juego individual
+
+const modalFilters = reactive({
+  searchQuery: '',
+  status: null,
+  platform: null
+});
+
+const gameStatusOptions = [
+  { value: null, text: 'Todos los Estados' },
+  { value: 'PLAYING', text: 'Jugando' },
+  { value: 'PLAYING_PAUSED', text: 'En Pausa' },
+  { value: 'PLAYING_ENDLESS', text: 'Sin Fin' },
+  { value: 'COMPLETED_MAIN_STORY', text: 'Completado' },
+  { value: 'COMPLETED_100_PERCENT', text: 'Completado 100%' },
+  { value: 'WISHLIST', text: 'En Deseos' },
+  { value: 'ARCHIVED_ABANDONED', text: 'Abandonado' }
+];
+
+const personalPlatformOptions = [
+  { value: null, text: 'Todas las Plataformas' },
+  { value: 'STEAM', text: 'Steam' },
+  { value: 'EPIC_GAMES', text: 'Epic Games Store' },
+  { value: 'GOG_GALAXY', text: 'GOG Galaxy' },
+  { value: 'XBOX', text: 'Xbox' },
+  { value: 'PLAYSTATION', text: 'PlayStation' },
+  { value: 'NINTENDO', text: 'Nintendo' },
+  { value: 'OTHER', text: 'Otra' }
+];
+
+// Añadir esta computed property para el filtrado
+const filteredLibraryForModal = computed(() => {
+  if (!libraryForSelection.value) return [];
+
+  return libraryForSelection.value.filter(game => {
+    const query = modalFilters.searchQuery.toLowerCase();
+    const status = modalFilters.status;
+    const platform = modalFilters.platform;
+
+    const nameMatch = !query || (game.game_name && game.game_name.toLowerCase().includes(query));
+    const statusMatch = !status || game.status === status;
+    const platformMatch = !platform || game.personal_platform === platform;
+
+    return nameMatch && statusMatch && platformMatch;
+  });
+});
 
 const isOwner = computed(() => {
   if (!authStore.isAuthenticated || !authStore.currentUser || !gameListDetails.value) {
@@ -469,7 +541,6 @@ const handleRemoveGameFromList = async (userGameInternalId) => {
     errorMessageApi.value = "Error: No se pudo identificar el juego a eliminar.";
     return;
   }
-  if (!window.confirm("¿Estás seguro de que quieres quitar este juego de la lista?")) return;
 
   isLoadingActionOnGame.value = true;
   errorMessageApi.value = '';

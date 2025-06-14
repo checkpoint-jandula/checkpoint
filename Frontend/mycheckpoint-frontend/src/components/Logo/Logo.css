@@ -16,40 +16,4 @@
   transition: fill 0.3s ease-in-out;
 }
 
-/*
-Al hacer hover en #Logo, cambiamos el fill del PATH #Vector_9
-#Logo:hover #Vector_9 {
-  ANTES: fill: #FFFFFF;
-  AHORA: Usamos la URL de nuestro nuevo degradado
-  fill: url(#DegradadoHover);
-}
 
---- Fondo de la Bandera ---
-#Logo:hover #Vector,
-#Logo:hover #Vector_2 {
-  fill: #7348D1; <- ¡Cambia este color!
-} 
-
---- Cuerpo principal del mando ---
-#Logo:hover #mandoColor path {
-  fill: #4C269D; <- ¡Cambia este color!
-}
-
---- Los 4 Botones redondos ---
-#Logo:hover #Vector_3,
-#Logo:hover #Vector_4,
-#Logo:hover #Vector_5,
-#Logo:hover #Vector_6 {
-  fill: #F81F96; <- ¡Cambia este color!
-}
-
---- "Bigotillo" ---
-#Logo:hover #Vector_7 {
-  fill: url(#DegradadoBigoteHover); <- ¡Cambia este color!
-}
-
---- Cruceta ---
-#Logo:hover #Vector_8 {
-  fill: #00D2E0; <- ¡Cambia este color!
-}
-*/
