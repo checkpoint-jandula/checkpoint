@@ -28,37 +28,60 @@
   </div>
 </template>
 <script setup>
+// --- 1. IMPORTACIONES ---
 import { ref, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { fetchAllPublicTierLists } from '@/services/apiInstances';
 
-const publicTierLists = ref([]); // Almacenará Array<TierListResponseDTO>
-const isLoading = ref(true);
-const errorMessage = ref('');
 
+// --- 2. ESTADO DEL COMPONENTE ---
+const publicTierLists = ref([]); // Almacenará el array de Tier Lists públicas.
+const isLoading = ref(true);     // Controla el mensaje de carga principal.
+const errorMessage = ref('');    // Almacena y muestra mensajes de error de la API.
+
+
+// --- 3. CICLO DE VIDA ---
+/**
+ * @description onMounted se ejecuta cuando el componente está listo en el DOM.
+ * Es el lugar ideal para realizar la carga inicial de datos.
+ */
+onMounted(() => {
+  loadPublicTierLists();
+});
+
+
+// --- 4. MÉTODOS DE DATOS ---
+/**
+ * @description Carga todas las Tier Lists públicas desde la API.
+ * Gestiona los estados de carga y error para la vista.
+ */
 const loadPublicTierLists = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
     const response = await fetchAllPublicTierLists();
     publicTierLists.value = response.data;
-    console.log("Tier lists públicas cargadas:", publicTierLists.value);
   } catch (error) {
     console.error("Error cargando tier lists públicas:", error);
+    // Se intenta dar un mensaje de error más específico si la API lo proporciona.
     if (error.response) {
       errorMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar las tier lists.'}`;
     } else {
       errorMessage.value = 'Error de red al cargar las tier lists.';
     }
   } finally {
+    // Este bloque se ejecuta siempre, asegurando que el estado de carga se desactive.
     isLoading.value = false;
   }
 };
 
-onMounted(() => {
-  loadPublicTierLists();
-});
 
+// --- 5. FUNCIONES DE UTILIDAD (HELPERS) ---
+/**
+ * @description Formatea una fecha en formato ISO a un string legible (ej: 'jun 15, 2025').
+ * @param {string} isoDateString - La fecha en formato ISO.
+ * @returns {string} - La fecha formateada o el string original en caso de error.
+ */
 const formatReadableDate = (isoDateString) => {
   if (!isoDateString) return '';
   try {
@@ -72,13 +95,25 @@ const formatReadableDate = (isoDateString) => {
   }
 };
 
+/**
+ * @description Trunca un texto si excede una longitud máxima, añadiendo puntos suspensivos.
+ * @param {string} text - El texto a truncar.
+ * @param {number} maxLength - La longitud máxima permitida.
+ * @returns {string} - El texto truncado o el original si es más corto.
+ */
 const truncateText = (text, maxLength) => {
   if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 };
 
-const formatTierListType = (type) => { //
+/**
+ * @description Convierte el tipo de Tier List (devuelto por la API) en un texto legible.
+ * Nota: Esta función está definida pero no se utiliza en el template actual.
+ * @param {string} type - El tipo de Tier List (ej. 'PROFILE_GLOBAL').
+ * @returns {string} - El texto formateado para mostrar en la UI.
+ */
+const formatTierListType = (type) => { 
   if (!type) return 'Tipo Desconocido';
   const typeMap = {
     'PROFILE_GLOBAL': 'De Perfil',

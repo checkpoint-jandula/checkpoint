@@ -446,6 +446,7 @@
   </div>
 </template>
 <script setup>
+// --- 1. IMPORTACIONES Y CONFIGURACIÓN ---
 import { ref, onMounted, watch, reactive, computed, nextTick } from "vue";
 import { useRoute, RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
@@ -461,7 +462,7 @@ import {
   moveItemInMyTierList,
   getMyUserGameLibrary,
 } from "@/services/apiInstances";
-import defaultTierItemCover from "@/assets/img/default-game-cover.svg"; // Placeholder para ítems de tier
+import defaultTierItemCover from "@/assets/img/default-game-cover.svg";
 
 const props = defineProps({
   tierListPublicId: {
@@ -474,58 +475,59 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-const tierListDetails = ref(null); // TierListResponseDTO
+
+// --- 2. ESTADO DEL COMPONENTE ---
+
+// -- Estado principal de la vista --
+const tierListDetails = ref(null);
 const isLoading = ref(true);
 const errorMessageApi = ref("");
 
-// --- ESTADO PARA DRAG AND DROP ---
-const draggedItemInfo = ref(null); // { tierListItemId: number, originalSectionId: number | null, originalOrder: number }
-const dragOverSectionId = ref(null); // Para feedback visual
-const dragOverItemId = ref(null); // Para saber sobre qué ítem se está arrastrando
+// -- Estado para Drag and Drop --
+const draggedItemInfo = ref(null);
+const dragOverSectionId = ref(null);
+const dragOverItemId = ref(null);
 
-// --- Estado para editar metadatos de TierList ---
+// -- Estado para Modal de Edición de Metadatos --
 const showEditTierListMetadataModal = ref(false);
 const isLoadingTierListMetadataUpdate = ref(false);
-const editMetadataMessage = ref("");
-const editMetadataError = ref(false);
-const editTierListMetadataError = ref(false);
 const editTierListMetadataMessage = ref("");
+const editTierListMetadataError = ref(false);
 const editTierListForm = reactive({
   name: "",
   description: null,
   is_public: false,
 });
 
-// --- Estado para editar nombre de sección ---
+// -- Estado para Edición de Nombre de Sección (en línea) --
 const editingSectionName = ref(false);
 const editingSectionId = ref(null);
 const currentSectionNameEdit = ref("");
-
-// Variables de estado para mensajes de error/éxito específicos de la edición de sección
 const sectionEditMessage = ref("");
 const sectionEditError = ref(false);
 const isLoadingSectionAction = ref(false);
 
-// --- NUEVO: Estado para Modal de "Añadir Sección" ---
+// -- Estado para Modal de Añadir Nueva Sección --
 const showAddSectionModal = ref(false);
 const newSectionForm = reactive({ name: "", color: "" });
 const isAddingSection = ref(false);
 const addSectionErrorMessage = ref("");
 
-// --- ESTADO PARA MODAL DE AÑADIR JUEGOS (ahora específico para "Sin Clasificar") ---
+// -- Estado para Modal de Añadir Juegos a "Sin Clasificar" --
 const showAddGamesToUnclassifiedModal = ref(false);
 const isLoadingLibraryForSelection = ref(false);
 const libraryForSelection = ref([]);
 const gamesToAdd = ref(new Set());
 const addItemsErrorMessage = ref("");
 const isLoadingTierItemAction = ref(false);
-
 const modalFilters = reactive({
   searchQuery: "",
   status: null,
   platform: null,
 });
 
+
+// --- 3. DATOS ESTÁTICOS (Opciones para Filtros) ---
 const gameStatusOptions = [
   { value: null, text: "Todos los Estados" },
   { value: "PLAYING", text: "Jugando" },
@@ -547,44 +549,42 @@ const personalPlatformOptions = [
   { value: "OTHER", text: "Otra" },
 ];
 
-// Propiedad computada que aplica los filtros del modal en tiempo real
+
+// --- 4. PROPIEDADES COMPUTADAS ---
+/**
+ * @description Filtra la biblioteca del usuario en el modal de "Añadir Juegos".
+ */
 const filteredLibraryForModal = computed(() => {
   if (!libraryForSelection.value) return [];
-
   return libraryForSelection.value.filter((game) => {
     const query = modalFilters.searchQuery.toLowerCase();
     const status = modalFilters.status;
     const platform = modalFilters.platform;
-
-    // Comprobación de coincidencias
-    const nameMatch =
-      !query ||
-      (game.game_name && game.game_name.toLowerCase().includes(query));
+    const nameMatch = !query || (game.game_name && game.game_name.toLowerCase().includes(query));
     const statusMatch = !status || game.status === status;
     const platformMatch = !platform || game.personal_platform === platform;
-
     return nameMatch && statusMatch && platformMatch;
   });
 });
 
+/**
+ * @description Determina si el usuario actual es el propietario de la Tier List.
+ */
 const isOwner = computed(() => {
-  if (
-    !authStore.isAuthenticated ||
-    !authStore.currentUser ||
-    !tierListDetails.value
-  ) {
-    return false;
-  }
-  return (
-    authStore.currentUser.nombre_usuario ===
-    tierListDetails.value.owner_username
-  );
+  if (!authStore.isAuthenticated || !authStore.currentUser || !tierListDetails.value) return false;
+  return authStore.currentUser.nombre_usuario === tierListDetails.value.owner_username;
 });
 
+/**
+ * @description Determina si la Tier List es editable (propietario y de tipo 'PROFILE_GLOBAL').
+ */
 const isEditableTierList = computed(() => {
   return isOwner.value && tierListDetails.value?.type === "PROFILE_GLOBAL";
 });
 
+/**
+ * @description Devuelve las secciones personalizadas ordenadas para su renderización.
+ */
 const sortedCustomSections = computed(() => {
   if (tierListDetails.value && tierListDetails.value.sections) {
     return [...tierListDetails.value.sections]
@@ -594,6 +594,39 @@ const sortedCustomSections = computed(() => {
   return [];
 });
 
+
+// --- 5. DIRECTIVA VUE PERSONALIZADA ---
+/**
+ * @description Directiva para hacer foco automático en un input cuando se muestra.
+ */
+const vFocus = {
+  mounted: (el) => { nextTick(() => { el.focus(); }); },
+  updated: (el, binding) => { if (binding.value && binding.oldValue !== binding.value) { nextTick(() => { el.focus(); }); } },
+};
+
+
+// --- 6. CICLO DE VIDA Y WATCHERS ---
+onMounted(() => {
+  fetchTierListDetails(props.tierListPublicId);
+});
+
+watch(() => props.tierListPublicId, (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      fetchTierListDetails(newId);
+    }
+  }
+);
+
+watch(() => newSectionForm.name, (newName) => {
+    newSectionForm.color = getTierColor(newName);
+  }
+);
+
+
+// --- 7. MÉTODOS DE DATOS ---
+/**
+ * @description Carga los detalles de la Tier List desde la API.
+ */
 const fetchTierListDetails = async (id) => {
   if (!id) {
     errorMessageApi.value = "ID de Tier List no proporcionado.";
@@ -606,20 +639,10 @@ const fetchTierListDetails = async (id) => {
   try {
     const response = await getTierListDetailsByPublicId(id);
     tierListDetails.value = response.data;
-    console.log(
-      "Detalles de la Tier List cargados:",
-      JSON.parse(JSON.stringify(tierListDetails.value))
-    );
   } catch (error) {
-    console.error(
-      `Error cargando detalles de la Tier List (ID: ${id}):`,
-      error
-    );
+    console.error(`Error cargando detalles de la Tier List (ID: ${id}):`, error);
     if (error.response) {
-      errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message ||
-        error.response.data.error ||
-        "No se pudieron cargar los detalles."
-        }`;
+      errorMessageApi.value = `Error ${error.response.status}: ${error.response.data.message || "No se pudieron cargar los detalles."}`;
       if (error.response.status === 403 || error.response.status === 404) {
         router.push({ name: "home" });
       }
@@ -631,57 +654,15 @@ const fetchTierListDetails = async (id) => {
   }
 };
 
-onMounted(() => {
-  fetchTierListDetails(props.tierListPublicId);
-});
 
-watch(
-  () => props.tierListPublicId,
-  (newId, oldId) => {
-    if (newId && newId !== oldId) {
-      fetchTierListDetails(newId);
-    }
-  }
-);
-
-watch(
-  () => newSectionForm.name,
-  (newName) => {
-    newSectionForm.color = getTierColor(newName);
-  }
-);
-
-const vFocus = {
-  mounted: (el) => {
-    nextTick(() => {
-      el.focus();
-    });
-  },
-  updated: (el, binding) => {
-    if (binding.value && binding.oldValue !== binding.value) {
-      nextTick(() => {
-        el.focus();
-      });
-    }
-  },
-};
-
-// --- Lógica para Editar Metadatos de la Tier List ---
+// --- 8. MÉTODOS DE GESTIÓN DE LA TIER LIST ---
 const openEditTierListMetadataModal = () => {
-  if (!isEditableTierList.value || !tierListDetails.value) {
-    alert(
-      "Esta Tier List no puede editar sus metadatos (no eres el propietario o no es de tipo 'Perfil Global')."
-    );
-    return;
-  }
+  if (!isEditableTierList.value || !tierListDetails.value) return;
   editTierListForm.name = tierListDetails.value.name || "";
   editTierListForm.description = tierListDetails.value.description || null;
   editTierListForm.is_public = tierListDetails.value.is_public || false;
-  // Resetear mensajes del modal
-  editMetadataMessage.value = ""; 
-  editMetadataError.value = false; 
-  editTierListMetadataMessage.value = ""; 
-  editTierListMetadataError.value = false; 
+  editTierListMetadataMessage.value = "";
+  editTierListMetadataError.value = false;
   showEditTierListMetadataModal.value = true;
 };
 
@@ -690,126 +671,67 @@ const closeEditTierListMetadataModal = () => {
 };
 
 const handleUpdateTierListMetadata = async () => {
-  if (!isEditableTierList.value) {
-    editTierListMetadataMessage.value =
-      "No tienes permiso para editar esta Tier List";
-    editTierListMetadataError.value = true;
-    return;
-  }
+  if (!isEditableTierList.value) return;
   if (!editTierListForm.name || editTierListForm.name.trim() === "") {
-    editTierListMetadataMessage.value =
-      "El nombre de la Tier List es obligatorio.";
+    editTierListMetadataMessage.value = "El nombre de la Tier List es obligatorio.";
     editTierListMetadataError.value = true;
     return;
   }
   isLoadingTierListMetadataUpdate.value = true;
   editTierListMetadataMessage.value = "";
   editTierListMetadataError.value = false;
-
-  const requestDTO = {
-    name: editTierListForm.name,
-    description: editTierListForm.description || null,
-    is_public: editTierListForm.is_public,
-  };
-
-  const changes = {};
+  const requestDTO = { name: editTierListForm.name, description: editTierListForm.description || null, is_public: editTierListForm.is_public };
   let hasChanges = false;
-  if (requestDTO.name !== tierListDetails.value.name) {
-    changes.name = requestDTO.name;
-    hasChanges = true;
-  }
-  if (requestDTO.description !== (tierListDetails.value.description || null)) {
-    changes.description = requestDTO.description;
-    hasChanges = true;
-  }
-  if (requestDTO.is_public !== tierListDetails.value.is_public) {
-    changes.is_public = requestDTO.is_public;
-    hasChanges = true;
-  }
-
+  if (requestDTO.name !== tierListDetails.value.name) hasChanges = true;
+  if (requestDTO.description !== (tierListDetails.value.description || null)) hasChanges = true;
+  if (requestDTO.is_public !== tierListDetails.value.is_public) hasChanges = true;
   if (!hasChanges) {
     editTierListMetadataMessage.value = "No se han realizado cambios.";
-    editTierListMetadataError.value = false;
     isLoadingTierListMetadataUpdate.value = false;
     return;
   }
-
   try {
-    const response = await updateMyTierListMetadata(
-      props.tierListPublicId,
-      requestDTO
-    );
+    const response = await updateMyTierListMetadata(props.tierListPublicId, requestDTO);
     tierListDetails.value = response.data;
-    editTierListMetadataMessage.value =
-      "¡Detalles de la Tier List actualizados!";
-    editTierListMetadataError.value = false;
+    editTierListMetadataMessage.value = "¡Detalles de la Tier List actualizados!";
     setTimeout(() => closeEditTierListMetadataModal(), 1500);
   } catch (error) {
     console.error("Error actualizando metadatos de la Tier List:", error);
     editTierListMetadataError.value = true;
     if (error.response?.data) {
-      editTierListMetadataMessage.value =
-        error.response.data.errors?.join(", ") ||
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo actualizar la Tier List.";
+      editTierListMetadataMessage.value = error.response.data.errors?.join(", ") || error.response.data.message || "No se pudo actualizar la Tier List.";
     } else {
-      editTierListMetadataMessage.value =
-        "Error de red al actualizar la Tier List.";
+      editTierListMetadataMessage.value = "Error de red al actualizar la Tier List.";
     }
   } finally {
     isLoadingTierListMetadataUpdate.value = false;
   }
 };
 
-// --- Lógica para Eliminar Tier List ---
 const handleDeleteTierList = async () => {
-  if (!tierListDetails.value || !isOwner.value) {
-    alert("No puedes eliminar esta Tier List.");
-    return;
-  }
-  if (
-    window.confirm(
-      `¿Estás seguro de que quieres eliminar la Tier List "${tierListDetails.value.name}"? Esta acción no se puede deshacer.`
-    )
-  ) {
+  if (!tierListDetails.value || !isOwner.value) return;
+  if (window.confirm(`¿Estás seguro de que quieres eliminar la Tier List "${tierListDetails.value.name}"?`)) {
     isLoading.value = true;
     errorMessageApi.value = "";
     try {
-      console.log(
-        "Intentando eliminar Tier List con listPublicId:",
-        props.tierListPublicId
-      );
       if (!props.tierListPublicId) {
-        errorMessageApi.value =
-          "Error: ID de Tier List no disponible para eliminación.";
+        errorMessageApi.value = "Error: ID de Tier List no disponible para eliminación.";
         isLoading.value = false;
         return;
       }
       await deleteMyTierList(props.tierListPublicId);
       alert("Tier List eliminada exitosamente.");
       if (authStore.currentUser?.public_id) {
-        router.push({
-          name: "profile",
-          params: { publicId: authStore.currentUser.public_id },
-          query: { tab: "my-tierlists" },
-        });
+        router.push({ name: "profile", params: { publicId: authStore.currentUser.public_id }, query: { tab: "my-tierlists" } });
       } else {
         router.push({ name: "home" });
       }
     } catch (error) {
       console.error("Error eliminando la Tier List:", error);
       if (error.response?.data) {
-        errorMessageApi.value =
-          error.response.data.message ||
-          error.response.data.error ||
-          "No se pudo eliminar la Tier List.";
-      } else if (error.message && error.message.includes("status code 404")) {
-        errorMessageApi.value =
-          "No se pudo eliminar la Tier List: Recurso no encontrado (404).";
+        errorMessageApi.value = error.response.data.message || "No se pudo eliminar la Tier List.";
       } else {
-        errorMessageApi.value =
-          "Error de red o inesperado al eliminar la Tier List.";
+        errorMessageApi.value = "Error de red o inesperado al eliminar la Tier List.";
       }
     } finally {
       isLoading.value = false;
@@ -817,7 +739,8 @@ const handleDeleteTierList = async () => {
   }
 };
 
-// --- LÓGICA PARA EDITAR SECCIONES ---
+
+// --- 9. MÉTODOS DE GESTIÓN DE SECCIONES (TIERS) ---
 const startEditSectionName = (section) => {
   if (!isOwner.value) return;
   editingSectionId.value = section.internal_id;
@@ -825,7 +748,6 @@ const startEditSectionName = (section) => {
   editingSectionName.value = true;
   sectionEditMessage.value = "";
   sectionEditError.value = false;
-  // El foco se maneja con v-focus en el template
 };
 
 const cancelEditSectionName = () => {
@@ -837,70 +759,31 @@ const cancelEditSectionName = () => {
 };
 
 const handleUpdateSectionDetails = async (section) => {
-  if (
-    !isOwner.value ||
-    section.is_default_unclassified ||
-    !section.internal_id
-  ) {
-    console.error(
-      "Actualización prevenida: Sin permisos, o la sección o su ID no son válidos."
-    );
+  if (!isOwner.value || section.is_default_unclassified || !section.internal_id) {
     cancelEditSectionName();
     return;
   }
-
-  // Determina el nombre final.
-  const newName =
-    editingSectionId.value === section.internal_id
-      ? currentSectionNameEdit.value.trim()
-      : section.name;
-
+  const newName = editingSectionId.value === section.internal_id ? currentSectionNameEdit.value.trim() : section.name;
   if (newName === "") {
     alert("El nombre de la sección no puede estar vacío.");
     return;
   }
-
-  // Salir del modo edición de texto
   if (editingSectionId.value === section.internal_id) {
     editingSectionName.value = false;
     editingSectionId.value = null;
   }
-
-  const requestDTO = {
-    name: newName,
-    color: section.color || "#CCCCCC", // Aseguramos que el color nunca es nulo
-  };
-
-  console.log(
-    "Enviando actualización para sección ID:",
-    section.internal_id,
-    "con datos:",
-    JSON.stringify(requestDTO)
-  );
+  const requestDTO = { name: newName, color: section.color || "#CCCCCC" };
   isLoadingSectionAction.value = true;
   sectionEditMessage.value = "";
-
   try {
-    const response = await updateMyTierSection(
-      props.tierListPublicId,
-      section.internal_id, // Usamos la propiedad correcta: 'internal_id'
-      requestDTO
-    );
-
+    const response = await updateMyTierSection(props.tierListPublicId, section.internal_id, requestDTO);
     tierListDetails.value = response.data;
     sectionEditMessage.value = "Sección actualizada.";
-    setTimeout(() => {
-      sectionEditMessage.value = "";
-    }, 3000);
+    setTimeout(() => { sectionEditMessage.value = ""; }, 3000);
   } catch (error) {
-    console.error(
-      `Error actualizando sección ID ${section.internal_id}:`,
-      error
-    );
-    const errorMessage =
-      error.response?.data?.message || "No se pudo actualizar la sección.";
+    console.error(`Error actualizando sección ID ${section.internal_id}:`, error);
     sectionEditError.value = true;
-    sectionEditMessage.value = errorMessage;
+    sectionEditMessage.value = error.response?.data?.message || "No se pudo actualizar la sección.";
   } finally {
     isLoadingSectionAction.value = false;
   }
@@ -910,67 +793,32 @@ const saveSectionName = (section) => {
   handleUpdateSectionDetails(section);
 };
 
-// --- LÓGICA ACTUALIZADA PARA ELIMINAR SECCIÓN ---
 const confirmRemoveSection = async (sectionId) => {
-  if (!isOwner.value) {
-    alert("Solo el propietario puede eliminar secciones.");
-    return;
-  }
-
-  const section = tierListDetails.value?.sections?.find(
-    (s) => s.internal_id === sectionId
-  );
-  if (!section) {
-    alert("Sección no encontrada.");
-    return;
-  }
-  // No se puede eliminar la sección por defecto "Sin Clasificar" 
-  // Adicionalmente, el back no permite eliminar la última sección personalizable.
+  if (!isOwner.value) return;
+  const section = tierListDetails.value?.sections?.find((s) => s.internal_id === sectionId);
+  if (!section) return;
   if (sortedCustomSections.value.length <= 1) {
-    alert(
-      "No puedes eliminar la última sección. Una Tier List debe tener al menos una tier personalizable."
-    );
+    alert("No puedes eliminar la última sección.");
     return;
   }
-
-  if (
-    window.confirm(
-      `¿Seguro que quieres eliminar la tier "${section.name}"? Los juegos en ella se moverán a "Sin Clasificar".`
-    )
-  ) {
-    isLoadingSectionAction.value = true; 
-    errorMessageApi.value = ""; 
+  if (window.confirm(`¿Seguro que quieres eliminar la tier "${section.name}"?`)) {
+    isLoadingSectionAction.value = true;
+    errorMessageApi.value = "";
     try {
-      const response = await removeSectionFromMyTierList(
-        props.tierListPublicId,
-        sectionId
-      );
-      tierListDetails.value = response.data; 
+      const response = await removeSectionFromMyTierList(props.tierListPublicId, sectionId);
+      tierListDetails.value = response.data;
     } catch (error) {
       console.error(`Error eliminando sección ID ${sectionId}:`, error);
-      if (error.response?.data) {
-        alert(
-          `Error: ${error.response.data.message ||
-          error.response.data.error ||
-          "No se pudo eliminar la sección."
-          }`
-        );
-      } else {
-        alert("Error de red al eliminar la sección.");
-      }
+      alert(`Error: ${error.response?.data?.message || "No se pudo eliminar la sección."}`);
     } finally {
       isLoadingSectionAction.value = false;
     }
   }
 };
 
-// --- NUEVA: Lógica para Añadir Nueva Sección (Tier) ---
 const openAddSectionModal = () => {
-  if (!isOwner.value) {
-    alert("Solo se pueden añadir secciones a Tier Lists que te pertenezcan.");
-    return;
-  }
-  newSectionForm.name = ""; // Resetear el nombre
+  if (!isOwner.value) return;
+  newSectionForm.name = "";
   newSectionForm.color = "#CCCCCC";
   addSectionErrorMessage.value = "";
   showAddSectionModal.value = true;
@@ -985,30 +833,17 @@ const handleAddSection = async () => {
     addSectionErrorMessage.value = "El nombre de la sección es obligatorio.";
     return;
   }
-
   isAddingSection.value = true;
   addSectionErrorMessage.value = "";
-
-  const requestDTO = {
-    name: newSectionForm.name.trim(),
-    color: newSectionForm.color,
-  }; // TierSectionRequestDTO
-
+  const requestDTO = { name: newSectionForm.name.trim(), color: newSectionForm.color };
   try {
-    const response = await addSectionToMyTierList(
-      props.tierListPublicId,
-      requestDTO
-    );
-    tierListDetails.value = response.data; 
+    const response = await addSectionToMyTierList(props.tierListPublicId, requestDTO);
+    tierListDetails.value = response.data;
     closeAddSectionModal();
   } catch (error) {
-    console.error("Error añadiendo sección a la Tier List:", error);
+    console.error("Error añadiendo sección:", error);
     if (error.response?.data) {
-      addSectionErrorMessage.value =
-        error.response.data.errors?.join(", ") ||
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo añadir la sección.";
+      addSectionErrorMessage.value = error.response.data.errors?.join(", ") || error.response.data.message || "No se pudo añadir la sección.";
     } else {
       addSectionErrorMessage.value = "Error de red al añadir la sección.";
     }
@@ -1017,56 +852,30 @@ const handleAddSection = async () => {
   }
 };
 
-// --- LÓGICA ACTUALIZADA PARA AÑADIR JUEGOS A "SIN CLASIFICAR" ---
+
+// --- 10. MÉTODOS DE GESTIÓN DE ÍTEMS (JUEGOS) ---
 const fetchLibraryForUnclassifiedSelection = async () => {
   isLoadingLibraryForSelection.value = true;
   addItemsErrorMessage.value = "";
   libraryForSelection.value = [];
   try {
     const libraryResponse = await getMyUserGameLibrary();
-    if (!libraryResponse.data)
-      throw new Error("No se recibieron datos de la biblioteca.");
-
+    if (!libraryResponse.data) throw new Error("No se recibieron datos de la biblioteca.");
     const allItemsInTierListSet = new Set();
-    tierListDetails.value?.unclassified_section?.items?.forEach((item) =>
-      allItemsInTierListSet.add(item.user_game_id)
-    ); //
+    tierListDetails.value?.unclassified_section?.items?.forEach((item) => allItemsInTierListSet.add(item.user_game_id));
     tierListDetails.value?.sections?.forEach((section) => {
-      section.items?.forEach((item) =>
-        allItemsInTierListSet.add(item.user_game_id)
-      );
+      section.items?.forEach((item) => allItemsInTierListSet.add(item.user_game_id));
     });
-
-    console.log(
-      "[AddGamesToUnclassifiedModal] UserGame IDs ya en la Tier List:",
-      Array.from(allItemsInTierListSet)
-    );
-
     libraryForSelection.value = libraryResponse.data.filter((libraryGame) => {
-      const hasValidId = libraryGame.internal_id != null;
-      const notAlreadyInTierList = !allItemsInTierListSet.has(
-        libraryGame.internal_id
-      );
-      return hasValidId && notAlreadyInTierList;
+      return libraryGame.internal_id != null && !allItemsInTierListSet.has(libraryGame.internal_id);
     });
-    console.log(
-      "[AddGamesToUnclassifiedModal] Juegos de biblioteca disponibles:",
-      JSON.parse(JSON.stringify(libraryForSelection.value))
-    );
-
     if (libraryForSelection.value.length === 0) {
-      addItemsErrorMessage.value =
-        libraryResponse.data.length > 0
-          ? "Todos los juegos de tu biblioteca ya están en esta Tier List o falta información de ID."
-          : "No hay juegos en tu biblioteca para añadir.";
+      addItemsErrorMessage.value = libraryResponse.data.length > 0 ? "Todos los juegos de tu biblioteca ya están en esta Tier List." : "No hay juegos en tu biblioteca para añadir.";
     }
   } catch (error) {
     console.error("Error cargando biblioteca para selección:", error);
     if (error.response?.data) {
-      addItemsErrorMessage.value =
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo cargar la biblioteca.";
+      addItemsErrorMessage.value = error.response.data.message || "No se pudo cargar la biblioteca.";
     } else {
       addItemsErrorMessage.value = "Error de red al cargar la biblioteca.";
     }
@@ -1076,15 +885,10 @@ const fetchLibraryForUnclassifiedSelection = async () => {
 };
 
 const openAddGamesToUnclassifiedModal = () => {
-  if (!isEditableTierList.value) {
-    alert(
-      "Solo se pueden añadir juegos a Tier Lists de tipo 'Perfil Global' que te pertenezcan."
-    );
-    return;
-  }
+  if (!isEditableTierList.value) return;
   gamesToAdd.value.clear();
-  fetchLibraryForUnclassifiedSelection(); 
-  showAddGamesToUnclassifiedModal.value = true; 
+  fetchLibraryForUnclassifiedSelection();
+  showAddGamesToUnclassifiedModal.value = true;
 };
 
 const closeAddGamesToUnclassifiedModal = () => {
@@ -1101,130 +905,74 @@ const toggleGameForAdditionInternal = (userGameInternalId) => {
 };
 
 const handleAddSelectedGamesToUnclassified = async () => {
-  if (gamesToAdd.value.size === 0) {
-    addItemsErrorMessage.value = "Selecciona al menos un juego.";
-    return;
-  }
+  if (gamesToAdd.value.size === 0) return;
   isLoadingTierItemAction.value = true;
   addItemsErrorMessage.value = "";
-
   const promises = [];
   gamesToAdd.value.forEach((userGameId) => {
-    const dto = { user_game_id: userGameId, order: null }; // TierListItemAddRequestDTO
-    promises.push(addItemToMyUnclassifiedSection(props.tierListPublicId, dto)); //
+    const dto = { user_game_id: userGameId, order: null };
+    promises.push(addItemToMyUnclassifiedSection(props.tierListPublicId, dto));
   });
-
   try {
     const results = await Promise.allSettled(promises);
-    const someSucceeded = results.some(
-      (result) => result.status === "fulfilled"
-    );
-    if (someSucceeded) {
+    if (results.some((r) => r.status === "fulfilled")) {
       await fetchTierListDetails(props.tierListPublicId);
       closeAddGamesToUnclassifiedModal();
     }
-    const failedCount = results.filter(
-      (result) => result.status === "rejected"
-    ).length;
+    const failedCount = results.filter((r) => r.status === "rejected").length;
     if (failedCount > 0) {
       addItemsErrorMessage.value = `No se pudieron añadir ${failedCount} juego(s).`;
     }
   } catch (error) {
     console.error("Error añadiendo juegos a 'Sin Clasificar':", error);
-    addItemsErrorMessage.value =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "No se pudieron añadir los juegos.";
+    addItemsErrorMessage.value = error.response?.data?.message || "No se pudieron añadir los juegos.";
     if (error.response?.status === 403) {
-      alert(
-        "No tienes permiso para añadir juegos a esta Tier List. Solo puedes hacerlo en Tier Lists de tipo 'Perfil Global' que te pertenezcan."
-      );
+      alert("No tienes permiso para añadir juegos a esta Tier List.");
     }
   } finally {
     isLoadingTierItemAction.value = false;
   }
 };
 
-// --- LÓGICA ACTUALIZADA PARA QUITAR ÍTEM DE TIER LIST (PROFILE_GLOBAL) ---
 const handleRemoveItemFromTierList = async (tierListItemId) => {
-  if (!isEditableTierList.value) {
-    alert(
-      "Solo puedes quitar ítems directamente de Tier Lists de tipo 'Perfil Global' que te pertenezcan."
-    );
-    return;
-  }
-  if (!tierListItemId) {
-    console.error("ID del ítem de la tier list no proporcionado.");
-    return;
-  }
-
+  if (!isEditableTierList.value) return;
+  if (!tierListItemId) return;
   isLoadingTierItemAction.value = true;
   try {
-    console.log(
-      `Quitando ítem con ID ${tierListItemId} de la Tier List ${props.tierListPublicId}`
-    );
-    const response = await removeItemFromMyTierList(
-      props.tierListPublicId,
-      tierListItemId
-    );
+    const response = await removeItemFromMyTierList(props.tierListPublicId, tierListItemId);
     tierListDetails.value = response.data;
   } catch (error) {
-    console.error(
-      `Error quitando ítem ${tierListItemId} de la Tier List:`,
-      error
-    );
-    alert(
-      `Error: ${error.response?.data?.message ||
-      error.response?.data?.error ||
-      "No se pudo quitar el ítem."
-      }`
-    );
+    console.error(`Error quitando ítem ${tierListItemId}:`, error);
+    alert(`Error: ${error.response?.data?.message || "No se pudo quitar el ítem."}`);
   } finally {
     isLoadingTierItemAction.value = false;
   }
 };
 
-// --- LÓGICA DE DRAG AND DROP ---
+
+// --- 11. MÉTODOS DE DRAG & DROP ---
 const handleDragStart = (event, item, originalSectionInternalId) => {
-  if (!isOwner.value) {
-    event.preventDefault();
-    return;
-  }
+  if (!isOwner.value) { event.preventDefault(); return; }
   event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData(
-    "application/json",
-    JSON.stringify({
-      tierListItemId: item.tier_list_item_id,
-      originalSectionId: originalSectionInternalId,
-    })
-  );
-  draggedItemInfo.value = {
-    tierListItemId: item.tier_list_item_id,
-    originalSectionId: originalSectionInternalId,
-  };
+  event.dataTransfer.setData("application/json", JSON.stringify({ tierListItemId: item.tier_list_item_id, originalSectionId: originalSectionInternalId }));
+  draggedItemInfo.value = { tierListItemId: item.tier_list_item_id, originalSectionId: originalSectionInternalId };
   event.target.closest(".tier-item-compact")?.classList.add("dragging-item");
 };
-
 
 const handleDragOver = (event, targetSectionId, targetItemId = null) => {
   if (!isOwner.value || !draggedItemInfo.value) return;
   event.preventDefault();
   event.dataTransfer.dropEffect = "move";
-
   if (targetItemId === draggedItemInfo.value.tierListItemId) {
     event.dataTransfer.dropEffect = "none";
     return;
   }
-
   dragOverSectionId.value = targetSectionId;
   dragOverItemId.value = targetItemId;
 };
 
 const handleDragLeaveItemOrSection = (event) => {
-  if (
-    event.relatedTarget &&
-    !event.currentTarget.contains(event.relatedTarget)
-  ) {
+  if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
     dragOverSectionId.value = null;
     dragOverItemId.value = null;
   } else if (!event.relatedTarget) {
@@ -1236,112 +984,64 @@ const handleDragLeaveItemOrSection = (event) => {
 const handleDrop = async (event, targetSectionId, beforeItemId = null) => {
   event.preventDefault();
   if (!draggedItemInfo.value || !isOwner.value) return;
-
-  const draggedData = JSON.parse(
-    event.dataTransfer.getData("application/json")
-  );
+  const draggedData = JSON.parse(event.dataTransfer.getData("application/json"));
   const tierListItemIdToMove = draggedData.tierListItemId;
   const originalSectionId = draggedData.originalSectionId;
-
   if (beforeItemId === tierListItemIdToMove) return;
-
-  let targetSection = tierListDetails.value?.sections?.find(
-    (s) => s.internal_id === targetSectionId
-  );
+  let targetSection = tierListDetails.value?.sections?.find((s) => s.internal_id === targetSectionId);
   if (!targetSection) {
-    if (
-      tierListDetails.value?.unclassified_section?.internal_id ===
-      targetSectionId
-    ) {
+    if (tierListDetails.value?.unclassified_section?.internal_id === targetSectionId) {
       targetSection = tierListDetails.value.unclassified_section;
     } else {
-      console.error("Sección destino no encontrada en drop");
       handleDragEnd();
       return;
     }
   }
-
   const itemsInTargetSection = targetSection.items || [];
   let newOrder;
-
   if (beforeItemId !== null) {
-    const beforeItemIndex = itemsInTargetSection.findIndex(
-      (item) => item.tier_list_item_id === beforeItemId
-    );
-
+    const beforeItemIndex = itemsInTargetSection.findIndex((item) => item.tier_list_item_id === beforeItemId);
     if (beforeItemIndex !== -1) {
       if (originalSectionId === targetSectionId) {
-        const draggedItemIndex = itemsInTargetSection.findIndex(
-          (item) => item.tier_list_item_id === tierListItemIdToMove
-        );
-
+        const draggedItemIndex = itemsInTargetSection.findIndex((item) => item.tier_list_item_id === tierListItemIdToMove);
         if (draggedItemIndex < beforeItemIndex) {
           newOrder = itemsInTargetSection[beforeItemIndex].item_order;
         } else {
-          newOrder =
-            beforeItemIndex > 0
-              ? itemsInTargetSection[beforeItemIndex - 1].item_order + 1
-              : itemsInTargetSection[beforeItemIndex].item_order;
+          newOrder = beforeItemIndex > 0 ? itemsInTargetSection[beforeItemIndex - 1].item_order + 1 : itemsInTargetSection[beforeItemIndex].item_order;
         }
       } else {
         newOrder = itemsInTargetSection[beforeItemIndex].item_order;
       }
     } else {
-      newOrder =
-        itemsInTargetSection.length > 0
-          ? itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1
-          : 0;
+      newOrder = itemsInTargetSection.length > 0 ? itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1 : 0;
     }
   } else {
-    newOrder =
-      itemsInTargetSection.length > 0
-        ? itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1
-        : 0;
+    newOrder = itemsInTargetSection.length > 0 ? itemsInTargetSection[itemsInTargetSection.length - 1].item_order + 1 : 0;
   }
-
-  console.log(
-    `Drop: Mover item ID ${tierListItemIdToMove} (originalmente en ${originalSectionId}) a sección ID ${targetSectionId}. ¿Antes del item ID ${beforeItemId}? Nuevo orden objetivo: ${newOrder}`
-  );
-
   isLoadingTierItemAction.value = true;
   errorMessageApi.value = "";
-
-  const moveDTO = {
-    target_section_internal_id: targetSectionId,
-    new_order: newOrder,
-  };
-
+  const moveDTO = { target_section_internal_id: targetSectionId, new_order: newOrder };
   try {
-    const response = await moveItemInMyTierList(
-      props.tierListPublicId,
-      tierListItemIdToMove,
-      moveDTO
-    );
-    tierListDetails.value = response.data; 
+    const response = await moveItemInMyTierList(props.tierListPublicId, tierListItemIdToMove, moveDTO);
+    tierListDetails.value = response.data;
   } catch (error) {
     console.error("Error moviendo ítem en Tier List:", error);
     if (error.response?.data) {
-      errorMessageApi.value =
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo mover el ítem.";
+      errorMessageApi.value = error.response.data.message || "No se pudo mover el ítem.";
     } else {
       errorMessageApi.value = "Error de red al mover el ítem.";
     }
     await fetchTierListDetails(props.tierListPublicId);
   } finally {
     isLoadingTierItemAction.value = false;
-    handleDragEnd(event); // Pasar el evento
+    handleDragEnd(event);
   }
 };
 
 const handleDragEnd = (event) => {
-  console.log("Drag End");
-  document
-    .querySelectorAll(".tier-item-compact.dragging-item")
-    .forEach((element) => {
-      element.classList.remove("dragging-item");
-    });
+  document.querySelectorAll(".tier-item-compact.dragging-item").forEach((element) => {
+    element.classList.remove("dragging-item");
+  });
   draggedItemInfo.value = null;
   dragOverSectionId.value = null;
   dragOverItemId.value = null;
@@ -1356,19 +1056,13 @@ const handleDragLeaveSection = (event, sectionId) => {
 const handleDropOnSection = async (event, targetSectionId) => {
   event.preventDefault();
   if (!draggedItemInfo.value) return;
-
   const tierListItemIdToMove = draggedItemInfo.value.tierListItemId;
-
   let newOrder = 0;
   let targetSection;
-  if (
-    targetSectionId === tierListDetails.value?.unclassified_section?.internal_id
-  ) {
+  if (targetSectionId === tierListDetails.value?.unclassified_section?.internal_id) {
     targetSection = tierListDetails.value.unclassified_section;
   } else {
-    targetSection = tierListDetails.value?.sections?.find(
-      (section) => section.internal_id === targetSectionId
-    );
+    targetSection = tierListDetails.value?.sections?.find((section) => section.internal_id === targetSectionId);
   }
   if (targetSection && targetSection.items) {
     newOrder = targetSection.items.length;
@@ -1376,54 +1070,36 @@ const handleDropOnSection = async (event, targetSectionId) => {
       newOrder = Math.max(0, targetSection.items.length - 1);
     }
   }
-
-  console.log(
-    `Drop: Mover item ID ${tierListItemIdToMove} a sección ID ${targetSectionId}, nuevo orden (estimado): ${newOrder}`
-  );
-
-  isLoadingTierItemAction.value = true; // Usar un loader
+  isLoadingTierItemAction.value = true;
   errorMessageApi.value = "";
-
-  const moveDTO = {
-    target_section_internal_id: targetSectionId,
-    new_order: newOrder,
-  };
-
+  const moveDTO = { target_section_internal_id: targetSectionId, new_order: newOrder };
   try {
-    const response = await moveItemInMyTierList(
-      props.tierListPublicId,
-      tierListItemIdToMove,
-      moveDTO
-    );
-    tierListDetails.value = response.data; // Actualizar con la respuesta completa
+    const response = await moveItemInMyTierList(props.tierListPublicId, tierListItemIdToMove, moveDTO);
+    tierListDetails.value = response.data;
   } catch (error) {
     console.error("Error moviendo ítem en Tier List:", error);
     if (error.response?.data) {
-      errorMessageApi.value =
-        error.response.data.message ||
-        error.response.data.error ||
-        "No se pudo mover el ítem.";
+      errorMessageApi.value = error.response.data.message || "No se pudo mover el ítem.";
     } else {
       errorMessageApi.value = "Error de red al mover el ítem.";
     }
     await fetchTierListDetails(props.tierListPublicId);
   } finally {
     isLoadingTierItemAction.value = false;
-    handleDragEnd(event); 
+    handleDragEnd(event);
   }
 };
 
-// Función para obtener URL de carátula de un item de la Tier List
+
+// --- 12. FUNCIONES DE UTILIDAD (HELPERS) ---
 const getItemCoverUrl = (itemCoverUrl, targetSize = "cover_small") => {
   if (typeof itemCoverUrl === "string" && itemCoverUrl.trim() !== "") {
     let imageUrl = itemCoverUrl;
     if (imageUrl.startsWith("//")) {
       imageUrl = `https:${imageUrl}`;
     }
-    // Aplicar transformación de tamaño si es necesario
     const regex = /(\/t_)[a-zA-Z0-9_-]+(\/)/;
     if (regex.test(imageUrl)) {
-      // Si ya tiene un /t_.../
       imageUrl = imageUrl.replace(regex, `$1${targetSize}$2`);
     } else if (imageUrl.includes("/igdb/image/upload/")) {
       if (!imageUrl.includes("/igdb/image/upload/" + targetSize + "/")) {
@@ -1432,7 +1108,7 @@ const getItemCoverUrl = (itemCoverUrl, targetSize = "cover_small") => {
     }
     return imageUrl;
   }
-  return defaultTierItemCover; 
+  return defaultTierItemCover;
 };
 
 const onTierItemCoverError = (event) => {
@@ -1442,11 +1118,7 @@ const onTierItemCoverError = (event) => {
 const formatReadableDate = (isoDateString) => {
   if (!isoDateString) return "";
   try {
-    return new Date(isoDateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(isoDateString).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   } catch (e) {
     return isoDateString;
   }
@@ -1454,26 +1126,20 @@ const formatReadableDate = (isoDateString) => {
 
 const formatTierListType = (type) => {
   if (!type) return "Tipo Desconocido";
-  const typeMap = {
-    PROFILE_GLOBAL: "De Perfil",
-    FROM_GAMELIST: "Desde Lista de Juegos",
-  };
+  const typeMap = { PROFILE_GLOBAL: "De Perfil", FROM_GAMELIST: "Desde Lista de Juegos" };
   return typeMap[String(type).toUpperCase()] || String(type);
 };
 
 const getTierColor = (sectionName) => {
-  if (!sectionName) return "#CCCCCC"; // Un gris neutro por defecto
+  if (!sectionName) return "#CCCCCC";
   const name = String(sectionName).toUpperCase();
-
-  // Paleta de colores hexadecimales
-  if (name.includes("S")) return "#FF7F7F"; // Rojo claro
-  if (name.includes("A")) return "#FFBF7F"; // Naranja
-  if (name.includes("B")) return "#FFFF7F"; // Amarillo
-  if (name.includes("C")) return "#BFFF7F"; // Verde claro
-  if (name.includes("D")) return "#7FBFFF"; // Azul claro
-  if (name.includes("E") || name.includes("F")) return "#BDB0D0"; // Lavanda grisáceo
-
-  return "#CCCCCC"; // Gris por defecto para nombres no reconocidos
+  if (name.includes("S")) return "#FF7F7F";
+  if (name.includes("A")) return "#FFBF7F";
+  if (name.includes("B")) return "#FFFF7F";
+  if (name.includes("C")) return "#BFFF7F";
+  if (name.includes("D")) return "#7FBFFF";
+  if (name.includes("E") || name.includes("F")) return "#BDB0D0";
+  return "#CCCCCC";
 };
 </script>
 

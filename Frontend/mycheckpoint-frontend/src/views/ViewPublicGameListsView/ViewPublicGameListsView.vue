@@ -28,37 +28,60 @@
   </div>
 </template>
 <script setup>
+// --- 1. IMPORTACIONES ---
 import { ref, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { fetchAllPublicGameLists } from '@/services/apiInstances';
 
-const publicGameLists = ref([]); // Almacenará Array<GameListResponseDTO>
-const isLoading = ref(true);
-const errorMessage = ref('');
 
+// --- 2. ESTADO DEL COMPONENTE ---
+const publicGameLists = ref([]); // Almacenará el array de listas de juegos públicas.
+const isLoading = ref(true);     // Controla el mensaje de carga principal.
+const errorMessage = ref('');    // Almacena y muestra mensajes de error de la API.
+
+
+// --- 3. CICLO DE VIDA ---
+/**
+ * @description onMounted se ejecuta cuando el componente está listo en el DOM.
+ * Es el lugar ideal para realizar la carga inicial de datos.
+ */
+onMounted(() => {
+  loadPublicGameLists();
+});
+
+
+// --- 4. MÉTODOS DE DATOS ---
+/**
+ * @description Carga todas las listas de juegos públicas desde la API.
+ * Gestiona los estados de carga y error para la vista.
+ */
 const loadPublicGameLists = async () => {
   isLoading.value = true;
   errorMessage.value = '';
   try {
     const response = await fetchAllPublicGameLists();
     publicGameLists.value = response.data;
-    console.log("Listas públicas cargadas:", publicGameLists.value);
   } catch (error) {
     console.error("Error cargando listas públicas de juegos:", error);
+    // Se intenta dar un mensaje de error más específico si la API lo proporciona.
     if (error.response) {
       errorMessage.value = `Error ${error.response.status}: ${error.response.data.message || error.response.data.error || 'No se pudieron cargar las listas.'}`;
     } else {
       errorMessage.value = 'Error de red al cargar las listas.';
     }
   } finally {
+    // Este bloque se ejecuta siempre, asegurando que el estado de carga se desactive.
     isLoading.value = false;
   }
 };
 
-onMounted(() => {
-  loadPublicGameLists();
-});
 
+// --- 5. FUNCIONES DE UTILIDAD (HELPERS) ---
+/**
+ * @description Formatea una fecha en formato ISO a un string legible (ej: 'jun 15, 2025').
+ * @param {string} isoDateString - La fecha en formato ISO.
+ * @returns {string} - La fecha formateada o el string original en caso de error.
+ */
 const formatReadableDate = (isoDateString) => {
   if (!isoDateString) return '';
   try {
@@ -66,13 +89,18 @@ const formatReadableDate = (isoDateString) => {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      // hour: '2-digit', minute: '2-digit' // Opcional si quieres la hora
     });
   } catch (e) {
     return isoDateString;
   }
 };
 
+/**
+ * @description Trunca un texto si excede una longitud máxima, añadiendo puntos suspensivos.
+ * @param {string} text - El texto a truncar.
+ * @param {number} maxLength - La longitud máxima permitida.
+ * @returns {string} - El texto truncado o el original si es más corto.
+ */
 const truncateText = (text, maxLength) => {
   if (!text) return '';
   if (text.length <= maxLength) return text;

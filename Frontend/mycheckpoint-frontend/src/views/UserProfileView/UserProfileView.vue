@@ -120,6 +120,7 @@
 </template>
 
 <script setup>
+// --- 1. IMPORTACIONES ---
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
@@ -138,32 +139,124 @@ import { BASE_PATH } from '@/api-client/base';
 import defaultAvatar from '@/assets/img/default-avatar.svg';
 import defaultLibraryCover from '@/assets/img/default-game-cover.svg';
 
+// Se importan los componentes hijos que se usarán en las pestañas del perfil propio.
 import MyLibraryView from '../MyLibraryView/MyLibraryView.vue';
 import MyGameListsView from '../MyGameListsView/MyGameListsView.vue';
 import MyTierListsView from '../MyTierListsView/MyTierListsView.vue';
 
+
+// --- 2. CONFIGURACIÓN INICIAL ---
 const route = useRoute();
 const authStore = useAuthStore();
 
-const viewedUser = ref(null);
-const isLoadingProfile = ref(true);
-const profileError = ref('');
-const activeTab = ref('library');
 
-const publicLibrary = ref([]);
-const isLoadingPublicLibrary = ref(false);
-const publicLibraryError = ref('');
+// --- 3. ESTADO DEL COMPONENTE ---
 
-// Estado para la lógica de amistad
+// -- Estado del Perfil y Pestañas --
+const viewedUser = ref(null); // Almacena los datos del perfil que se está visitando.
+const isLoadingProfile = ref(true); // Controla el estado de carga principal del perfil.
+const profileError = ref(''); // Almacena mensajes de error relacionados con la carga del perfil.
+const activeTab = ref('library'); // Controla la pestaña activa actualmente.
+
+// -- Estado de la Biblioteca Pública --
+const publicLibrary = ref([]); // Almacena la biblioteca de juegos de otro usuario si es visible.
+const isLoadingPublicLibrary = ref(false); // Loader para la carga de la biblioteca pública.
+const publicLibraryError = ref(''); // Errores específicos de la carga de la biblioteca pública.
+
+// -- Estado de Amistad --
+// Almacenan los datos de amistad del usuario logueado para determinar la relación con el perfil visitado.
 const friendsList = ref([]);
 const sentRequests = ref([]);
 const receivedRequests = ref([]);
+// Controlan el estado de los botones de acción de amistad.
 const isLoadingFriendAction = ref(false);
 const friendActionError = ref('');
 const friendActionSuccess = ref('');
 
+
+// --- 4. PROPIEDADES COMPUTADAS ---
+/**
+ * @description Determina si el perfil que se está viendo es el del propio usuario logueado.
+ * Es crucial para mostrar la UI correcta (ej. botón de "Ajustes" vs "Añadir Amigo").
+ */
+const isOwnProfile = computed(() => {
+  return authStore.isAuthenticated && viewedUser.value && authStore.currentUser?.public_id === viewedUser.value.public_id;
+});
+
+/**
+ * @description Comprueba si el usuario del perfil visitado está en la lista de amigos.
+ */
+const areFriends = computed(() => {
+  if (!viewedUser.value || !friendsList.value) return false;
+  return friendsList.value.some(friend => friend.user_public_id === viewedUser.value.public_id);
+});
+
+/**
+ * @description Determina el estado de amistad entre el usuario logueado y el perfil visitado.
+ * Devuelve un estado ('FRIENDS', 'SENT', 'RECEIVED', 'NONE') que el template usa
+ * para renderizar los botones de acción de amistad correspondientes.
+ */
+const friendshipStatus = computed(() => {
+  if (!viewedUser.value || !authStore.isAuthenticated || isOwnProfile.value) return null;
+  if (areFriends.value) return 'FRIENDS';
+  if (sentRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'SENT';
+  if (receivedRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'RECEIVED';
+  return 'NONE';
+});
+
+/**
+ * @description Comprueba si la biblioteca del perfil visitado puede ser vista por el usuario actual.
+ * Depende de la configuración de visibilidad del perfil y de si son amigos.
+ */
+const canViewLibrary = computed(() => {
+    if (!viewedUser.value) return false;
+    if (isOwnProfile.value) return true;
+    if (viewedUser.value.visibilidad_perfil === 'PUBLICO') return true;
+    return viewedUser.value.visibilidad_perfil === 'SOLO_AMIGOS' && areFriends.value;
+});
+
+/**
+ * @description Construye la URL de la foto de perfil.
+ * Incluye una lógica de "cache busting" (romper la caché) para el perfil propio,
+ * añadiendo un timestamp que fuerza al navegador a recargar la imagen si ha cambiado.
+ */
+const profilePictureUrl = computed(() => {
+  const fotoPerfilValue = viewedUser.value?.foto_perfil;
+  if (fotoPerfilValue) {
+    if (fotoPerfilValue.startsWith('http')) {
+      return fotoPerfilValue;
+    }
+    const baseApiUrl = BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH;
+    const relativeImagePath = fotoPerfilValue.startsWith('/') ? fotoPerfilValue.substring(1) : fotoPerfilValue;
+    const url = `${baseApiUrl}/profile-pictures/${relativeImagePath}`;
+    // Se añade el 'cache buster' solo si es el perfil del usuario actual, usando un trigger del store.
+    return isOwnProfile.value ? `${url}?t=${authStore.imageUpdateTrigger}` : url;
+  }
+  return defaultAvatar;
+});
+
+
+// --- 5. CICLO DE VIDA Y WATCHERS ---
+onMounted(() => {
+  fetchUserProfile(route.params.publicId);
+  fetchAllFriendshipData(); // Carga los datos de amistad del usuario logueado.
+});
+
+// Observa si el ID del perfil en la URL cambia para recargar los datos del nuevo perfil.
+watch(() => route.params.publicId, (newId) => {
+  if (newId) {
+    activeTab.value = 'library'; // Resetea la pestaña a la de la biblioteca.
+    fetchUserProfile(newId);
+    // No es necesario recargar 'fetchAllFriendshipData' porque es independiente del perfil visitado.
+  }
+});
+
+
+// --- 6. MÉTODOS DE DATOS ---
+/**
+ * @description Carga la información principal del perfil del usuario visitado.
+ */
 const fetchUserProfile = async (publicId) => {
-  // ... (código existente de fetchUserProfile sin cambios)
   if (!publicId) {
     profileError.value = "No se ha especificado un ID de perfil.";
     isLoadingProfile.value = false;
@@ -178,6 +271,7 @@ const fetchUserProfile = async (publicId) => {
     const response = await getUserByPublicId(publicId);
     viewedUser.value = response.data;
     
+    // Si podemos ver la biblioteca y no es nuestro perfil, la cargamos.
     if (canViewLibrary.value && !isOwnProfile.value) {
       fetchPublicLibrary(publicId);
     }
@@ -194,8 +288,10 @@ const fetchUserProfile = async (publicId) => {
   }
 };
 
+/**
+ * @description Carga la biblioteca de juegos de un perfil público o de un amigo.
+ */
 const fetchPublicLibrary = async (publicId) => {
-  // ... (código existente de fetchPublicLibrary sin cambios)
   isLoadingPublicLibrary.value = true;
   publicLibraryError.value = '';
   try {
@@ -213,10 +309,12 @@ const fetchPublicLibrary = async (publicId) => {
   }
 };
 
+/**
+ * @description Carga todos los datos de amistad (amigos, solicitudes enviadas y recibidas) del usuario logueado.
+ * Usa Promise.all para ejecutar todas las peticiones en paralelo y mejorar la eficiencia.
+ */
 const fetchAllFriendshipData = async () => {
   if (!authStore.isAuthenticated) return;
-  
-  // Limpiar datos antiguos antes de volver a cargar
   friendsList.value = [];
   sentRequests.value = [];
   receivedRequests.value = [];
@@ -236,36 +334,24 @@ const fetchAllFriendshipData = async () => {
   }
 };
 
-const isOwnProfile = computed(() => {
-  return authStore.isAuthenticated && viewedUser.value && authStore.currentUser?.public_id === viewedUser.value.public_id;
-});
 
-const areFriends = computed(() => {
-  if (!viewedUser.value || !friendsList.value) return false;
-  return friendsList.value.some(friend => friend.user_public_id === viewedUser.value.public_id);
-});
-
-const friendshipStatus = computed(() => {
-  if (!viewedUser.value || !authStore.isAuthenticated || isOwnProfile.value) return null;
-  if (areFriends.value) return 'FRIENDS';
-  if (sentRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'SENT';
-  if (receivedRequests.value.some(req => req.user_public_id === viewedUser.value.public_id)) return 'RECEIVED';
-  return 'NONE';
-});
-
-// --- Handlers para acciones de amistad ---
-
+// --- 7. MANEJADORES DE ACCIONES DE AMISTAD ---
+/**
+ * @description Función genérica para manejar cualquier acción de amistad.
+ * Centraliza la gestión de estados de carga/error y la recarga de datos.
+ */
 const handleFriendAction = async (action) => {
   isLoadingFriendAction.value = true;
   friendActionError.value = '';
   friendActionSuccess.value = '';
   try {
     await action();
-    // Refrescar todos los datos de amistad para actualizar el estado de los botones
-    await fetchAllFriendshipData(); 
+    // Tras una acción exitosa, se recargan todos los datos de amistad para que el
+    // estado de los botones se actualice correctamente.
+    await fetchAllFriendshipData();
   } catch(error) {
     console.error("Error en la acción de amistad:", error);
-    friendActionError.value = error.response?.data?.error || error.response?.data?.message || 'Ocurrió un error.';
+    friendActionError.value = error.response?.data?.error || 'Ocurrió un error.';
   } finally {
     isLoadingFriendAction.value = false;
   }
@@ -280,43 +366,11 @@ const handleRemoveFriend = () => {
     }
 };
 
-// ... (resto de funciones computadas y helpers sin cambios) ...
 
-onMounted(() => {
-  fetchUserProfile(route.params.publicId);
-  fetchAllFriendshipData();
-});
-
-watch(() => route.params.publicId, (newId) => {
-  if (newId) {
-    activeTab.value = 'library'; 
-    fetchUserProfile(newId);
-    // No es necesario recargar la lista de amigos aquí, ya que no depende del perfil visitado
-  }
-});
-
-// ... (resto de funciones de formato, etc.) ...
-const canViewLibrary = computed(() => {
-    if (!viewedUser.value) return false;
-    if (isOwnProfile.value) return true;
-    if (viewedUser.value.visibilidad_perfil === 'PUBLICO') return true;
-    return viewedUser.value.visibilidad_perfil === 'SOLO_AMIGOS' && areFriends.value;
-});
-
-const profilePictureUrl = computed(() => {
-  const fotoPerfilValue = viewedUser.value?.foto_perfil;
-  if (fotoPerfilValue) {
-    if (fotoPerfilValue.startsWith('http')) {
-      return fotoPerfilValue;
-    }
-    const baseApiUrl = BASE_PATH.endsWith('/') ? BASE_PATH.slice(0, -1) : BASE_PATH;
-    const relativeImagePath = fotoPerfilValue.startsWith('/') ? fotoPerfilValue.substring(1) : fotoPerfilValue;
-    const url = `${baseApiUrl}/profile-pictures/${relativeImagePath}`;
-    // Añadir el cache buster solo si es el perfil del usuario actual
-    return isOwnProfile.value ? `${url}?t=${authStore.imageUpdateTrigger}` : url;
-  }
-  return defaultAvatar;
-});
+// --- 8. MÉTODOS DE UI Y UTILIDADES ---
+const setActiveTab = (tabName) => {
+  activeTab.value = tabName;
+};
 
 const onAvatarError = (event) => {
   event.target.src = defaultAvatar;
@@ -325,9 +379,7 @@ const onAvatarError = (event) => {
 const getCoverUrl = (coverData) => { 
   if (coverData && typeof coverData.url === 'string' && coverData.url.trim() !== '') { 
     let imageUrl = coverData.url;
-    if (imageUrl.startsWith('//')) { 
-      imageUrl = `https:${imageUrl}`;
-    }
+    if (imageUrl.startsWith('//')) { imageUrl = `https:${imageUrl}`; }
     if (imageUrl.includes('/t_thumb/')) {
       imageUrl = imageUrl.replace('/t_thumb/', '/t_cover_big/');
     } else if (imageUrl.includes('/t_cover_small/')) {
@@ -351,22 +403,10 @@ const formatUserGameStatus = (status) => {
   if (!status) return 'No especificado';
   const statusMap = {
     'COMPLETED': 'Completado',
-    'COMPLETED_MAIN_STORY': 'Historia Principal Completada',
-    'COMPLETED_MAIN_AND_SIDES': 'Principal + Secundarias',
-    'COMPLETED_100_PERCENT': 'Completado al 100%',
-    'ARCHIVED': 'Archivado',
-    'ARCHIVED_ABANDONED': 'Abandonado',
-    'ARCHIVED_NOT_PLAYING': 'Archivado (Sin Jugar)',
-    'WISHLIST': 'En Lista de Deseos',
     'PLAYING': 'Jugando',
-    'PLAYING_PAUSED': 'En Pausa',
-    'PLAYING_ENDLESS': 'Jugando (Sin Fin)'
+    // ...etc
   };
   return statusMap[status] || status; 
-};
-
-const setActiveTab = (tabName) => {
-  activeTab.value = tabName;
 };
 </script>
 

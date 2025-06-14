@@ -23,7 +23,7 @@ const isLoading = ref(true);
 onMounted(() => {
   setTimeout(() => {
     isLoading.value = false; // Ocultamos el loader después de 4 segundos
-  }, 2000); // Dale un poco más de tiempo que la animación principal (3s)
+  }, 100); // Dale un poco más de tiempo que la animación principal (3s)
 });
 
 </script>

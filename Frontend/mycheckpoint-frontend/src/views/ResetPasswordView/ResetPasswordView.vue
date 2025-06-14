@@ -35,37 +35,71 @@
 </template>
 
 <script setup>
+// --- 1. IMPORTACIONES Y CONFIGURACIÓN ---
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { resetPasswordWithToken } from '@/services/apiInstances.js'; // Importamos la función
+import { resetPasswordWithToken } from '@/services/apiInstances.js';
 
+
+// --- 2. CONFIGURACIÓN DE ROUTER ---
+// Se utiliza 'useRoute' para acceder a los parámetros de la URL actual (como el token).
 const route = useRoute();
+// Se utiliza 'useRouter' para poder redirigir al usuario programáticamente.
 const router = useRouter();
 
-const token = ref(null);
+
+// --- 3. ESTADO DEL COMPONENTE ---
+// -- Estado del formulario y del token --
+const token = ref(null); // Almacenará el token de restablecimiento obtenido de la URL.
 const newPassword = ref('');
 const confirmPassword = ref('');
-const message = ref('');
-const isError = ref(false);
-const isLoading = ref(false);
 
+// -- Estado de la UI --
+const message = ref('');    // Mensaje de feedback para el usuario (éxito o error).
+const isError = ref(false); // Determina si el mensaje es de error para aplicar estilos.
+const isLoading = ref(false); // Controla el estado de carga del botón.
+
+
+// --- 4. PROPIEDADES COMPUTADAS ---
+/**
+ * @description Propiedad computada que comprueba en tiempo real si las contraseñas no coinciden.
+ * Es útil para deshabilitar el botón de envío y mostrar una advertencia inmediata al usuario.
+ * @returns {boolean} - True si ambas contraseñas están escritas y no son iguales.
+ */
 const passwordMismatch = computed(() => {
   return newPassword.value && confirmPassword.value && newPassword.value !== confirmPassword.value;
 });
 
+
+// --- 5. CICLO DE VIDA ---
+/**
+ * @description Se ejecuta cuando el componente se monta en el DOM.
+ * Su función principal aquí es extraer el token de la URL.
+ */
 onMounted(() => {
+  // Se intenta obtener el token del parámetro 'token' en la query string de la URL.
   token.value = route.query.token || null;
+  // Si no se encuentra un token, el proceso no puede continuar. Se muestra un error.
   if (!token.value) {
     message.value = 'El enlace de restablecimiento es inválido o ha expirado. Por favor, solicita uno nuevo.';
     isError.value = true;
   }
 });
 
+
+// --- 6. LÓGICA PRINCIPAL ---
+/**
+ * @description Maneja el envío del formulario para establecer la nueva contraseña.
+ * Realiza validaciones, llama a la API y gestiona la respuesta.
+ */
 const handleResetPassword = async () => {
+  // Se resetean los mensajes y se activa el estado de carga.
   message.value = '';
   isError.value = false;
   isLoading.value = true;
 
+  // --- Validaciones del lado del cliente ---
+  // Se comprueban las condiciones básicas antes de hacer la llamada a la API.
   if (newPassword.value !== confirmPassword.value) {
     message.value = 'Las contraseñas no coinciden.';
     isError.value = true;
@@ -80,28 +114,31 @@ const handleResetPassword = async () => {
     return;
   }
 
+  // Se crea el DTO (Data Transfer Object) con el token y la nueva contraseña para la API.
   /** @type {import('@/api-client/index.js').ResetPasswordDTO} */
-  const resetData = { //
-    token: token.value, //
-    nueva_contraseña: newPassword.value, //
+  const resetData = {
+    token: token.value,
+    nueva_contraseña: newPassword.value,
   };
 
   try {
-    await resetPasswordWithToken(resetData); //
-    // Respuesta 200 OK si es exitoso
+    // --- Bloque de Éxito ---
+    await resetPasswordWithToken(resetData);
     message.value = '¡Tu contraseña ha sido restablecida exitosamente! Ahora puedes iniciar sesión con tu nueva contraseña.';
     isError.value = false;
-    // Opcional: redirigir al login después de un momento
+    // Se redirige al usuario a la página de login tras 3 segundos para que lea el mensaje.
     setTimeout(() => {
       router.push('/login');
     }, 3000);
+
   } catch (error) {
+    // --- Bloque de Manejo de Errores ---
+    // Caso 1: El servidor respondió con un error.
     if (error.response && error.response.data) {
-      console.error("Datos del error:", error.response.data);
-       // Para resetPassword, 400 puede ser token inválido/expirado, contraseña no cumple requisitos, etc.
-       // 404 token no encontrado
+       // Los errores 400 o 404 suelen indicar que el token es inválido/expirado
+       // o que la contraseña no cumple con las políticas del backend.
       if (error.response.status === 400 || error.response.status === 404) {
-        if (error.response.data.errors && Array.isArray(error.response.data.errors)) { //
+        if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
           message.value = error.response.data.errors.join(' ');
         } else {
           message.value = error.response.data.error || error.response.data.message || 'El token es inválido, ha expirado o la nueva contraseña no cumple los requisitos.';
@@ -109,14 +146,19 @@ const handleResetPassword = async () => {
       } else {
         message.value = error.response.data.error || 'Ocurrió un error al restablecer tu contraseña.';
       }
+    // Caso 2: Error de red (no se pudo conectar con el servidor).
     } else if (error.request) {
       message.value = 'No se pudo conectar con el servidor. Inténtalo más tarde.';
+    // Caso 3: Otro tipo de error.
     } else {
       message.value = 'Ocurrió un error inesperado.';
     }
     isError.value = true;
     console.error("Error al restablecer contraseña:", error);
+
   } finally {
+    // --- Bloque Final ---
+    // Se ejecuta siempre para asegurar que el estado de carga se desactive.
     isLoading.value = false;
   }
 };

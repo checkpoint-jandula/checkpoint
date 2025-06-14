@@ -99,6 +99,7 @@
 </template>
 
 <script setup>
+// --- 1. IMPORTACIONES ---
 import { ref, reactive, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import {
@@ -109,18 +110,27 @@ import {
 } from '@/services/apiInstances';
 import defaultGameCover from '@/assets/img/default-game-cover.svg';
 
-// Estado para cada lista de juegos
-const recentlyReleased = ref([]);
-const mostHyped = ref([]);
-const highlyAnticipated = ref([]);
-const upcomingReleases = ref([]);
 
+// --- 2. REFERENCIAS A ELEMENTOS DEL DOM ---
+// Estas refs se conectan con los elementos 'ref' en el <template> para poder manipularlos,
+// en este caso, para controlar el desplazamiento de cada carrusel de juegos.
 const mostHypedCarouselRef = ref(null);
 const upcomingReleasesCarouselRef = ref(null);
 const highlyAnticipatedCarouselRef = ref(null);
 const recentlyReleasedCarouselRef = ref(null);
 
-// Estado de carga para cada sección
+
+// --- 3. ESTADO DEL COMPONENTE ---
+// -- Listas de Juegos --
+// Cada ref almacenará un array de juegos devuelto por la API.
+const recentlyReleased = ref([]);
+const mostHyped = ref([]);
+const highlyAnticipated = ref([]);
+const upcomingReleases = ref([]);
+
+// -- Estados de Carga --
+// Un objeto reactivo para gestionar el estado de carga de cada sección de forma independiente.
+// Esto permite que unas secciones se muestren mientras otras todavía están cargando.
 const isLoading = reactive({
   recently: true,
   hyped: true,
@@ -128,7 +138,8 @@ const isLoading = reactive({
   upcoming: true
 });
 
-// Estado de error para cada sección
+// -- Estados de Error --
+// Un objeto reactivo para almacenar los mensajes de error de cada sección por separado.
 const errors = reactive({
   recently: '',
   hyped: '',
@@ -136,8 +147,17 @@ const errors = reactive({
   upcoming: ''
 });
 
-// Cargar todos los datos cuando el componente se monta
+
+// --- 4. CICLO DE VIDA (onMounted) ---
+/**
+ * @description Se ejecuta una vez que el componente se ha montado en el DOM.
+ * Realiza todas las llamadas a la API para obtener los datos de los juegos.
+ */
 onMounted(async () => {
+  // Se utiliza Promise.allSettled para ejecutar todas las peticiones de forma concurrente.
+  // A diferencia de Promise.all, allSettled espera a que TODAS las promesas terminen,
+  // ya sea con éxito o con error. Esto es ideal aquí para que si una sección falla,
+  // las demás puedan seguir cargando y mostrándose correctamente.
   const [recentlyRes, hypedRes, anticipatedRes, upcomingRes] = await Promise.allSettled([
     findRecentlyReleasedGames(),
     findMostHypedGames(),
@@ -145,16 +165,19 @@ onMounted(async () => {
     findUpcomingReleases()
   ]);
 
-  // Procesar resultados para Lanzamientos Recientes
+  // Procesar resultados para "Lanzamientos Recientes"
+  // Se comprueba el estado de la promesa. Si es 'fulfilled', la petición tuvo éxito.
   if (recentlyRes.status === 'fulfilled') {
     recentlyReleased.value = recentlyRes.value.data;
   } else {
+    // Si la promesa fue 'rejected', se registra el error y se asigna un mensaje para la UI.
     errors.recently = 'No se pudieron cargar los lanzamientos recientes.';
     console.error('Error en findRecentlyReleasedGames:', recentlyRes.reason);
   }
+  // En cualquier caso (éxito o error), se desactiva el estado de carga para esta sección.
   isLoading.recently = false;
 
-  // Procesar resultados para Más Populares
+  // Procesar resultados para "Más Populares"
   if (hypedRes.status === 'fulfilled') {
     mostHyped.value = hypedRes.value.data;
   } else {
@@ -163,7 +186,7 @@ onMounted(async () => {
   }
   isLoading.hyped = false;
 
-  // Procesar resultados para Más Anticipados
+  // Procesar resultados para "Más Esperados"
   if (anticipatedRes.status === 'fulfilled') {
     highlyAnticipated.value = anticipatedRes.value.data;
   } else {
@@ -172,7 +195,7 @@ onMounted(async () => {
   }
   isLoading.anticipated = false;
 
-  // Procesar resultados para Próximos Lanzamientos
+  // Procesar resultados para "Próximos Lanzamientos"
   if (upcomingRes.status === 'fulfilled') {
     upcomingReleases.value = upcomingRes.value.data;
   } else {
@@ -183,34 +206,57 @@ onMounted(async () => {
 });
 
 
-// Función de utilidad para obtener la URL de la carátula
-const getCoverUrl = (cover) => {
-  if (cover && typeof cover.url === 'string') {
-    let imageUrl = cover.url.replace('/t_thumb/', '/t_cover_big/');
-    if (imageUrl.startsWith('//')) {
-      return `https:${imageUrl}`;
-    }
-    return imageUrl;
-  }
-  return defaultGameCover;
-};
-
-const onImageError = (event) => {
-  event.target.src = defaultGameCover;
-};
-
-
+// --- 5. MÉTODOS DE UI ---
+/**
+ * @description Controla el desplazamiento horizontal de un carrusel.
+ * @param {object} carouselRef - La referencia al elemento del DOM del carrusel.
+ * @param {string} direction - La dirección del desplazamiento ('prev' o 'next').
+ */
 const scrollCarousel = (carouselRef, direction) => {
+  // Se asegura de que la referencia al carrusel existe.
   if (carouselRef) {
-    // Calculamos cuánto nos vamos a desplazar (ej: 80% del ancho visible)
+    // Calcula la distancia de desplazamiento como un porcentaje del ancho visible del carrusel.
+    // Esto hace que el desplazamiento sea responsivo al tamaño de la ventana.
     const scrollAmount = carouselRef.clientWidth * 0.5;
     
-    // Usamos el método scrollBy para un desplazamiento suave
+    // Utiliza el método 'scrollBy' con un comportamiento 'smooth' para una animación suave.
     carouselRef.scrollBy({
       left: direction === 'next' ? scrollAmount : -scrollAmount,
       behavior: 'smooth'
     });
   }
+};
+
+
+// --- 6. FUNCIONES DE UTILIDAD ---
+/**
+ * @description Construye la URL correcta para la carátula de un juego a partir de los datos de la API de IGDB.
+ * @param {object} cover - El objeto 'cover' que viene en los datos del juego.
+ * @returns {string} - La URL completa y formateada de la imagen o un placeholder por defecto.
+ */
+const getCoverUrl = (cover) => {
+  // Comprueba que el objeto 'cover' y su propiedad 'url' existan.
+  if (cover && typeof cover.url === 'string') {
+    // Reemplaza el tamaño de la imagen en la URL para obtener una de mayor calidad.
+    let imageUrl = cover.url.replace('/t_thumb/', '/t_cover_big/');
+    
+    // Corrige las URLs que empiezan por '//' añadiendo el protocolo 'https'.
+    if (imageUrl.startsWith('//')) {
+      return `https:${imageUrl}`;
+    }
+    return imageUrl;
+  }
+  // Si no hay URL, devuelve una imagen por defecto.
+  return defaultGameCover;
+};
+
+/**
+ * @description Función de fallback que se ejecuta si una imagen no se puede cargar.
+ * Asigna una imagen por defecto al elemento 'img' que ha fallado.
+ * @param {Event} event - El evento de error de la imagen.
+ */
+const onImageError = (event) => {
+  event.target.src = defaultGameCover;
 };
 </script>
 
