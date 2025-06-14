@@ -2,6 +2,7 @@ package mp.tfg.mycheckpoint.service.scheduler;
 
 
 import mp.tfg.mycheckpoint.entity.GameList;
+import mp.tfg.mycheckpoint.entity.TierList;
 import mp.tfg.mycheckpoint.entity.User;
 import mp.tfg.mycheckpoint.entity.UserGame;
 import mp.tfg.mycheckpoint.repository.*;
@@ -28,6 +29,7 @@ public class AccountCleanupService {
     private final UserRepository userRepository;
     private final UserGameRepository userGameRepository;
     private final GameListRepository gameListRepository;
+    private final TierListRepository tierListRepository;
     private final FriendshipRepository friendshipRepository;
     private final VerificationTokenRepository verificationTokenRepository; // Para tokens de verificación
     private final PasswordResetTokenRepository passwordResetTokenRepository; // Para tokens de reseteo
@@ -40,6 +42,7 @@ public class AccountCleanupService {
      * @param userRepository Repositorio para las entidades {@link User}.
      * @param userGameRepository Repositorio para las entidades {@link UserGame}.
      * @param gameListRepository Repositorio para las entidades {@link GameList}.
+     * @param tierListRepository Repositorio para las entidades {@link TierList}.
      * @param friendshipRepository Repositorio para las entidades {@link mp.tfg.mycheckpoint.entity.Friendship}.
      * @param verificationTokenRepository Repositorio para los {@link mp.tfg.mycheckpoint.entity.VerificationToken}.
      * @param passwordResetTokenRepository Repositorio para los {@link mp.tfg.mycheckpoint.entity.PasswordResetToken}.
@@ -48,12 +51,14 @@ public class AccountCleanupService {
     public AccountCleanupService(UserRepository userRepository,
                                  UserGameRepository userGameRepository,
                                  GameListRepository gameListRepository,
+                                 TierListRepository tierListRepository,
                                  FriendshipRepository friendshipRepository,
                                  VerificationTokenRepository verificationTokenRepository,
                                  PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.userGameRepository = userGameRepository;
         this.gameListRepository = gameListRepository;
+        this.tierListRepository = tierListRepository;
         this.friendshipRepository = friendshipRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
@@ -73,6 +78,7 @@ public class AccountCleanupService {
      * Finalmente, la entidad {@link User} misma.
      * Se registran logs detallados del proceso y de cualquier error que pueda ocurrir.
      */
+    //0 * * * * ? / 0 0 2 * * ?
     @Scheduled(cron = "0 0 2 * * ?")
     @Transactional // Importante para que la operación de borrado sea atómica
     public void performScheduledAccountDeletions() {
@@ -91,6 +97,13 @@ public class AccountCleanupService {
             logger.warn("Eliminando definitivamente la cuenta del usuario con email: {} (ID: {}, PublicID: {}) programada para el {}",
                     user.getEmail(), user.getId(), user.getPublicId(), user.getFechaEliminacion());
             try {
+
+                List<TierList> tierLists = tierListRepository.findAllByOwnerAndTypeWithSections(user);
+                if (!tierLists.isEmpty()) {
+                    tierListRepository.deleteAll(tierLists);
+                    logger.info("Eliminadas {} listas de TierList para el usuario {}.", tierLists.size(), user.getEmail());
+                }
+
                 List<UserGame> userGames = userGameRepository.findByUser(user);
                 if (!userGames.isEmpty()) {
                     userGameRepository.deleteAll(userGames);
