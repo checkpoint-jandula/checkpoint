@@ -9,23 +9,17 @@
     </div>
 
     <div class="results-grid" v-else-if="!isLoading && searchResults.length > 0">
-      <div v-for="game in searchResults" :key="game.id" class="game-card">
-        <RouterLink :to="{ name: 'game-details', params: { igdbId: game.id } }">
-          <img
-            :src="getCoverUrl(game.cover)"
-            :alt="`Carátula de ${game.name || 'Juego sin nombre'}`"
-            class="game-cover"
-            @error="onImageError"
-          />
-          <div class="game-info">
-            <h3 class="game-name">{{ game.name || 'Nombre no disponible' }}</h3>
-            <p class="game-year" v-if="game.first_release_date">
-              {{ formatReleaseYear(game.first_release_date) }}
-            </p>
-            <p v-if="game.summary" class="game-summary">{{ truncateText(game.summary, 100) }}</p>
-          </div>
-        </RouterLink>
-      </div>
+      <RouterLink v-for="game in searchResults" :key="game.id"
+        :to="{ name: 'game-details', params: { igdbId: game.id } }" class="game-card">
+        <img :src="getCoverUrl(game.cover)" :alt="`Carátula de ${game.name || 'Juego sin nombre'}`" class="game-cover"
+          @error="onImageError" />
+        <div class="game-info">
+          <h3 class="game-name">{{ game.name || 'Nombre no disponible' }}</h3>
+          <p class="game-year" v-if="game.first_release_date">
+            {{ formatReleaseYear(game.first_release_date) }}
+          </p>
+        </div>
+      </RouterLink>
     </div>
     <div v-else class="no-results-message">
       Usa la barra de búsqueda o los filtros avanzados en el menú para encontrar juegos.
@@ -37,7 +31,7 @@
 import { ref, watch, computed } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 // MODIFICADO: Importamos las funciones específicas de apiInstances
-import { buscarJuegosEnIgdb, filtrarJuegosEnIgdb } from '@/services/apiInstances'; 
+import { buscarJuegosEnIgdb, filtrarJuegosEnIgdb } from '@/services/apiInstances';
 import defaultGameCover from '@/assets/img/default-game-cover.svg';
 
 const route = useRoute();
@@ -90,11 +84,11 @@ const processRouteQuery = async (query) => {
       hasSearched.value = false;
       return;
     }
-    
+
     searchResults.value = response.data;
 
     if (response.data.length === 0) {
-        errorMessage.value = "No se encontraron juegos que coincidan con los criterios."
+      errorMessage.value = "No se encontraron juegos que coincidan con los criterios."
     }
 
   } catch (error) {
@@ -106,10 +100,10 @@ const processRouteQuery = async (query) => {
 };
 
 // El watch no necesita cambios, seguirá funcionando perfectamente
-watch(() => route.query, 
+watch(() => route.query,
   (newQuery) => {
     processRouteQuery(newQuery);
-  }, 
+  },
   { immediate: true, deep: true }
 );
 

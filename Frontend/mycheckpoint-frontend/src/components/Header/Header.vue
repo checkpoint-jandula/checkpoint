@@ -203,6 +203,7 @@ const applyFilters = () => {
   }
   router.push({ name: 'search-games', query: queryParams });
   showFilterPanel.value = false;
+  searchQuery.value = '';
 };
 
 const clearFilters = () => {

@@ -146,7 +146,7 @@
                 </button>
 
                 <div class="carousel-viewport" ref="carouselViewportRef">
-                  <div class="carousel-slider" :style="carouselSliderStyle">
+                  <div class="carousel-slider" :style="carouselSliderStyle" @transitionend="handleTransitionEnd">
                     <div v-for="(screenshot, index) in gameDetail.game_info.screenshots" :key="screenshot.id"
                       class="carousel-item">
                       <img :src="getCoverUrl(screenshot, 'screenshot_med')" :alt="`Screenshot ${screenshot.id}`"
@@ -829,30 +829,26 @@ const screenshotCarouselIndex = ref(0);
 
 
 const nextScreenshot = () => {
-  // Aseguramos que tenemos un array de screenshots con elementos
   const screenshots = gameDetail.value?.game_info?.screenshots;
-  if (!screenshots || screenshots.length === 0) {
-    return;
+  if (!screenshots || screenshots.length <= 1) return;
+  
+  if (screenshotCarouselIndex.value >= screenshots.length - 1) {
+    screenshotCarouselIndex.value = 0;
+  } else {
+    screenshotCarouselIndex.value++;
   }
-
-  const totalImages = screenshots.length;
-  // Usamos el operador de módulo (%) para crear el bucle infinito.
-  // Si estamos en la última imagen (índice 4 de 5), (4 + 1) % 5 = 0. Vuelve al inicio.
-  screenshotCarouselIndex.value = (screenshotCarouselIndex.value + 1) % totalImages;
 };
 
 
 const prevScreenshot = () => {
-  // Aseguramos que tenemos un array de screenshots con elementos
   const screenshots = gameDetail.value?.game_info?.screenshots;
-  if (!screenshots || screenshots.length === 0) {
-    return;
+  if (!screenshots || screenshots.length <= 1) return;
+  
+  if (screenshotCarouselIndex.value <= 0) {
+    screenshotCarouselIndex.value = screenshots.length - 1;
+  } else {
+    screenshotCarouselIndex.value--;
   }
-
-  const totalImages = screenshots.length;
-  // La fórmula para retroceder es un poco diferente para evitar números negativos.
-  // Si estamos en el inicio (índice 0), (0 - 1 + 5) % 5 = 4. Salta al final.
-  screenshotCarouselIndex.value = (screenshotCarouselIndex.value - 1 + totalImages) % totalImages;
 };
 
 // AÑADE ESTA PROPIEDAD COMPUTADA para calcular el estilo 'transform' dinámicamente
@@ -885,14 +881,22 @@ onUnmounted(() => {
 
 // La propiedad computada ahora usa el ancho dinámico
 const carouselSliderStyle = computed(() => {
-  if (carouselItemWidth.value === 0) return {}; // Evita cálculos antes de que se monte
-
-  // El desplazamiento ahora se calcula correctamente en cualquier tamaño de pantalla
-  const moveDistance = -screenshotCarouselIndex.value * carouselItemWidth.value;
+  if (!gameDetail.value?.game_info?.screenshots?.length) return {};
+  
+  const itemWidth = 400; // Ancho fijo de cada item (debe coincidir con el CSS)
+  const position = screenshotCarouselIndex.value * itemWidth;
+  
   return {
-    transform: `translateX(${moveDistance}px)`
+    transform: `translateX(-${position}px)`,
+    width: `${itemWidth * gameDetail.value.game_info.screenshots.length}px`
   };
 });
+
+let isTransitioning = false;
+
+const handleTransitionEnd = () => {
+  isTransitioning = false;
+};
 
 const showLightbox = ref(false);
 const currentGallery = ref([]); // Guardará el array de la galería activa (artworks o screenshots)
