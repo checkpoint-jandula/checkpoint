@@ -47,7 +47,7 @@ import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { searchUsers } from '@/services/apiInstances'; // Importa la función para buscar usuarios.
 import { BASE_PATH } from '@/api-client/base'; // Importa la URL base de la API.
-import defaultAvatar from '@/assets/img/default-avatar.png'; // Imagen placeholder para avatares.
+import defaultAvatar from '@/assets/img/default-avatar.svg'; // Imagen placeholder para avatares.
 
 // --- ESTADO DEL COMPONENTE ---
 const searchQuery = ref(''); // Almacena el texto introducido por el usuario en el campo de búsqueda.
